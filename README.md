@@ -25,10 +25,10 @@ ToolFront runs on your computer through an [MCP](https://modelcontextprotocol.io
 ### Prerequisites
 You'll need [uv](https://docs.astral.sh/uv/) or [Docker](https://www.docker.com/) to run the MCP server, and optionally an API key to activate collaborative learning.
 
-
+---
 ### Running with UV:
-[![Add to Cursor with UV](img/buttons/cursor_uv.png)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoidXZ4IHRvb2xmcm9udCBEQVRBQkFTRS1VUkwtMSBEQVRBQkFTRS1VUkwtMiAtLWFwaS1rZXkgWU9VUi1BUEktS0VZIn0%3D)
-[![Add to GitHub Copilot with UV](img/buttons/copilot_uv.png)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22toolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--API-KEY%22%2C%22YOUR_API_KEY%22%5D%7D)
+[![Add to Cursor with UV](https://github.com/kruskal-labs/toolfront/blob/main/img/buttons/cursor_uv.png?raw=true)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoidXZ4IHRvb2xmcm9udCBEQVRBQkFTRS1VUkwtMSBEQVRBQkFTRS1VUkwtMiAtLWFwaS1rZXkgWU9VUi1BUEktS0VZIn0%3D)
+[![Add to GitHub Copilot with UV](https://github.com/kruskal-labs/toolfront/blob/main/img/buttons/copilot_uv.png?raw=true)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22toolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--API-KEY%22%2C%22YOUR_API_KEY%22%5D%7D)
 
 <br>
 
@@ -62,8 +62,8 @@ uvx toolfront "DATABASE-URL-1" "DATABASE-URL-2" [...] --api-key "YOUR-API-KEY"
 ---
 
 ### Running with Docker
-[![Add to Cursor with Docker](img/buttons/cursor_docker.png)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoiZG9ja2VyIHJ1biBhbnRpZG1nL3Rvb2xmcm9udCBEQVRBQkFTRS1VUkwtMSBEQVRBQkFTRS1VUkwtMiAtLWFwaS1rZXkgWU9VUi1BUEktS0VZIn0=)
-[![Add to GitHub Copilot with Docker](img/buttons/copilot_docker.png)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22antidmg%2Ftoolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D)
+[![Add to Cursor with Docker](https://github.com/kruskal-labs/toolfront/blob/main/img/buttons/cursor_docker.png?raw=true)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoiZG9ja2VyIHJ1biBhbnRpZG1nL3Rvb2xmcm9udCBEQVRBQkFTRS1VUkwtMSBEQVRBQkFTRS1VUkwtMiAtLWFwaS1rZXkgWU9VUi1BUEktS0VZIn0=)
+[![Add to GitHub Copilot with Docker](https://github.com/kruskal-labs/toolfront/blob/main/img/buttons/copilot_docker.png?raw=true)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22antidmg%2Ftoolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D)
 
 <br>
 
