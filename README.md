@@ -57,6 +57,9 @@ uvx toolfront "DATABASE-URL-1" "DATABASE-URL-2" [...] --api-key "YOUR-API-KEY"
 ```
 
 > [!TIP]
+> **API Key**: The API key is currently in beta for collaborative learning. Contact us at support@kruskal.ai or join our [Discord server](https://discord.gg/rRyM7zkZTf) to request access.
+
+> [!TIP]
 > **Version control**: Use `toolfront` to get the latest version automatically, or pin to a specific version e.g. `toolfront==0.1.0`. This applies to both direct commands and MCP configuration.
 
 ---
@@ -194,6 +197,14 @@ Run the `uvx toolfront` or `docker run` commands with your database URLs directl
 If you're still having trouble, double-check your database URLs using the examples in the [Databases section](#databases) above.
 
 </details>
+
+## Support & Community
+
+Need help with ToolFront? We're here to assist:
+
+- **Email**: support@kruskal.ai for technical support and questions
+- **Discord**: Join our [community server](https://discord.gg/rRyM7zkZTf) for real-time help and discussions
+- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/kruskal-labs/toolfront/issues)
 
 ## Contributing
 
