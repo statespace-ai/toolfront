@@ -1,7 +1,7 @@
 <br>
 <div align="center"> 
-<img alt="toolfront" src="img/logo/toolfront_logo_light.svg#gh-light-mode-only" width="80%">
-<img alt="toolfront" src="img/logo/toolfront_logo_dark.svg#gh-dark-mode-only" width="80%">
+<img alt="toolfront" src="https://github.com/kruskal-labs/toolfront/blob/main/img/logo/toolfront_logo_light.png#gh-light-mode-only" width="80%">
+<img alt="toolfront" src="https://github.com/kruskal-labs/toolfront/blob/main/img/logo/toolfront_logo_dark.png#gh-dark-mode-only" width="80%">
 
 </div>
 
@@ -9,18 +9,18 @@
 <br>
 
 > AI agents lack context about your databases, while teams keep rewriting the same queries because past work often gets lost. 
-> ToolFront connects agents to your databases and feeds them your team's proven query patterns, so both agents and teammates can learn from each other and and ship faster.
+> ToolFront connects agents to your databases and feeds them your team's proven query patterns, so both agents and teammates can learn from each other and ship faster.
 
 
 ## Features
 
-- **⚡ One-step setup**: Connect coding agent like Cursor, GitHub Copilot, and Claude to all your databases with a single command.
+- **⚡ One-step setup**: Connect coding agents like Cursor, GitHub Copilot, and Claude to all your databases with a single command.
 - **🔒 Privacy-first**: Your data never leaves your machine, and is only shared between agents and databases through a secure MCP server.
 - **🧠 Collaborative learning**: The more your team uses ToolFront, the better your AI agents understand your databases and query patterns.
 
 ## Quickstart
 
-ToolFront runs on your computer through an [MCP](https://modelcontextprotocol.io/)  server, a secure protocol that lets apps provide context with LLMs models.
+ToolFront runs on your computer through an [MCP](https://modelcontextprotocol.io/) server, a secure protocol that lets apps provide context to LLM models.
 
 ### Prerequisites
 You'll need [uv](https://docs.astral.sh/uv/) or [Docker](https://www.docker.com/) to run the MCP server, and optionally an API key to activate collaborative learning.
@@ -86,7 +86,7 @@ Add this to your MCP config file to connect coding agents to ToolFront with Dock
 }
 ```
 
-Alternatively, run the following command to download and pull and run the ToolFront MCP container:
+Alternatively, run the following command to download, pull, and run the ToolFront MCP container:
 
 ```bash
 docker run antidmg/toolfront "DATABASE-URL-1" "DATABASE-URL-2" [...] --api-key "YOUR-API-KEY"
@@ -103,7 +103,7 @@ Data teams keep rewriting the same queries because past work often gets siloed, 
 
 ## Model Context Protocol (MCP)
 
-ToolFront's' MCP server comes with seven database tools for AI agents.
+ToolFront's MCP server comes with seven database tools for AI agents.
 
 
 ### Databases
@@ -119,7 +119,7 @@ When configuring ToolFront, use the fully-specified connection URL for your data
 | Snowflake | `snowflake://user:pass@account/db` |
 | SQLite | `sqlite:///path/to/db.sqlite` |
 
-More databses coming soon!
+More databases coming soon!
 
 ### Tools
 
@@ -133,7 +133,7 @@ ToolFront provides AI agents with the following database tools:
 | `inspect` | Inspects table schemas, showing column names, data types, and constraints |
 | `sample` | Retrieves sample rows from tables to understand data content and format |
 | `query` | Executes read-only SQL queries against databases with error handling |
-| `learn` | Retrieves relevant queries or tables for in-context learning|
+| `learn` | Retrieves relevant queries or tables for in-context learning |
 
 ## FAQ
 
@@ -141,14 +141,23 @@ ToolFront provides AI agents with the following database tools:
 <summary><strong>How is ToolFront different from other database MCPs?</strong></summary>
 <br>
 
-Two key advantages: collaborative learning, multi-database support. Most database MCPs just expose raw database operations, but ToolFront teaches your AI agents successful query patterns to help them agents understand your specific schemas. ToolFront works seamlessly across multiple database types with a unified interface, while other MCPs typically focus on single database types.
+ToolFront has three key advantages: **multi-database support**, **privacy-first architecture**, and **collaborative learning**.
+
+**Multi-database support**: While some general-purpose MCP servers happen to support multiple databases, most database MCPs only work with one database at a time, forcing you to manage separate MCP servers for each connection. ToolFront connects to all your databases in one place.
+
+**Privacy-first architecture**: Other multi-database solutions route your data through the cloud, which racks up egress fees and creates serious privacy, security, and access control issues. ToolFront keeps everything local.
+
+**Collaborative learning**: Database MCPs just expose raw database operations. ToolFront goes further by teaching your AI agents successful query patterns from your team's work, helping them learn your specific schemas and data relationships to improve over time.
 
 </details>
 
 <details>
 <summary><strong>How is collaborative learning different from agent memory?</strong></summary>
+<br>
 
-Agent memory stores conversation history for individual users. ToolFront creates a shared knowledge base that works across your entire team. When one team member successfully queries a database, that pattern helps other team members and AI agents with similar tasks. It's organization-wide learning instead of individual conversation memory.
+Agent memory stores conversation histories for individuals, whereas ToolFront's collaborative learning remembers relational query patterns across your team and databases.
+
+When one teammate queries a database, that knowledge becomes available to other team members using ToolFront. The system gets smarter over time by learning from your team's collective database interactions.
 
 </details>
 
@@ -156,7 +165,7 @@ Agent memory stores conversation history for individual users. ToolFront creates
 <summary><strong>What data is collected during collaborative learning?</strong></summary>
 <br>
 
-Only query patterns and AI-generated descriptions are collected never your actual database content. Your personal information and sensitive data always stay on your machine. See the `query` and `learn` functions in [tools.py](src/toolfront/tools.py) for implementation details.
+With an API key, ToolFront only logs the query syntax and their descriptions generated by your AI agents. It never collects your actual database content or personal information. For details, see the `query` and `learn` functions in [tools.py](src/toolfront/tools.py).
 
 </details>
 
