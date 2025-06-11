@@ -48,6 +48,6 @@ class TestConfigValues:
 
     def test_backend_url_format(self):
         """Test that BACKEND_URL has expected format."""
-        # Should be local development URL
-        assert BACKEND_URL.startswith("http://")
-        assert "8001" in BACKEND_URL  # Expected port
+        # Should be production API URL
+        assert BACKEND_URL.startswith("https://")
+        assert "api.kruskal.ai" in BACKEND_URL
