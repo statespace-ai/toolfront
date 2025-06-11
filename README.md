@@ -50,14 +50,14 @@ Add this to your MCP config file to connect coding agents to ToolFront with UV:
 }
 ```
 
+> [!TIP]
+> **API Key**: The API key is currently in beta for collaborative learning. Contact us at support@kruskal.ai or join our [Discord server](https://discord.gg/rRyM7zkZTf) to request access.
+
 Alternatively, run `uvx toolfront` to download and start the ToolFront MCP server:
 
 ```bash
 uvx toolfront "DATABASE-URL-1" "DATABASE-URL-2" [...] --api-key "YOUR-API-KEY"
 ```
-
-> [!TIP]
-> **API Key**: The API key is currently in beta for collaborative learning. Contact us at support@kruskal.ai or join our [Discord server](https://discord.gg/rRyM7zkZTf) to request access.
 
 > [!TIP]
 > **Version control**: Use `toolfront` to get the latest version automatically, or pin to a specific version e.g. `toolfront==0.1.0`. This applies to both direct commands and MCP configuration.
@@ -126,7 +126,7 @@ When configuring ToolFront, use the fully-specified connection URL for your data
 | Snowflake | `snowflake://user:pass@account/db` |
 | SQLite | `sqlite:///path/to/db.sqlite` |
 
-More databases coming soon!
+Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
 ### Tools
 
