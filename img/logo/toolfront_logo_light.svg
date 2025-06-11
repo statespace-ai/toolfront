@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 778.32 204">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #333;
+        font-family: Montserrat-Bold, Montserrat;
+        font-size: 60px;
+        font-weight: 700;
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-2, .cls-3, .cls-4, .cls-5, .cls-6, .cls-7 {
+        stroke-width: 0px;
+      }
+
+      .cls-8 {
+        letter-spacing: .24em;
+      }
+
+      .cls-9 {
+        letter-spacing: .25em;
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient-3);
+        filter: url(#drop-shadow-2);
+      }
+
+      .cls-4 {
+        fill: url(#linear-gradient-4);
+        filter: url(#drop-shadow-3);
+      }
+
+      .cls-5 {
+        fill: url(#linear-gradient-2);
+        filter: url(#drop-shadow-1);
+      }
+
+      .cls-6 {
+        opacity: .5;
+      }
+
+      .cls-6, .cls-7 {
+        fill: #9b5fa9;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="118" y1="98" x2="150" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9b5fa9"/>
+      <stop offset="1" stop-color="#c47ade"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="150" y1="112" x2="174" y2="112" xlink:href="#linear-gradient"/>
+    <filter id="drop-shadow-1" filterUnits="userSpaceOnUse">
+      <feOffset dx="0" dy="0"/>
+      <feGaussianBlur result="blur" stdDeviation="10"/>
+      <feFlood flood-color="#000" flood-opacity=".5"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <linearGradient id="linear-gradient-3" x1="30" y1="102" x2="174" y2="102" xlink:href="#linear-gradient"/>
+    <filter id="drop-shadow-2" filterUnits="userSpaceOnUse">
+      <feOffset dx="0" dy="0"/>
+      <feGaussianBlur result="blur-2" stdDeviation="10"/>
+      <feFlood flood-color="#000" flood-opacity=".5"/>
+      <feComposite in2="blur-2" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <linearGradient id="linear-gradient-4" y1="141.27" x2="174" y2="141.27" xlink:href="#linear-gradient"/>
+    <filter id="drop-shadow-3" filterUnits="userSpaceOnUse">
+      <feOffset dx="0" dy="0"/>
+      <feGaussianBlur result="blur-3" stdDeviation="10"/>
+      <feFlood flood-color="#000" flood-opacity=".5"/>
+      <feComposite in2="blur-3" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <path class="cls-2" d="m150,86h-28.67c-1.84,0-3.33,1.49-3.33,3.33v17.33c0,1.84,1.49,3.33,3.33,3.33h28.67v-24Z"/>
+    <path class="cls-5" d="m150,86h0v52h24v-28h0c-9.37-9.37-14.63-14.63-24-24Z"/>
+    <polygon class="cls-7" points="94 174 94 174 94 142 94 174"/>
+    <path class="cls-3" d="m174,34.44c0-2.45-1.99-4.44-4.44-4.44H34.44c-2.45,0-4.44,1.99-4.44,4.44v23.11c0,2.45,1.99,4.44,4.44,4.44h23.11c2.45,0,4.44,1.99,4.44,4.44v75.56c12.5,12.5,19.5,19.5,32,32h0v-107.56c0-2.45,1.99-4.44,4.44-4.44h71.11c2.45,0,4.44-1.99,4.44-4.44v-23.11Z"/>
+    <path class="cls-4" d="m118,140.53v32c32.46-4.08,56-16.21,56-30.53v-32c0,14.33-23.54,26.46-56,30.53Z"/>
+    <path class="cls-6" d="m94,142v32c8.36,0,16.42-.51,24-1.47v-32c-7.58.95-15.64,1.47-24,1.47Z"/>
+    <text class="cls-1" transform="translate(250.68 120)"><tspan class="cls-8" x="0" y="0">T</tspan><tspan class="cls-9" x="51.48" y="0">OOLFRONT</tspan></text>
+  </g>
+</svg>
