@@ -50,9 +50,6 @@ Add this to your MCP config file to connect coding agents to ToolFront with UV:
 }
 ```
 
-> [!TIP]
-> **API Key**: The API key is currently in beta for collaborative learning. Contact us at support@kruskal.ai or join our [Discord server](https://discord.gg/rRyM7zkZTf) to request access.
-
 Alternatively, run `uvx toolfront` to download and start the ToolFront MCP server:
 
 ```bash
@@ -101,12 +98,15 @@ docker run -i antidmg/toolfront "DATABASE-URL-1" "DATABASE-URL-2" [...] --api-ke
 
 ## Collaborative In-context Learning
 
-
-Data teams keep rewriting the same queries because past work often gets siloed, scattered, or lost. ToolFront teaches AI agents how your team works with your databases through [in-context learning](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html#in-context-learning-key-concept). When provided with an API key, your agents will:
+Data teams keep rewriting the same queries because past work often gets siloed, scattered, or lost. ToolFront teaches AI agents how your team works with your databases through [in-context learning](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html#in-context-learning-key-concept). With ToolFront, your agents can:
 
 - Reason about historical query patterns
 - Remember relevant tables and schemas
 - Reference your and your teammates' work
+
+> [!NOTE]
+> In-context learning is currently in open beta. To request an API key, please email Esteban at [esteban@kruskal.ai](mailto:esteban@kruskal.ai).
+
 
 ## Model Context Protocol (MCP)
 
@@ -202,7 +202,6 @@ If you're still having trouble, double-check your database URLs using the exampl
 
 Need help with ToolFront? We're here to assist:
 
-- **Email**: support@kruskal.ai for technical support and questions
 - **Discord**: Join our [community server](https://discord.gg/rRyM7zkZTf) for real-time help and discussions
 - **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/kruskal-labs/toolfront/issues)
 
