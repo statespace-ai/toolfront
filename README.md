@@ -3,6 +3,9 @@
 <img alt="toolfront" src="https://github.com/kruskal-labs/toolfront/blob/main/img/logo/toolfront_logo_light.png#gh-light-mode-only" width="80%">
 <img alt="toolfront" src="https://github.com/kruskal-labs/toolfront/blob/main/img/logo/toolfront_logo_dark.png#gh-dark-mode-only" width="80%">
 
+[![Test Suite](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml/badge.svg)](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml)
+[![Discord](https://img.shields.io/discord/1323415085011701870?label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/rRyM7zkZTf)
+
 </div>
 
 <br>
