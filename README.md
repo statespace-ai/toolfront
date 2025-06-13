@@ -33,7 +33,7 @@ ToolFront runs on your computer through an [MCP](https://modelcontextprotocol.io
 
 - **[uv](https://docs.astral.sh/uv/)** or **[Docker](https://www.docker.com/)** to run the MCP server (we recommend UV)
 - **Database connection URLs** of your databases - [see below](#databases)
-- **API key** (optional) to activate collaborative learning - [see below](#collaborative-incontext-learning)
+- **API key** (optional) to activate collaborative learning - [see below](#collaborative-in-context-learning)
 
 ### Run ToolFront in your IDE
 
