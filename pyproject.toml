@@ -61,6 +61,10 @@ test = [
     "pytest-asyncio>=0.21.0",
 ]
 
+databricks = [
+    "databricks-sql-connector>=2.7.0",
+]
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
