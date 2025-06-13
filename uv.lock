@@ -2061,6 +2061,7 @@ dependencies = [
     { name = "async-lru" },
     { name = "asyncpg" },
     { name = "click" },
+    { name = "databricks-sql-connector" },
     { name = "db-dtypes" },
     { name = "duckdb" },
     { name = "duckdb-engine" },
@@ -2084,9 +2085,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-databricks = [
-    { name = "databricks-sql-connector" },
-]
 test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2107,7 +2105,7 @@ requires-dist = [
     { name = "async-lru", specifier = ">=2.0.5" },
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "click", specifier = ">=8.1.8" },
-    { name = "databricks-sql-connector", marker = "extra == 'databricks'", specifier = ">=2.7.0" },
+    { name = "databricks-sql-connector", specifier = ">=2.7.0" },
     { name = "db-dtypes", specifier = ">=1.4.3" },
     { name = "duckdb", specifier = ">=1.2.2" },
     { name = "duckdb-engine", specifier = ">=0.17.0" },
@@ -2131,7 +2129,7 @@ requires-dist = [
     { name = "sqlalchemy-bigquery", specifier = ">=1.14.1" },
     { name = "sqlalchemy-utils", specifier = ">=0.41.2" },
 ]
-provides-extras = ["test", "databricks"]
+provides-extras = ["test"]
 
 [package.metadata.requires-dev]
 dev = [

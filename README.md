@@ -142,8 +142,6 @@ ToolFront supports the following databases:
 | Snowflake | `snowflake://user:pass@account/db` |
 | SQLite | `sqlite:///path/to/db.sqlite` |
 
-For detailed information on the Databricks integration, see [DATABRICKS_INTEGRATION.md](DATABRICKS_INTEGRATION.md).
-
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
 > [!TIP]

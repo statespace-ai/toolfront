@@ -41,10 +41,7 @@ class Databricks(Database):
         try:
             from databricks import sql
         except ImportError:
-            raise DatabaseError(
-                "databricks-sql-connector package is required for Databricks integration. "
-                "Install with: pip install toolfront[databricks]"
-            )
+            raise DatabaseError("databricks-sql-connector package is required for Databricks integration")
 
         hostname = self.url.host
         http_path = self.url.query.get("http_path", "")
