@@ -1,7 +1,6 @@
 """Databricks integration for Toolfront."""
 
 import logging
-from typing import Optional
 
 import pandas as pd
 from async_lru import alru_cache
@@ -57,19 +56,21 @@ class Databricks(Database):
         logger.debug(f"Connecting to Databricks: hostname={hostname}")
 
         try:
-            with sql.connect(
-                server_hostname=hostname,
-                http_path=http_path,
-                access_token=token,
-                _timeout=30
-            ) as connection:
-                with connection.cursor() as cursor:
-                    cursor.execute(code)
-                    if cursor.description:
-                        columns = [column[0] for column in cursor.description]
-                        data = cursor.fetchall()
-                        return pd.DataFrame(data, columns=columns)
-                    return pd.DataFrame()
+            with (
+                sql.connect(
+                    server_hostname=hostname,
+                    http_path=http_path,
+                    access_token=token,
+                    _timeout=30
+                ) as connection,
+                connection.cursor() as cursor,
+            ):
+                cursor.execute(code)
+                if cursor.description:
+                    columns = [column[0] for column in cursor.description]
+                    data = cursor.fetchall()
+                    return pd.DataFrame(data, columns=columns)
+                return pd.DataFrame()
         except Exception as e:
             raise DatabaseError(f"Query execution failed: {e}")
 
