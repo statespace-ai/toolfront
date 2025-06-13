@@ -33,8 +33,7 @@ async def _get_context_field(field: str, ctx: Context) -> Any:
 
 
 async def test(
-    ctx: Context,
-    connection: Connection = Field(..., description="The data source to test.")
+    ctx: Context, connection: Connection = Field(..., description="The data source to test.")
 ) -> dict[str, Any]:
     """
     Test whether a data source is connected.
@@ -180,12 +179,14 @@ async def scan(
         logger.debug(f"Connected to database: {connection.url}")
         result = await db.scan_tables(pattern=pattern, limit=limit, mode=mode)
         logger.debug(f"Scan completed successfully. Found {len(result)} matching tables.")
-        
+
         return {"tables": result}  # Return as dict with key
     except Exception as e:
         logger.error(f"Failed to scan tables: {e}", exc_info=True)
         if "pattern" in str(e).lower() and mode == MatchMode.REGEX:
-            raise ConnectionError(f"Failed to search {connection.url} - Invalid regex pattern: {pattern}. Please try a different pattern or use a different matching mode.")
+            raise ConnectionError(
+                f"Failed to search {connection.url} - Invalid regex pattern: {pattern}. Please try a different pattern or use a different matching mode."
+            )
         elif "connection" in str(e).lower() or "connect" in str(e).lower():
             raise ConnectionError(f"Failed to connect to {connection.url} - {str(e)}")
         else:

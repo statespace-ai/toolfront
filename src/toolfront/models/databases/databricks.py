@@ -27,13 +27,13 @@ class Databricks(Database):
         # Username/password format: databricks://token:actual_token@host
         if self.url.username == "token" and self.url.password:
             return self.url.password
-        
+
         # Query parameter formats
         return (
-            self.url.query.get("token") or
-            self.url.query.get("access_token") or
-            self.url.query.get("personal_access_token") or
-            ""
+            self.url.query.get("token")
+            or self.url.query.get("access_token")
+            or self.url.query.get("personal_access_token")
+            or ""
         )
 
     async def query(self, code: str) -> pd.DataFrame:
@@ -58,10 +58,7 @@ class Databricks(Database):
         try:
             with (
                 sql.connect(
-                    server_hostname=hostname,
-                    http_path=http_path,
-                    access_token=token,
-                    _timeout=30
+                    server_hostname=hostname, http_path=http_path, access_token=token, _timeout=30
                 ) as connection,
                 connection.cursor() as cursor,
             ):
@@ -80,11 +77,11 @@ class Databricks(Database):
             return []
 
         columns = data.columns.tolist()
-        
+
         # Standard Databricks formats
-        if 'database' in columns and 'tableName' in columns:
+        if "database" in columns and "tableName" in columns:
             return [f"{row['database']}.{row['tableName']}" for _, row in data.iterrows()]
-        elif 'databaseName' in columns and 'tableName' in columns:
+        elif "databaseName" in columns and "tableName" in columns:
             return [f"{row['databaseName']}.{row['tableName']}" for _, row in data.iterrows()]
         elif len(columns) >= 2:
             return [f"{row[0]}.{row[1]}" for _, row in data.iterrows()]
@@ -100,7 +97,7 @@ class Databricks(Database):
             return self._format_table_names(data)
         except Exception as first_error:
             logger.warning(f"SHOW TABLES failed: {first_error}, trying information_schema")
-            
+
             try:
                 query = """
                     SELECT table_catalog, table_schema, table_name
@@ -109,12 +106,12 @@ class Databricks(Database):
                     ORDER BY table_catalog, table_schema, table_name
                 """
                 data = await self.query(query)
-                
+
                 if data.empty:
                     return []
-                    
+
                 return [f"{row[0]}.{row[1]}.{row[2]}" for _, row in data.iterrows()]
-                
+
             except Exception as second_error:
                 logger.error(f"Both table listing methods failed: {first_error}, {second_error}")
                 raise DatabaseError(f"Failed to get tables from Databricks: {second_error}") from second_error
@@ -125,19 +122,19 @@ class Databricks(Database):
             table_names = await self.get_tables()
             if not table_names:
                 return []
-                
+
             scan_methods = {
                 MatchMode.REGEX: self._scan_tables_regex,
                 MatchMode.JARO_WINKLER: self._scan_tables_jaro_winkler,
                 MatchMode.TF_IDF: self._scan_tables_tf_idf,
             }
-            
+
             scan_method = scan_methods.get(mode, self._scan_tables_regex)
             if mode not in scan_methods:
                 logger.warning(f"Unknown match mode: {mode}, falling back to regex")
-                
+
             return scan_method(table_names, pattern, limit)
-            
+
         except Exception as e:
             logger.error(f"Table scan failed for Databricks: {e}")
             raise DatabaseError(f"Failed to scan tables in Databricks: {e}") from e
@@ -157,7 +154,7 @@ class Databricks(Database):
             raise ValueError(f"Invalid table path: {table_path}")
 
         splits = table_path.split(".")
-        
+
         try:
             if len(splits) == 3:
                 catalog, schema, table = splits
@@ -171,7 +168,7 @@ class Databricks(Database):
                 return await self.query(f"DESCRIBE TABLE {table_path}")
             else:
                 raise ValueError(f"Invalid table path: {table_path}. Expected format: [catalog.]schema.table")
-                
+
         except Exception as e:
             logger.error(f"Failed to inspect table {table_path}: {e}")
             raise DatabaseError(f"Failed to inspect table {table_path}: {e}") from e
@@ -188,7 +185,7 @@ class Databricks(Database):
             return await self.query(f"SELECT * FROM {table_path} LIMIT {n}")
         except Exception as limit_error:
             logger.warning(f"LIMIT failed: {limit_error}, trying TABLESAMPLE")
-            
+
             try:
                 return await self.query(f"SELECT * FROM {table_path} TABLESAMPLE ({n} ROWS)")
             except Exception as sample_error:

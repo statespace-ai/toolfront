@@ -1,7 +1,7 @@
 """Unit tests for Databricks integration logic."""
 
-import pytest
 import pandas as pd
+import pytest
 from sqlalchemy.engine.url import make_url
 
 from toolfront.models.databases.databricks import Databricks
@@ -63,56 +63,47 @@ def test_extract_token_empty_when_missing():
 
 def test_format_table_names_standard_databricks():
     """Test table name formatting with standard Databricks columns."""
-    data = pd.DataFrame({
-        'database': ['catalog1', 'catalog1', 'catalog2'],
-        'tableName': ['table1', 'table2', 'table3']
-    })
+    data = pd.DataFrame({"database": ["catalog1", "catalog1", "catalog2"], "tableName": ["table1", "table2", "table3"]})
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     result = db._format_table_names(data)
-    expected = ['catalog1.table1', 'catalog1.table2', 'catalog2.table3']
+    expected = ["catalog1.table1", "catalog1.table2", "catalog2.table3"]
     assert result == expected
 
 
 def test_format_table_names_alternative_databricks():
     """Test table name formatting with alternative Databricks columns."""
-    data = pd.DataFrame({
-        'databaseName': ['catalog1', 'catalog1', 'catalog2'],
-        'tableName': ['table1', 'table2', 'table3']
-    })
+    data = pd.DataFrame(
+        {"databaseName": ["catalog1", "catalog1", "catalog2"], "tableName": ["table1", "table2", "table3"]}
+    )
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     result = db._format_table_names(data)
-    expected = ['catalog1.table1', 'catalog1.table2', 'catalog2.table3']
+    expected = ["catalog1.table1", "catalog1.table2", "catalog2.table3"]
     assert result == expected
 
 
 def test_format_table_names_fallback_two_columns():
     """Test table name formatting fallback with two columns."""
-    data = pd.DataFrame({
-        0: ['schema1', 'schema1', 'schema2'],
-        1: ['table1', 'table2', 'table3']
-    })
+    data = pd.DataFrame({0: ["schema1", "schema1", "schema2"], 1: ["table1", "table2", "table3"]})
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     result = db._format_table_names(data)
-    expected = ['schema1.table1', 'schema1.table2', 'schema2.table3']
+    expected = ["schema1.table1", "schema1.table2", "schema2.table3"]
     assert result == expected
 
 
 def test_format_table_names_single_column():
     """Test table name formatting with single column."""
-    data = pd.DataFrame({
-        0: ['table1', 'table2', 'table3']
-    })
+    data = pd.DataFrame({0: ["table1", "table2", "table3"]})
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     result = db._format_table_names(data)
-    expected = ['table1', 'table2', 'table3']
+    expected = ["table1", "table2", "table3"]
     assert result == expected
 
 
@@ -121,7 +112,7 @@ def test_format_table_names_empty_dataframe():
     data = pd.DataFrame()
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     result = db._format_table_names(data)
     assert result == []
 
@@ -130,9 +121,9 @@ def test_get_detailed_table_info_query():
     """Test SQL query generation for detailed table info."""
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     query = db._get_detailed_table_info("catalog1", "schema1", "table1")
-    
+
     assert "catalog1.information_schema.columns" in query
     assert "table_schema = 'schema1'" in query
     assert "table_name = 'table1'" in query
@@ -144,17 +135,17 @@ def test_get_detailed_table_info_query():
     assert "ORDER BY ordinal_position" in query
 
 
-@pytest.mark.asyncio 
+@pytest.mark.asyncio
 async def test_inspect_table_path_validation():
     """Test table path validation logic."""
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     # Test empty path
     with pytest.raises(ValueError, match="Invalid table path"):
         await db.inspect_table("")
-    
-    # Test invalid format  
+
+    # Test invalid format
     with pytest.raises(Exception, match="Invalid table path.*Expected format"):
         await db.inspect_table("single_name")
 
@@ -164,11 +155,11 @@ async def test_sample_table_path_validation():
     """Test sample table path validation logic."""
     url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
-    
+
     # Test empty path
     with pytest.raises(ValueError, match="Invalid table path"):
         await db.sample_table("")
-    
+
     # Test non-string path
     with pytest.raises(ValueError, match="Invalid table path"):
         await db.sample_table(None)
