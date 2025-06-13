@@ -32,14 +32,18 @@ async def _get_context_field(field: str, ctx: Context) -> Any:
     return getattr(getattr(getattr(ctx, "request_context", None), "lifespan_context", None), field, None)
 
 
-async def test(connection: Connection = Field(..., description="The data source to test.")) -> dict[str, Any]:
+async def test(
+    ctx: Context,
+    connection: Connection = Field(..., description="The data source to test.")
+) -> dict[str, Any]:
     """
     Test whether a data source is connected.
 
     Instructions:
     1. Only use this tool if you suspect the connection to a data source is not working, and want to troubleshoot it.
     """
-    db = await connection.connect()
+    url_map = await _get_context_field("url_map", ctx)
+    db = await connection.connect(url_map=url_map)
     result = await db.test_connection()
     return {"connected": result.connected, "message": result.message}
 
