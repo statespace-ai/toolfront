@@ -135,7 +135,7 @@ ToolFront supports the following databases:
 | Database | URL Example |
 |----------|-----|
 | BigQuery | `bigquery://project/dataset` |
-| Databricks | `databricks://token:YOUR_TOKEN@hostname/database?http_path=/path` (requires optional dependency `pip install toolfront[databricks]`) |
+| Databricks | `databricks://token:YOUR_TOKEN@hostname/database?http_path=/path` |
 | DuckDB | `duckdb:///path/to/db.duckdb` |
 | MySQL | `mysql://user:pass@host:port/db` |
 | PostgreSQL | `postgresql://user:pass@host:port/db` |
