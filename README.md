@@ -1,15 +1,11 @@
-<br>
-<div align="center"> 
-<img alt="toolfront" src="img/logo.png" width="61.8%">
-
-<br>
 
 [![Test Suite](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml/badge.svg)](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml)
 [![Discord](https://img.shields.io/discord/1323415085011701870?label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/rRyM7zkZTf)
 
+<br>
+<div align="center"> 
+<img alt="toolfront" src="img/logo.png" width="61.8%">
 </div>
-
-
 <br>
 
 > AI agents lack context about your databases, while teams keep rewriting the same queries because past work often gets lost. 
@@ -20,13 +16,13 @@
 
 - **⚡ One-step setup**: Connect coding agents like Cursor, GitHub Copilot, and Claude to all your databases with a single command or config.
 - **🔒 Privacy-first**: Your data never leaves your premises, and is only shared between agents and databases through a secure MCP server.
-- **🧠 Collaborative learning**: The more your team uses ToolFront, the better your AI agents understand your databases and query patterns.
+- **🧠 Collaborative learning**: The more your team uses ToolFront, the better your AI agents understand your databases and query patterns. Requires API key.
 
 <br>
-
 <div align="center">
 <img alt="databases" src="img/databases.png" width="61.8%">
 </div>
+
 
 ## Quickstart
 
@@ -39,16 +35,18 @@ ToolFront runs on your computer through an [MCP](https://modelcontextprotocol.io
 - **Database connection URLs** of your databases - [see below](#databases)
 - **API key** (optional) to activate collaborative learning - [see below](#collaborative-incontext-learning)
 
-### Setup ToolFront in your IDE
+### Run ToolFront in your IDE
 
 [![Add to Cursor with UV](img/buttons/button_cursor_uv.png)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoidXZ4IHRvb2xmcm9udCBEQVRBQkFTRS1VUkwtMSBEQVRBQkFTRS1VUkwtMiAtLWFwaS1rZXkgWU9VUi1BUEktS0VZIn0%3D) [![Add to GitHub Copilot with UV](img/buttons/button_copilot_uv.png)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22toolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--API-KEY%22%2C%22YOUR_API_KEY%22%5D%7D) [![Add to Cursor with Docker](img/buttons/button_cursor_docker.png)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoiZG9ja2VyIiwiYXJncyI6WyJydW4iLCItaSIsImFudGlkbWcvdG9vbGZyb250IiwiREFUQUJBU0UtVVJMLTEiLCJEQVRBQkFTRS1VUkwtMiIsIi0tYXBpLWtleSIsIllPVVItQVBJLUtFWSJdfQo=) [![Add to GitHub Copilot with Docker](img/buttons/button_copilot_docker.png)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22antidmg%2Ftoolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D)
 
 First, create an MCP config by clicking a setup button above or navigating to the MCP settings for your IDE:
 
-- **Cursor**: Settings → Cursor Settings → MCP Tools (or create `.cursor/mcp.json` file) - [Documentation](https://docs.cursor.com/context/model-context-protocol#manual-configuration)
-- **GitHub Copilot (VSCode)**: Copilot icon → Edit preferences → Copilot Chat → MCP - [Documentation](https://docs.github.com/en/copilot/customizing-copilot/using-model-context-protocol/extending-copilot-chat-with-mcp)
-- **Windsurf**: Plugins icon → Plugin Store → Add manually (or edit `~/.codeium/windsurf/mcp_config.json`) - [Documentation](https://docs.windsurf.com/windsurf/cascade/mcp)
-- **Claude Code**: `claude mcp add toolfront uvx toolfront [database-urls] --api-key YOUR-API-KEY` - [Documentation](https://docs.anthropic.com/en/docs/claude-code/mcp#configure-mcp-servers)
+| IDE | Setup Instructions | Documentation |
+|-----|-------------------|---------------|
+| **Cursor** | Settings → Cursor Settings → MCP Tools (or create `.cursor/mcp.json` file) | [Cursor Documentation](https://docs.cursor.com/context/model-context-protocol#manual-configuration) |
+| **GitHub Copilot (VSCode)** | Copilot icon → Edit preferences → Copilot Chat → MCP | [GitHub Copilot Documentation](https://docs.github.com/en/copilot/customizing-copilot/using-model-context-protocol/extending-copilot-chat-with-mcp) |
+| **Windsurf** | Plugins icon → Plugin Store → Add manually (or edit `~/.codeium/windsurf/mcp_config.json`) | [Windsurf Documentation](https://docs.windsurf.com/windsurf/cascade/mcp) |
+| **Claude Code** | Run `claude mcp add toolfront uvx toolfront [database-urls] --api-key YOUR-API-KEY` | [Claude Code Documentation](https://docs.anthropic.com/en/docs/claude-code/mcp#configure-mcp-servers) |
 
 Then, edit the MCP configuration with your database connection URLs and optional API key:
 
@@ -97,13 +95,16 @@ Then, edit the MCP configuration with your database connection URLs and optional
 </details>
 <br>
 
+You're all set! You can now ask your coding assistant about your databases.
+
+
 > [!TIP]
 > **Version control**: You can pin to specific versions for consistency. Use `toolfront==0.1.x` for UV or `antidmg/toolfront:0.1.x` for Docker.
 
 
-### Run ToolFront From Your Terminal
+### Run ToolFront from your Terminal
 
-You can also un ToolFront directly from your terminal with your database connection URLs and optional API key:
+To use ToolFront outside your IDE, run it directly from your terminal with your database URLs and optional API key:
 
 ```bash
 # Using UV
@@ -132,15 +133,15 @@ Data teams keep rewriting the same queries because past work often gets siloed, 
 
 ToolFront supports the following databases:
 
-| Database | URL Example |
-|----------|-----|
-| BigQuery | `bigquery://your-project-id?credentials_path=/path/to/service-account.json` |
-| Databricks | `databricks://token:YOUR_TOKEN@your-workspace.cloud.databricks.com/default?http_path=/sql/1.0/warehouses/warehouse_id` |
-| DuckDB | `duckdb:///path/to/db.duckdb` |
-| MySQL | `mysql://user:pass@host:port/db` |
-| PostgreSQL | `postgresql://user:pass@host:port/db` |
-| Snowflake | `snowflake://user:pass@account/db` |
-| SQLite | `sqlite:///path/to/db.sqlite` |
+| Database | URL Format | Documentation |
+|----------|------------|---------------|
+| BigQuery | `bigquery://{project-id}?credentials_path={path-to-service-account.json}` | [Google Cloud Docs](https://cloud.google.com/bigquery/docs/authentication) |
+| Databricks | `databricks://token:{token}@{workspace}.cloud.databricks.com/{catalog}?http_path={warehouse-path}` | [Databricks Docs](https://docs.databricks.com/integrations/jdbc-odbc-bi.html#get-connection-details) |
+| DuckDB | `duckdb://{path-to-database.duckdb}` | [DuckDB Docs](https://duckdb.org/docs/api/python/dbapi.html) |
+| MySQL | `mysql://{user}:{password}@{host}:{port}/{database}` | [MySQL Docs](https://dev.mysql.com/doc/connector-python/en/connector-python-connectargs.html) |
+| PostgreSQL | `postgres://{user}:{password}@{hostname}:{port}/{database-name}` | [PostgreSQL Docs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) |
+| Snowflake | `snowflake://{user}:{password}@{account}/{database}` | [Snowflake Docs](https://docs.snowflake.com/en/developer-guide/python-connector/python-connector-api#connection-parameters) |
+| SQLite | `sqlite://{path-to-database.sqlite}` | [SQLite Docs](https://docs.python.org/3/library/sqlite3.html#sqlite3.connect) |
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
@@ -151,15 +152,15 @@ Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolf
 
 MCP tools are functions that AI agents can call to interact with external systems. ToolFront comes with seven database tools:
 
-| Tool | Description |
-|------|-------------|
-| `test` | Tests whether a data source connection is working |
-| `discover` | Discovers and lists all configured databases and file sources |
-| `scan` | Searches for tables using regex, fuzzy matching, or TF-IDF similarity |
-| `inspect` | Inspects table schemas, showing column names, data types, and constraints |
-| `sample` | Retrieves sample rows from tables to understand data content and format |
-| `query` | Executes read-only SQL queries against databases with error handling |
-| `learn` | Retrieves relevant queries or tables for in-context learning |
+| Tool | Description | Requires API Key |
+|------|-------------|------------------|
+| `test` | Tests whether a data source connection is working | ✗ |
+| `discover` | Discovers and lists all configured databases and file sources | ✗ |
+| `scan` | Searches for tables using regex, fuzzy matching, or TF-IDF similarity | ✗ |
+| `inspect` | Inspects table schemas, showing column names, data types, and constraints | ✗ |
+| `sample` | Retrieves sample rows from tables to understand data content and format | ✗ |
+| `query` | Executes read-only SQL queries against databases with error handling | ✗ |
+| `learn` | Retrieves relevant queries or tables for in-context learning | ✓ |
 
 ## FAQ
 
