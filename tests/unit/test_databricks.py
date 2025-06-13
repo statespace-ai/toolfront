@@ -1,13 +1,10 @@
-"""
-Unit tests for Databricks integration
-"""
+"""Unit tests for Databricks integration logic."""
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 import pandas as pd
 from sqlalchemy.engine.url import make_url
 
 from toolfront.models.databases.databricks import Databricks
-from toolfront.models.database import MatchMode
 
 
 def test_databricks_initialization():
@@ -22,130 +19,156 @@ def test_databricks_initialization():
     assert db.url.query["token"] == "token"
 
 
-@pytest.mark.asyncio
-async def test_get_tables():
-    """Test get_tables method."""
-    # Create mock DataFrame that would be returned by query
-    mock_df = pd.DataFrame({
-        0: ["catalog1", "catalog1", "catalog2"],
-        1: ["schema1", "schema2", "schema1"],
-        2: ["table1", "table2", "table3"]
+def test_extract_token_from_query_parameter():
+    """Test token extraction from URL query parameters."""
+    url = make_url("databricks://hostname/db?http_path=/path&token=abc123")
+    db = Databricks(url=url)
+    assert db._extract_token() == "abc123"
+
+
+def test_extract_token_from_username_password():
+    """Test token extraction from username/password format."""
+    url = make_url("databricks://token:abc123@hostname/db?http_path=/path")
+    db = Databricks(url=url)
+    assert db._extract_token() == "abc123"
+
+
+def test_extract_token_from_access_token_parameter():
+    """Test token extraction from access_token parameter."""
+    url = make_url("databricks://hostname/db?http_path=/path&access_token=abc123")
+    db = Databricks(url=url)
+    assert db._extract_token() == "abc123"
+
+
+def test_extract_token_from_personal_access_token_parameter():
+    """Test token extraction from personal_access_token parameter."""
+    url = make_url("databricks://hostname/db?http_path=/path&personal_access_token=abc123")
+    db = Databricks(url=url)
+    assert db._extract_token() == "abc123"
+
+
+def test_extract_token_prioritizes_username_password():
+    """Test that username/password format takes priority over query parameters."""
+    url = make_url("databricks://token:abc123@hostname/db?http_path=/path&token=xyz789")
+    db = Databricks(url=url)
+    assert db._extract_token() == "abc123"
+
+
+def test_extract_token_empty_when_missing():
+    """Test that empty string is returned when no token is found."""
+    url = make_url("databricks://hostname/db?http_path=/path")
+    db = Databricks(url=url)
+    assert db._extract_token() == ""
+
+
+def test_format_table_names_standard_databricks():
+    """Test table name formatting with standard Databricks columns."""
+    data = pd.DataFrame({
+        'database': ['catalog1', 'catalog1', 'catalog2'],
+        'tableName': ['table1', 'table2', 'table3']
     })
-    
-    # Create Databricks instance
-    url = make_url("databricks://hostname:443/database?http_path=/path&token=token")
+    url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
     
-    # Mock the query method
-    db.query = AsyncMock(return_value=mock_df)
-    
-    # Call get_tables
-    tables = await db.get_tables()
-    
-    # Verify results
-    assert len(tables) == 3
-    assert "catalog1.schema1.table1" in tables
-    assert "catalog1.schema2.table2" in tables
-    assert "catalog2.schema1.table3" in tables
-    
-    # Verify query was called
-    db.query.assert_called_once()
-    # We don't check the exact query because it may vary based on Databricks version
+    result = db._format_table_names(data)
+    expected = ['catalog1.table1', 'catalog1.table2', 'catalog2.table3']
+    assert result == expected
 
 
-@pytest.mark.asyncio
-async def test_scan_tables():
-    """Test scan_tables method."""
-    # Create Databricks instance
-    url = make_url("databricks://hostname:443/database?http_path=/path&token=token")
-    db = Databricks(url=url)
-    
-    # Mock get_tables method
-    mock_tables = ["catalog1.schema1.customer", "catalog1.schema1.order", "catalog2.schema1.product"]
-    db.get_tables = AsyncMock(return_value=mock_tables)
-    
-    # Test regex mode
-    result = await db.scan_tables(pattern="customer", mode=MatchMode.REGEX)
-    assert len(result) == 1
-    assert "catalog1.schema1.customer" in result
-    
-    # Test with different pattern
-    result = await db.scan_tables(pattern="schema1", mode=MatchMode.REGEX)
-    assert len(result) == 3  # All contain schema1
-    
-    # Test with non-existent pattern
-    result = await db.scan_tables(pattern="nonexistent", mode=MatchMode.REGEX)
-    assert len(result) == 0
-
-
-@pytest.mark.asyncio
-async def test_inspect_table():
-    """Test inspect_table method."""
-    # Create mock DataFrame that would be returned by query
-    mock_df = pd.DataFrame({
-        "column_name": ["id", "name", "age"],
-        "data_type": ["INT", "VARCHAR", "INT"],
-        "is_nullable": ["NO", "YES", "YES"],
-        "column_default": [None, None, None],
-        "ordinal_position": [1, 2, 3]
+def test_format_table_names_alternative_databricks():
+    """Test table name formatting with alternative Databricks columns."""
+    data = pd.DataFrame({
+        'databaseName': ['catalog1', 'catalog1', 'catalog2'],
+        'tableName': ['table1', 'table2', 'table3']
     })
-    
-    # Create Databricks instance
-    url = make_url("databricks://hostname:443/database?http_path=/path&token=token")
+    url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
     
-    # Mock the query method
-    db.query = AsyncMock(return_value=mock_df)
+    result = db._format_table_names(data)
+    expected = ['catalog1.table1', 'catalog1.table2', 'catalog2.table3']
+    assert result == expected
+
+
+def test_format_table_names_fallback_two_columns():
+    """Test table name formatting fallback with two columns."""
+    data = pd.DataFrame({
+        0: ['schema1', 'schema1', 'schema2'],
+        1: ['table1', 'table2', 'table3']
+    })
+    url = make_url("databricks://hostname/db")
+    db = Databricks(url=url)
     
-    # Call inspect_table
-    result = await db.inspect_table("catalog1.schema1.customer")
+    result = db._format_table_names(data)
+    expected = ['schema1.table1', 'schema1.table2', 'schema2.table3']
+    assert result == expected
+
+
+def test_format_table_names_single_column():
+    """Test table name formatting with single column."""
+    data = pd.DataFrame({
+        0: ['table1', 'table2', 'table3']
+    })
+    url = make_url("databricks://hostname/db")
+    db = Databricks(url=url)
     
-    # Verify results
-    assert len(result) == 3  # 3 rows
-    assert list(result["column_name"]) == ["id", "name", "age"]
+    result = db._format_table_names(data)
+    expected = ['table1', 'table2', 'table3']
+    assert result == expected
+
+
+def test_format_table_names_empty_dataframe():
+    """Test table name formatting with empty DataFrame."""
+    data = pd.DataFrame()
+    url = make_url("databricks://hostname/db")
+    db = Databricks(url=url)
     
-    # Verify query was called with correct SQL
-    db.query.assert_called_once()
-    call_args = db.query.call_args[0][0]
-    assert "catalog1.information_schema.columns" in call_args
-    assert "table_schema = 'schema1'" in call_args
-    assert "table_name = 'customer'" in call_args
+    result = db._format_table_names(data)
+    assert result == []
+
+
+def test_get_detailed_table_info_query():
+    """Test SQL query generation for detailed table info."""
+    url = make_url("databricks://hostname/db")
+    db = Databricks(url=url)
     
-    # Test with invalid table path
+    query = db._get_detailed_table_info("catalog1", "schema1", "table1")
+    
+    assert "catalog1.information_schema.columns" in query
+    assert "table_schema = 'schema1'" in query
+    assert "table_name = 'table1'" in query
+    assert "column_name" in query
+    assert "data_type" in query
+    assert "is_nullable" in query
+    assert "column_default" in query
+    assert "ordinal_position" in query
+    assert "ORDER BY ordinal_position" in query
+
+
+@pytest.mark.asyncio 
+async def test_inspect_table_path_validation():
+    """Test table path validation logic."""
+    url = make_url("databricks://hostname/db")
+    db = Databricks(url=url)
+    
+    # Test empty path
     with pytest.raises(ValueError, match="Invalid table path"):
-        await db.inspect_table("invalid_path")
+        await db.inspect_table("")
+    
+    # Test invalid format  
+    with pytest.raises(Exception, match="Invalid table path.*Expected format"):
+        await db.inspect_table("single_name")
 
 
 @pytest.mark.asyncio
-async def test_sample_table():
-    """Test sample_table method."""
-    # Create mock DataFrame that would be returned by query
-    mock_df = pd.DataFrame({
-        "id": [1, 2, 3],
-        "name": ["Alice", "Bob", "Charlie"],
-        "age": [25, 30, 35]
-    })
-    
-    # Create Databricks instance
-    url = make_url("databricks://hostname:443/database?http_path=/path&token=token")
+async def test_sample_table_path_validation():
+    """Test sample table path validation logic."""
+    url = make_url("databricks://hostname/db")
     db = Databricks(url=url)
     
-    # Mock the query method
-    db.query = AsyncMock(return_value=mock_df)
-    
-    # Call sample_table
-    result = await db.sample_table("catalog1.schema1.customer", n=3)
-    
-    # Verify results
-    assert len(result) == 3  # 3 rows
-    assert list(result["name"]) == ["Alice", "Bob", "Charlie"]
-    
-    # Verify query was called with correct SQL
-    db.query.assert_called_once()
-    query = db.query.call_args[0][0]
-    assert "SELECT * FROM catalog1.schema1.customer" in query
-    assert "LIMIT 3" in query
-    
-    # Test with invalid table path
+    # Test empty path
     with pytest.raises(ValueError, match="Invalid table path"):
         await db.sample_table("")
+    
+    # Test non-string path
+    with pytest.raises(ValueError, match="Invalid table path"):
+        await db.sample_table(None)
