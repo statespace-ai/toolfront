@@ -123,7 +123,7 @@ When configuring ToolFront, use the fully-specified connection URL for your data
 | Database | URL Example |
 |----------|-----|
 | BigQuery | `bigquery://project/dataset` |
-| Databricks | `databricks://hostname:port/database?http_path=/path&token=token` (requires optional dependency `pip install toolfront[databricks]`) |
+| Databricks | `databricks://token:YOUR_TOKEN@hostname/database?http_path=/path` (requires optional dependency `pip install toolfront[databricks]`) |
 | DuckDB | `duckdb:///path/to/db.duckdb` |
 | MySQL | `mysql://user:pass@host:port/db` |
 | PostgreSQL | `postgresql://user:pass@host:port/db` |
