@@ -126,7 +126,7 @@ Data teams keep rewriting the same queries because past work often gets siloed, 
 - Reference your and your teammates' work
 
 > [!NOTE]
-> In-context learning is currently in open beta. To request an API key, please email Esteban at [esteban@kruskal.ai](mailto:esteban@kruskal.ai).
+> In-context learning is currently in open beta. To request an API key, please email Esteban at [esteban@kruskal.ai](mailto:esteban@kruskal.ai) or hop into our [Discord server](https://discord.gg/rRyM7zkZTf).
 
 
 ## Databases
