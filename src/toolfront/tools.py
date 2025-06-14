@@ -166,9 +166,9 @@ async def scan(
     Matching Instructions:
     1. Choose from three matching modes:
         - regex: Returns tables matching a regular expression pattern (case-insensitive). Pattern must be a valid regex expression.
-        - BM25: Returns tables using BM25 (Best Match 25) ranking algorithm (case-insensitive). Pattern must be a sentence, phrase, or space-separated words.
-        - Jaro-Winkler: Returns tables using Jaro-Winkler similarity algorithm (case-insensitive). Pattern must be a sentence, phrase, or space-separated words.
-    2. It is recommended to start with Jaro-Winkler similarity algorithm for initial fuzzy matching, and then switch to BM25 and regex for more precise matching.
+        - tf_idf: Returns tables using TF-IDF (Term Frequency-Inverse Document Frequency) ranking algorithm (case-insensitive). Pattern must be a sentence, phrase, or space-separated words.
+        - jaro_winkler: Returns tables using Jaro-Winkler similarity algorithm (case-insensitive). Pattern must be a sentence, phrase, or space-separated words.
+    2. It is recommended to start with Jaro-Winkler similarity algorithm for initial fuzzy matching, and then switch to TF-IDF and regex for more precise matching.
     """
     logger = logging.getLogger("toolfront")
     logger.debug(f"Scanning tables with pattern '{pattern}', mode '{mode}', limit {limit}")
