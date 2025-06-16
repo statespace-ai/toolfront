@@ -76,7 +76,7 @@ Then, edit the MCP configuration with your database connection URLs and optional
 
 ```json
 {
-  # Rest of config file
+  // Rest of config file
   "toolfront": {
     "command": "docker",
     "args": [
@@ -85,7 +85,7 @@ Then, edit the MCP configuration with your database connection URLs and optional
       "antidmg/toolfront",
       "snowflake://user:pass@org",
       "postgresql://user:pass@host:port/db",
-      # Add other database URLs here
+      // Add other database URLs here
       "--api-key", "YOUR-API-KEY"  // Optional
     ]
   }
