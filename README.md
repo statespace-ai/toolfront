@@ -62,7 +62,7 @@ Then, edit the MCP configuration with your database connection URLs and optional
       "toolfront",
       "snowflake://user:pass@org",
       "postgresql://user:pass@host:port/db",
-      // Add other database URLs here
+      # Add other database URLs here
       "--api-key", "YOUR-API-KEY"  // Optional
     ]
   }
@@ -85,7 +85,7 @@ Then, edit the MCP configuration with your database connection URLs and optional
       "antidmg/toolfront",
       "snowflake://user:pass@org",
       "postgresql://user:pass@host:port/db",
-      // Add other database URLs here
+      # Add other database URLs here
       "--api-key", "YOUR-API-KEY"  // Optional
     ]
   }
