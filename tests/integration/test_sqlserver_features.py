@@ -159,6 +159,79 @@ class TestSQLServerFeatures:
                 pass
 
     @pytest.mark.asyncio
+    async def test_sqlserver_multiple_schemas(self, sqlserver_url):
+        """Test SQL Server with multiple schemas."""
+        connection = Connection(url=sqlserver_url)
+        database = await connection.connect()
+
+        # Create a custom schema and table
+        await database.query("CREATE SCHEMA test_schema")
+        await database.query("""
+            CREATE TABLE test_schema.multi_schema_table (
+                id INT PRIMARY KEY,
+                name NVARCHAR(50)
+            )
+        """)
+
+        try:
+            # Test table discovery includes both schemas
+            tables = await database.get_tables()
+            dbo_tables = [t for t in tables if t.startswith("dbo.")]
+            test_schema_tables = [t for t in tables if t.startswith("test_schema.")]
+            
+            assert len(test_schema_tables) > 0, "Should discover tables in custom schema"
+            assert "test_schema.multi_schema_table" in test_schema_tables
+
+            # Test inspect table works with custom schema
+            schema_info = await database.inspect_table("test_schema.multi_schema_table")
+            assert len(schema_info) > 0
+            
+            column_names = schema_info["column_name"].tolist()
+            assert "id" in column_names
+            assert "name" in column_names
+
+        finally:
+            # Clean up
+            try:
+                await database.query("DROP TABLE test_schema.multi_schema_table")
+                await database.query("DROP SCHEMA test_schema")
+            except Exception:
+                pass
+
+    @pytest.mark.asyncio
+    async def test_sqlserver_identity_columns(self, sqlserver_url):
+        """Test SQL Server identity column handling."""
+        connection = Connection(url=sqlserver_url)
+        database = await connection.connect()
+
+        # Create table with identity column
+        await database.query("""
+            CREATE TABLE dbo.identity_test (
+                id INT IDENTITY(1,1) PRIMARY KEY,
+                name NVARCHAR(50)
+            )
+        """)
+
+        try:
+            # Test that inspect_table shows identity column info
+            schema_info = await database.inspect_table("dbo.identity_test")
+            assert len(schema_info) > 0
+            
+            # Find the identity column
+            id_column = schema_info[schema_info["column_name"] == "id"].iloc[0]
+            assert id_column["data_type"].lower() == "int"
+            
+            # Test that we can sample from table with identity column
+            sample = await database.sample_table("dbo.identity_test", n=1)
+            assert len(sample) == 0  # Empty table
+
+        finally:
+            try:
+                await database.query("DROP TABLE dbo.identity_test")
+            except Exception:
+                pass
+
+    @pytest.mark.asyncio
     async def test_sqlserver_connection_error_handling(self, sqlserver_url):
         """Test SQL Server connection error handling."""
         # Test with invalid database
