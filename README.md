@@ -62,6 +62,7 @@ Then, edit the MCP configuration with your database connection URLs and optional
       "toolfront",
       "snowflake://user:pass@org",
       "postgresql://user:pass@host:port/db",
+      "mssql://user:pass@server:port/db",
       # Add other database URLs here
       "--api-key", "YOUR-API-KEY"  // Optional
     ]
@@ -85,6 +86,7 @@ Then, edit the MCP configuration with your database connection URLs and optional
       "antidmg/toolfront",
       "snowflake://user:pass@org",
       "postgresql://user:pass@host:port/db",
+      "mssql://user:pass@server:port/db",
       # Add other database URLs here
       "--api-key", "YOUR-API-KEY"  // Optional
     ]
@@ -108,10 +110,10 @@ To use ToolFront outside your IDE, run it directly from your terminal with your 
 
 ```bash
 # Using UV
-uvx toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" --api-key "YOUR-API-KEY"
+uvx toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" "mssql://user:pass@server:port/db" --api-key "YOUR-API-KEY"
 
 # Using Docker  
-docker run -i antidmg/toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" --api-key "YOUR-API-KEY"
+docker run -i antidmg/toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" "mssql://user:pass@server:port/db" --api-key "YOUR-API-KEY"
 ```
 
 > [!TIP]
@@ -141,6 +143,7 @@ ToolFront supports the following databases:
 | MySQL | `mysql://{user}:{password}@{host}:{port}/{database}` | [MySQL Docs](https://dev.mysql.com/doc/connector-python/en/connector-python-connectargs.html) |
 | PostgreSQL | `postgres://{user}:{password}@{hostname}:{port}/{database-name}` | [PostgreSQL Docs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) |
 | Snowflake | `snowflake://{user}:{password}@{account}/{database}` | [Snowflake Docs](https://docs.snowflake.com/en/developer-guide/python-connector/python-connector-api#connection-parameters) |
+| SQL Server | `mssql://{user}:{password}@{server}:{port}/{database}` or `sqlserver://{user}:{password}@{server}:{port}/{database}` | [SQL Server Docs](https://docs.microsoft.com/en-us/sql/connect/python/pyodbc/python-sql-driver-pyodbc) |
 | SQLite | `sqlite://{path-to-database.sqlite}` | [SQLite Docs](https://docs.python.org/3/library/sqlite3.html#sqlite3.connect) |
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
