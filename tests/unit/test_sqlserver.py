@@ -19,36 +19,31 @@ class TestSQLServerImplementation:
 
     def test_table_path_validation_logic(self):
         """Test table path splitting logic."""
-        # Valid table path should split correctly
         valid_path = "dbo.users"
         splits = valid_path.split(".")
         assert len(splits) == 2
         assert splits[0] == "dbo"
         assert splits[1] == "users"
 
-        # Invalid table paths should fail validation
         invalid_paths = [
-            "users",  # Missing schema
-            "dbo.users.extra",  # Too many parts
-            "",  # Empty
-            ".",  # Just dot
-            "dbo.",  # Missing table name
-            ".users",  # Missing schema name
+            "users",
+            "dbo.users.extra",
+            "",
+            ".",
+            "dbo.",
+            ".users",
         ]
 
         for invalid_path in invalid_paths:
             splits = invalid_path.split(".")
-            # This logic matches what's in the actual implementation
             assert len(splits) != 2 or any(not part.strip() for part in splits)
 
     def test_sample_size_validation_logic(self):
         """Test sample size parameter validation logic."""
-        # Valid sample sizes
         valid_sizes = [1, 5, 10, 100]
         for size in valid_sizes:
-            assert size > 0  # This is the validation logic in our code
+            assert size > 0
 
-        # Invalid sample sizes
         invalid_sizes = [0, -1, -10]
         for size in invalid_sizes:
-            assert size <= 0  # This would trigger ValueError in our code
+            assert size <= 0

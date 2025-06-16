@@ -14,11 +14,9 @@ class TestSQLServerFeatures:
         connection = Connection(url=sqlserver_url)
         database = await connection.connect()
 
-        # Verify session initialization
         init_sql = database.initialize_session()
         assert init_sql == "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
 
-        # Test connection works
         result = await database.test_connection()
         assert result.connected, f"Failed to connect to SQL Server: {result.message}"
 
@@ -28,11 +26,9 @@ class TestSQLServerFeatures:
         connection = Connection(url=sqlserver_url)
         database = await connection.connect()
 
-        # Get tables - should work even if empty
         tables = await database.get_tables()
         assert isinstance(tables, list)
 
-        # Should exclude system schemas (information_schema, sys)
         system_tables = [
             t for t in tables if t.startswith(("information_schema.", "sys.", "INFORMATION_SCHEMA.", "SYS."))
         ]

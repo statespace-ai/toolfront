@@ -22,9 +22,7 @@ class SQLServer(SQLAlchemyMixin, Database):
             ORDER BY table_schema, table_name;
         """
         data = await self.query(query)
-        # Use positional access instead of column names to avoid driver-specific naming inconsistencies.
-        # x.iloc[0] = table_schema (first column), x.iloc[1] = table_name (second column)
-        # Different SQL Server drivers may handle column naming differently.
+        # Use positional access to avoid driver-specific column naming inconsistencies
         return data.apply(lambda x: f"{x.iloc[0]}.{x.iloc[1]}", axis=1).tolist()
 
     async def inspect_table(self, table_path: str) -> pd.DataFrame:
@@ -37,7 +35,6 @@ class SQLServer(SQLAlchemyMixin, Database):
         table_schema, table_name = splits
 
         try:
-            # Use parameterized query to prevent SQL injection
             query = f"""
                 SELECT
                     column_name,
@@ -70,7 +67,6 @@ class SQLServer(SQLAlchemyMixin, Database):
         if not len(splits) == 2:
             raise ValueError(f"Invalid table path: {table_path}. Expected format: schema.table")
 
-        # Validate n parameter
         if n <= 0:
             raise ValueError(f"Sample size must be positive, got {n}")
 
