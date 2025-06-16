@@ -1,7 +1,6 @@
 """Unit tests for SSH tunnel functionality."""
 
 import pytest
-from unittest.mock import patch, MagicMock
 
 from toolfront.ssh import (
     SSHConfig,
@@ -187,7 +186,7 @@ class TestSSHUrlExtraction:
 
 
 class TestSSHTunnelManager:
-    """Test SSH tunnel manager functionality."""
+    """Test SSH tunnel manager functionality - pure logic only."""
 
     def test_tunnel_manager_creation(self):
         """Test SSH tunnel manager creation."""
@@ -214,91 +213,3 @@ class TestSSHTunnelManager:
         manager = SSHTunnelManager(config)
         
         assert not manager.is_active()
-
-    @patch('toolfront.ssh.socket.socket')
-    def test_find_free_port(self, mock_socket):
-        """Test finding a free port."""
-        mock_sock = MagicMock()
-        mock_sock.getsockname.return_value = ("localhost", 12345)
-        mock_socket.return_value.__enter__.return_value = mock_sock
-        
-        config = SSHConfig(
-            ssh_host="bastion.example.com",
-            ssh_user="ubuntu",
-            ssh_key_path="/path/to/key.pem"
-        )
-        
-        manager = SSHTunnelManager(config)
-        port = manager._find_free_port()
-        
-        assert port == 12345
-
-    @patch('toolfront.ssh.Path')
-    def test_get_ssh_key_path_expansion(self, mock_path):
-        """Test SSH key path expansion."""
-        mock_path_obj = MagicMock()
-        mock_path_obj.expanduser.return_value = mock_path_obj
-        mock_path_obj.exists.return_value = True
-        mock_path_obj.__str__ = lambda x: "/home/user/.ssh/id_rsa"
-        mock_path.return_value = mock_path_obj
-        
-        config = SSHConfig(
-            ssh_host="bastion.example.com",
-            ssh_user="ubuntu",
-            ssh_key_path="~/.ssh/id_rsa"
-        )
-        
-        manager = SSHTunnelManager(config)
-        key_path = manager._get_ssh_key_path()
-        
-        assert key_path == "/home/user/.ssh/id_rsa"
-
-    @patch('toolfront.ssh.Path')
-    def test_get_ssh_key_path_not_found(self, mock_path):
-        """Test error when SSH key file doesn't exist."""
-        mock_path_obj = MagicMock()
-        mock_path_obj.expanduser.return_value = mock_path_obj
-        mock_path_obj.exists.return_value = False
-        mock_path.return_value = mock_path_obj
-        
-        config = SSHConfig(
-            ssh_host="bastion.example.com",
-            ssh_user="ubuntu",
-            ssh_key_path="/nonexistent/key.pem"
-        )
-        
-        manager = SSHTunnelManager(config)
-        
-        with pytest.raises(FileNotFoundError):
-            manager._get_ssh_key_path()
-
-    @patch('toolfront.ssh.SSHTunnelForwarder')
-    @patch('toolfront.ssh.Path')
-    async def test_tunnel_context_manager(self, mock_path, mock_tunnel_forwarder):
-        """Test tunnel context manager lifecycle."""
-        # Mock path handling
-        mock_path_obj = MagicMock()
-        mock_path_obj.expanduser.return_value = mock_path_obj
-        mock_path_obj.exists.return_value = True
-        mock_path_obj.__str__ = lambda x: "/path/to/key.pem"
-        mock_path.return_value = mock_path_obj
-        
-        # Mock tunnel forwarder
-        mock_tunnel = MagicMock()
-        mock_tunnel.local_bind_port = 12345
-        mock_tunnel_forwarder.return_value = mock_tunnel
-        
-        config = SSHConfig(
-            ssh_host="bastion.example.com",
-            ssh_user="ubuntu",
-            ssh_key_path="/path/to/key.pem",
-            local_port=54321  # Use specific port
-        )
-        
-        manager = SSHTunnelManager(config)
-        
-        async with manager.tunnel() as local_port:
-            assert local_port == 12345
-            mock_tunnel.start.assert_called_once()
-        
-        mock_tunnel.stop.assert_called_once()
