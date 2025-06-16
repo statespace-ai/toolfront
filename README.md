@@ -55,15 +55,14 @@ Then, edit the MCP configuration with your database connection URLs and optional
 
 ```json
 {
-  # Rest of config file
+  // Rest of config file
   "toolfront": {
     "command": "uvx",
     "args": [
       "toolfront",
       "snowflake://user:pass@org",
       "postgresql://user:pass@host:port/db",
-      "mssql://user:pass@server:port/db",
-      # Add other database URLs here
+      // Add other database URLs here
       "--api-key", "YOUR-API-KEY"  // Optional
     ]
   }
@@ -86,7 +85,6 @@ Then, edit the MCP configuration with your database connection URLs and optional
       "antidmg/toolfront",
       "snowflake://user:pass@org",
       "postgresql://user:pass@host:port/db",
-      "mssql://user:pass@server:port/db",
       # Add other database URLs here
       "--api-key", "YOUR-API-KEY"  // Optional
     ]
@@ -110,10 +108,10 @@ To use ToolFront outside your IDE, run it directly from your terminal with your 
 
 ```bash
 # Using UV
-uvx toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" "mssql://user:pass@server:port/db" --api-key "YOUR-API-KEY"
+uvx toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" --api-key "YOUR-API-KEY"
 
 # Using Docker  
-docker run -i antidmg/toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" "mssql://user:pass@server:port/db" --api-key "YOUR-API-KEY"
+docker run -i antidmg/toolfront "snowflake://user:pass@org" "postgresql://user:pass@host:port/db" --api-key "YOUR-API-KEY"
 ```
 
 > [!TIP]
