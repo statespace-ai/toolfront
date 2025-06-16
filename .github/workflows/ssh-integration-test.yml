@@ -39,7 +39,7 @@ jobs:
         
     - name: Build and start integration test environment
       run: |
-        docker-compose -f docker-compose.integration.yml up -d --build
+        docker compose -f docker-compose.integration.yml up -d --build
         
     - name: Wait for services to be healthy
       run: |
@@ -47,36 +47,36 @@ jobs:
         sleep 15
         
         echo "Checking SSH bastion health..."
-        timeout 60 bash -c 'until docker-compose -f docker-compose.integration.yml exec -T ssh-bastion nc -z localhost 2222; do echo "Waiting for SSH..."; sleep 3; done'
+        timeout 60 bash -c 'until docker compose -f docker-compose.integration.yml exec -T ssh-bastion nc -z localhost 2222; do echo "Waiting for SSH..."; sleep 3; done'
         
         echo "Checking PostgreSQL health..."
-        timeout 60 bash -c 'until docker-compose -f docker-compose.integration.yml exec -T postgres-private pg_isready -U testuser -d testdb; do echo "Waiting for PostgreSQL..."; sleep 3; done'
+        timeout 60 bash -c 'until docker compose -f docker-compose.integration.yml exec -T postgres-private pg_isready -U testuser -d testdb; do echo "Waiting for PostgreSQL..."; sleep 3; done'
         
         echo "All services are healthy!"
         
     - name: Show service status
       run: |
         echo "=== Service Status ==="
-        docker-compose -f docker-compose.integration.yml ps
+        docker compose -f docker-compose.integration.yml ps
         echo "======================"
         
     - name: Run SSH tunneling integration tests
       run: |
         echo "🧪 Running SSH tunneling integration tests..."
-        docker-compose -f docker-compose.integration.yml run --rm test-runner uv run python -m pytest tests/integration/ -v -m "docker_compose"
+        docker compose -f docker-compose.integration.yml run --rm test-runner uv run python -m pytest tests/integration/ -v -m "docker_compose"
         
     - name: Show container logs on failure
       if: failure()
       run: |
         echo "=== SSH Bastion Logs ==="
-        docker-compose -f docker-compose.integration.yml logs ssh-bastion
+        docker compose -f docker-compose.integration.yml logs ssh-bastion
         echo "=== PostgreSQL Logs ==="
-        docker-compose -f docker-compose.integration.yml logs postgres-private
+        docker compose -f docker-compose.integration.yml logs postgres-private
         echo "=== Test Runner Logs ==="
-        docker-compose -f docker-compose.integration.yml logs test-runner
+        docker compose -f docker-compose.integration.yml logs test-runner
         
     - name: Clean up
       if: always()
       run: |
-        docker-compose -f docker-compose.integration.yml down -v --remove-orphans
+        docker compose -f docker-compose.integration.yml down -v --remove-orphans
         docker system prune -f
