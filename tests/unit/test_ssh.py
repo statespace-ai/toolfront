@@ -200,7 +200,7 @@ class TestSSHTunnelManager:
         manager = SSHTunnelManager(config)
         
         assert manager.config == config
-        assert manager.tunnel is None
+        assert manager._tunnel_forwarder is None
         assert manager.local_port is None
 
     def test_is_active_false_initially(self):
