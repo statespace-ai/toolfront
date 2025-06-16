@@ -27,17 +27,17 @@ logger = logging.getLogger("toolfront.connection")
 
 class SSHTunnelDatabase(BaseModel):
     """Wrapper for database connections through SSH tunnels."""
-    
+
     database: Database
     tunnel_manager: SSHTunnelManager
-    
+
     class Config:
         arbitrary_types_allowed = True
 
     async def __aenter__(self):
         """Enter async context manager."""
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Exit async context manager."""
         # Tunnel cleanup is handled by the tunnel manager context
@@ -57,19 +57,19 @@ class Connection(BaseModel):
         # Get the original URL, considering URL mapping
         original_url = url_map[self.url] if url_map and self.url in url_map else self.url
         original_url = unquote(original_url) if isinstance(original_url, str) else str(original_url)
-        
+
         # Extract SSH parameters if present
         clean_url, ssh_config = extract_ssh_params(original_url)
-        
+
         # Parse the clean URL
         url = make_url(clean_url)
-        
+
         # If SSH tunnel is needed, modify the URL to use localhost
         if ssh_config:
             logger.info(f"SSH tunnel detected for {url.drivername} connection")
             # We'll create a special database wrapper that manages the tunnel
             return await self._create_ssh_database(url, ssh_config)
-        
+
         # Standard connection without SSH tunnel
         return self._create_database(url)
 
@@ -99,7 +99,7 @@ class Connection(BaseModel):
         # Only PostgreSQL and MySQL support SSH tunnels for now
         if url.drivername not in ("postgresql", "mysql"):
             raise ValueError(f"SSH tunnels are not yet supported for {url.drivername}")
-        
+
         # Create the database with a placeholder tunnel URL
         # The actual tunnel connection will be handled by the database class
         tunnel_db = SSHTunnelledDatabase(url=url, ssh_config=ssh_config)
@@ -113,7 +113,7 @@ class Connection(BaseModel):
 
 class SSHTunnelledDatabase(Database):
     """Database connection that uses SSH tunneling."""
-    
+
     ssh_config: SSHConfig = Field(..., description="SSH tunnel configuration")
     _actual_database: Database | None = None
 
@@ -123,7 +123,7 @@ class SSHTunnelledDatabase(Database):
     @property
     def _tunnel_manager(self) -> SSHTunnelManager:
         """Get the SSH tunnel manager."""
-        if not hasattr(self, '_cached_tunnel_manager'):
+        if not hasattr(self, "_cached_tunnel_manager"):
             self._cached_tunnel_manager = SSHTunnelManager(self.ssh_config)
         return self._cached_tunnel_manager
 
@@ -131,7 +131,7 @@ class SSHTunnelledDatabase(Database):
         """Get the actual database connection through SSH tunnel."""
         if self._actual_database is not None:
             return self._actual_database
-            
+
         # This will be handled by context managers in the actual database operations
         raise RuntimeError("Direct access to tunnelled database not supported. Use async context methods.")
 
@@ -141,19 +141,21 @@ class SSHTunnelledDatabase(Database):
             async with self._tunnel_manager.tunnel() as local_port:
                 # Create a tunnelled URL pointing to localhost
                 tunnelled_url = self.url.set(host="localhost", port=local_port)
-                
+
                 # Create the actual database connection
                 if self.url.drivername == "postgresql":
                     from toolfront.models.databases.postgresql import PostgreSQL
+
                     db = PostgreSQL(url=tunnelled_url.set(drivername="postgresql+asyncpg"))
                 elif self.url.drivername == "mysql":
-                    from toolfront.models.databases.mysql import MySQL  
+                    from toolfront.models.databases.mysql import MySQL
+
                     db = MySQL(url=tunnelled_url.set(drivername="mysql+aiomysql"))
                 else:
                     raise ValueError(f"SSH tunnels not supported for {self.url.drivername}")
-                
+
                 return await db.test_connection()
-                
+
         except Exception as e:
             logger.error(f"SSH tunnel connection test failed: {e}")
             return ConnectionResult(connected=False, message=f"SSH tunnel connection failed: {e}")
@@ -162,62 +164,70 @@ class SSHTunnelledDatabase(Database):
         """Get tables through SSH tunnel."""
         async with self._tunnel_manager.tunnel() as local_port:
             tunnelled_url = self.url.set(host="localhost", port=local_port)
-            
+
             if self.url.drivername == "postgresql":
                 from toolfront.models.databases.postgresql import PostgreSQL
+
                 db = PostgreSQL(url=tunnelled_url.set(drivername="postgresql+asyncpg"))
             elif self.url.drivername == "mysql":
                 from toolfront.models.databases.mysql import MySQL
+
                 db = MySQL(url=tunnelled_url.set(drivername="mysql+aiomysql"))
             else:
                 raise ValueError(f"SSH tunnels not supported for {self.url.drivername}")
-            
+
             return await db.get_tables()
 
     async def inspect_table(self, table_path: str):
         """Inspect table structure through SSH tunnel."""
         async with self._tunnel_manager.tunnel() as local_port:
             tunnelled_url = self.url.set(host="localhost", port=local_port)
-            
+
             if self.url.drivername == "postgresql":
                 from toolfront.models.databases.postgresql import PostgreSQL
+
                 db = PostgreSQL(url=tunnelled_url.set(drivername="postgresql+asyncpg"))
             elif self.url.drivername == "mysql":
                 from toolfront.models.databases.mysql import MySQL
+
                 db = MySQL(url=tunnelled_url.set(drivername="mysql+aiomysql"))
             else:
                 raise ValueError(f"SSH tunnels not supported for {self.url.drivername}")
-            
+
             return await db.inspect_table(table_path)
 
     async def sample_table(self, table_path: str, n: int = 5):
         """Sample table data through SSH tunnel."""
         async with self._tunnel_manager.tunnel() as local_port:
             tunnelled_url = self.url.set(host="localhost", port=local_port)
-            
+
             if self.url.drivername == "postgresql":
                 from toolfront.models.databases.postgresql import PostgreSQL
+
                 db = PostgreSQL(url=tunnelled_url.set(drivername="postgresql+asyncpg"))
             elif self.url.drivername == "mysql":
                 from toolfront.models.databases.mysql import MySQL
+
                 db = MySQL(url=tunnelled_url.set(drivername="mysql+aiomysql"))
             else:
                 raise ValueError(f"SSH tunnels not supported for {self.url.drivername}")
-            
+
             return await db.sample_table(table_path, n)
 
     async def query(self, code: str):
         """Execute query through SSH tunnel."""
         async with self._tunnel_manager.tunnel() as local_port:
             tunnelled_url = self.url.set(host="localhost", port=local_port)
-            
+
             if self.url.drivername == "postgresql":
                 from toolfront.models.databases.postgresql import PostgreSQL
+
                 db = PostgreSQL(url=tunnelled_url.set(drivername="postgresql+asyncpg"))
             elif self.url.drivername == "mysql":
                 from toolfront.models.databases.mysql import MySQL
+
                 db = MySQL(url=tunnelled_url.set(drivername="mysql+aiomysql"))
             else:
                 raise ValueError(f"SSH tunnels not supported for {self.url.drivername}")
-            
+
             return await db.query(code)
