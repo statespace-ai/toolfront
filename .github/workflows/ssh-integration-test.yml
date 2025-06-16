@@ -63,7 +63,7 @@ jobs:
     - name: Run SSH tunneling integration tests
       run: |
         echo "🧪 Running SSH tunneling integration tests..."
-        docker-compose -f docker-compose.integration.yml run --rm test-runner
+        docker-compose -f docker-compose.integration.yml run --rm test-runner uv run python -m pytest tests/integration/ -v -m "docker_compose"
         
     - name: Show container logs on failure
       if: failure()

@@ -21,6 +21,9 @@ from typing import AsyncGenerator
 from toolfront.models.connection import Connection
 from toolfront.ssh import extract_ssh_params
 
+# Mark all tests in this class as requiring Docker Compose
+pytestmark = pytest.mark.docker_compose
+
 
 class TestSSHTunneling:
     """Integration tests for SSH tunneling with real containers."""
