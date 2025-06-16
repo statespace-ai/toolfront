@@ -2300,6 +2300,10 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+dev = [
+    { name = "pre-commit" },
+    { name = "ruff" },
+]
 test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2333,6 +2337,7 @@ requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.9.0" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.0.0" },
     { name = "psycopg2", specifier = ">=2.9.10" },
     { name = "pyarrow", specifier = "<19.0.0" },
     { name = "pydantic", specifier = ">=2.11.4" },
@@ -2341,13 +2346,14 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.21.0" },
     { name = "python-decouple", specifier = ">=3.8" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
     { name = "scikit-learn", specifier = ">=1.6.1" },
     { name = "snowflake-sqlalchemy", specifier = ">=1.7.3" },
     { name = "sqlalchemy-bigquery", specifier = ">=1.14.1" },
     { name = "sqlalchemy-utils", specifier = ">=0.41.2" },
     { name = "sshtunnel", specifier = ">=0.4.0" },
 ]
-provides-extras = ["test"]
+provides-extras = ["test", "dev"]
 
 [package.metadata.requires-dev]
 dev = [

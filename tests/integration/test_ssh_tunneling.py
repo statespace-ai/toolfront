@@ -3,7 +3,7 @@ Integration tests for SSH tunneling functionality.
 
 This test suite simulates Tejas's exact use case:
 - PostgreSQL database in a private network (like RDS in private subnet)
-- SSH bastion server (like EC2 instance in public subnet)  
+- SSH bastion server (like EC2 instance in public subnet)
 - toolfront connecting through SSH tunnel from external network
 
 Architecture:
@@ -12,11 +12,9 @@ Architecture:
 """
 
 import os
-import asyncio
-import pytest
 import subprocess
-import time
-from typing import AsyncGenerator
+
+import pytest
 
 from toolfront.models.connection import Connection
 from toolfront.ssh import extract_ssh_params
@@ -46,21 +44,26 @@ class TestSSHTunneling:
     def test_environment_setup(self, connection_params):
         """Verify the Docker environment is set up correctly."""
         print("🔍 Testing environment setup...")
-        
+
         # Test 1: SSH bastion is reachable
-        ssh_result = subprocess.run([
-            "nc", "-z", connection_params["ssh_host"], str(connection_params["ssh_port"])
-        ], capture_output=True, timeout=10)
-        
-        assert ssh_result.returncode == 0, f"SSH bastion not reachable at {connection_params['ssh_host']}:{connection_params['ssh_port']}"
+        ssh_result = subprocess.run(
+            ["nc", "-z", connection_params["ssh_host"], str(connection_params["ssh_port"])],
+            capture_output=True,
+            timeout=10,
+        )
+
+        assert (
+            ssh_result.returncode == 0
+        ), f"SSH bastion not reachable at {connection_params['ssh_host']}:{connection_params['ssh_port']}"
         print(f"✅ SSH bastion reachable at {connection_params['ssh_host']}:{connection_params['ssh_port']}")
-        
+
         # Test 2: PostgreSQL should NOT be directly reachable (it's in private network)
         # This test confirms our network isolation is working
-        postgres_direct_result = subprocess.run([
-            "timeout", "5", "nc", "-z", connection_params["postgres_host"], str(connection_params["postgres_port"])
-        ], capture_output=True)
-        
+        postgres_direct_result = subprocess.run(
+            ["timeout", "5", "nc", "-z", connection_params["postgres_host"], str(connection_params["postgres_port"])],
+            capture_output=True,
+        )
+
         # This should fail because postgres is in private network
         assert postgres_direct_result.returncode != 0, "PostgreSQL should not be directly accessible (private network)"
         print("✅ PostgreSQL properly isolated in private network")
@@ -68,17 +71,23 @@ class TestSSHTunneling:
     def test_ssh_connectivity(self, connection_params):
         """Test that we can SSH to the bastion server."""
         print("🔍 Testing SSH connectivity...")
-        
+
         # Test SSH authentication
         ssh_test_cmd = [
-            "sshpass", "-p", connection_params["ssh_password"],
-            "ssh", "-o", "StrictHostKeyChecking=no",
-            "-o", "ConnectTimeout=10",
+            "sshpass",
+            "-p",
+            connection_params["ssh_password"],
+            "ssh",
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "ConnectTimeout=10",
             f"{connection_params['ssh_user']}@{connection_params['ssh_host']}",
-            "-p", str(connection_params["ssh_port"]),
-            "echo 'SSH_SUCCESS'"
+            "-p",
+            str(connection_params["ssh_port"]),
+            "echo 'SSH_SUCCESS'",
         ]
-        
+
         try:
             result = subprocess.run(ssh_test_cmd, capture_output=True, text=True, timeout=15)
             assert result.returncode == 0, f"SSH authentication failed: {result.stderr}"
@@ -97,17 +106,23 @@ class TestSSHTunneling:
     def test_postgres_via_bastion(self, connection_params):
         """Test that PostgreSQL is accessible from the bastion server."""
         print("🔍 Testing PostgreSQL access via bastion...")
-        
+
         # Test PostgreSQL connectivity from bastion
         postgres_test_cmd = [
-            "sshpass", "-p", connection_params["ssh_password"],
-            "ssh", "-o", "StrictHostKeyChecking=no",
-            "-o", "ConnectTimeout=10",
+            "sshpass",
+            "-p",
+            connection_params["ssh_password"],
+            "ssh",
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "ConnectTimeout=10",
             f"{connection_params['ssh_user']}@{connection_params['ssh_host']}",
-            "-p", str(connection_params["ssh_port"]),
-            f"PGPASSWORD={connection_params['postgres_password']} psql -h {connection_params['postgres_host']} -U {connection_params['postgres_user']} -d {connection_params['postgres_db']} -c 'SELECT 1 as test_connection;'"
+            "-p",
+            str(connection_params["ssh_port"]),
+            f"PGPASSWORD={connection_params['postgres_password']} psql -h {connection_params['postgres_host']} -U {connection_params['postgres_user']} -d {connection_params['postgres_db']} -c 'SELECT 1 as test_connection;'",
         ]
-        
+
         result = subprocess.run(postgres_test_cmd, capture_output=True, text=True, timeout=20)
         assert result.returncode == 0, f"PostgreSQL connection via bastion failed: {result.stderr}"
         assert "test_connection" in result.stdout, f"PostgreSQL query failed: {result.stdout}"
@@ -116,7 +131,7 @@ class TestSSHTunneling:
     def test_ssh_parameter_extraction(self, connection_params):
         """Test SSH parameter extraction from URL."""
         print("🔍 Testing SSH parameter extraction...")
-        
+
         # Build the SSH tunnel URL (simulating what Tejas would use)
         tunnel_url = (
             f"postgresql://{connection_params['postgres_user']}:{connection_params['postgres_password']}"
@@ -126,9 +141,9 @@ class TestSSHTunneling:
             f"&ssh_user={connection_params['ssh_user']}"
             f"&ssh_password={connection_params['ssh_password']}"
         )
-        
+
         clean_url, ssh_config = extract_ssh_params(tunnel_url)
-        
+
         assert ssh_config is not None, "SSH configuration should be extracted"
         assert ssh_config.ssh_host == connection_params["ssh_host"]
         assert ssh_config.ssh_port == connection_params["ssh_port"]
@@ -136,7 +151,7 @@ class TestSSHTunneling:
         assert ssh_config.ssh_password == connection_params["ssh_password"]
         assert ssh_config.remote_host == connection_params["postgres_host"]
         assert ssh_config.remote_port == connection_params["postgres_port"]
-        
+
         print("✅ SSH parameters extracted correctly")
         return tunnel_url, clean_url, ssh_config
 
@@ -144,7 +159,7 @@ class TestSSHTunneling:
     async def test_ssh_tunnel_connection(self, connection_params):
         """Test the complete SSH tunnel connection flow."""
         print("🔍 Testing complete SSH tunnel connection...")
-        
+
         # Build tunnel URL
         tunnel_url = (
             f"postgresql://{connection_params['postgres_user']}:{connection_params['postgres_password']}"
@@ -154,13 +169,13 @@ class TestSSHTunneling:
             f"&ssh_user={connection_params['ssh_user']}"
             f"&ssh_password={connection_params['ssh_password']}"
         )
-        
+
         # Create connection
         connection = Connection(url=tunnel_url)
         db = await connection.connect()
-        
+
         print(f"✅ SSH tunnel database created: {type(db).__name__}")
-        
+
         # Test connection
         connection_result = await db.test_connection()
         assert connection_result.connected, f"SSH tunnel connection failed: {connection_result.message}"
@@ -170,7 +185,7 @@ class TestSSHTunneling:
     async def test_ssh_tunnel_operations(self, connection_params):
         """Test database operations through SSH tunnel."""
         print("🔍 Testing database operations via SSH tunnel...")
-        
+
         tunnel_url = (
             f"postgresql://{connection_params['postgres_user']}:{connection_params['postgres_password']}"
             f"@{connection_params['postgres_host']}:{connection_params['postgres_port']}/{connection_params['postgres_db']}"
@@ -179,32 +194,32 @@ class TestSSHTunneling:
             f"&ssh_user={connection_params['ssh_user']}"
             f"&ssh_password={connection_params['ssh_password']}"
         )
-        
+
         connection = Connection(url=tunnel_url)
         db = await connection.connect()
-        
+
         # Test 1: Get tables
         tables = await db.get_tables()
         print(f"✅ Retrieved {len(tables)} tables via SSH tunnel: {tables}")
         assert len(tables) > 0, "Should have tables from init-db.sql"
         assert any("users" in table for table in tables), "users table should exist"
         assert any("orders" in table for table in tables), "orders table should exist"
-        
-        # Test 2: Inspect table structure  
+
+        # Test 2: Inspect table structure
         users_schema = await db.inspect_table("public.users")
-        print(f"✅ Retrieved users table schema via SSH tunnel")
+        print("✅ Retrieved users table schema via SSH tunnel")
         assert users_schema is not None, "Should retrieve table schema"
-        
+
         # Test 3: Sample data
         users_sample = await db.sample_table("public.users", n=3)
         print(f"✅ Retrieved {len(users_sample)} sample records via SSH tunnel")
         assert len(users_sample) > 0, "Should retrieve sample data"
-        
+
         # Test 4: Execute query
         query_result = await db.query("SELECT COUNT(*) as user_count FROM public.users WHERE active = true")
         print(f"✅ Query executed via SSH tunnel: {len(query_result)} rows returned")
         assert len(query_result) > 0, "Query should return results"
-        
+
         # Test 5: Complex query (join)
         join_query = """
         SELECT u.username, COUNT(o.id) as order_count
@@ -222,7 +237,7 @@ class TestSSHTunneling:
     async def test_error_handling(self, connection_params):
         """Test error handling for SSH tunnel failures."""
         print("🔍 Testing SSH tunnel error handling...")
-        
+
         # Test 1: Wrong SSH password
         wrong_password_url = (
             f"postgresql://{connection_params['postgres_user']}:{connection_params['postgres_password']}"
@@ -232,15 +247,15 @@ class TestSSHTunneling:
             f"&ssh_user={connection_params['ssh_user']}"
             f"&ssh_password=wrongpassword"
         )
-        
+
         connection = Connection(url=wrong_password_url)
         db = await connection.connect()
-        
+
         connection_result = await db.test_connection()
         assert not connection_result.connected, "Connection should fail with wrong SSH password"
         assert "SSH tunnel connection failed" in connection_result.message
         print("✅ SSH authentication error handled correctly")
-        
+
         # Test 2: Wrong SSH host
         wrong_host_url = (
             f"postgresql://{connection_params['postgres_user']}:{connection_params['postgres_password']}"
@@ -250,10 +265,10 @@ class TestSSHTunneling:
             f"&ssh_user={connection_params['ssh_user']}"
             f"&ssh_password={connection_params['ssh_password']}"
         )
-        
+
         connection = Connection(url=wrong_host_url)
         db = await connection.connect()
-        
+
         connection_result = await db.test_connection()
         assert not connection_result.connected, "Connection should fail with wrong SSH host"
         print("✅ SSH host error handled correctly")
@@ -262,17 +277,17 @@ class TestSSHTunneling:
         """Test the exact scenario we'll demo to clients."""
         print("🎯 DEMO SCENARIO: Tejas's use case simulation")
         print("=" * 60)
-        
+
         # This is exactly what Tejas would run
         tejas_command = (
             f'toolfront "postgresql://{connection_params["postgres_user"]}:{connection_params["postgres_password"]}'
-            f'@{connection_params["postgres_host"]}:{connection_params["postgres_port"]}/{connection_params["postgres_db"]}'
-            f'?ssh_host={connection_params["ssh_host"]}'
-            f'&ssh_port={connection_params["ssh_port"]}'
-            f'&ssh_user={connection_params["ssh_user"]}'
+            f"@{connection_params['postgres_host']}:{connection_params['postgres_port']}/{connection_params['postgres_db']}"
+            f"?ssh_host={connection_params['ssh_host']}"
+            f"&ssh_port={connection_params['ssh_port']}"
+            f"&ssh_user={connection_params['ssh_user']}"
             f'&ssh_password={connection_params["ssh_password"]}"'
         )
-        
+
         print("🚀 Tejas would run this command:")
         print(f"   {tejas_command}")
         print()
