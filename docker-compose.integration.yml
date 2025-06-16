@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database in "private" network (simulates RDS in private subnet)
+  postgres-private:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: testdb
+    volumes:
+      - ./tests/integration/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - private-network
+    ports:
+      - "5432"  # Only accessible within private network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # SSH bastion server (simulates EC2 bastion in public subnet)
+  ssh-bastion:
+    image: lscr.io/linuxserver/openssh-server:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - PASSWORD_ACCESS=true
+      - USER_PASSWORD=bastionpass
+      - USER_NAME=bastionuser
+      - SUDO_ACCESS=false
+      - DOCKER_MODS=linuxserver/mods:openssh-server-ssh-tunnel
+    volumes:
+      - ./tests/integration/ssh-setup.sh:/custom-cont-init.d/ssh-setup.sh:ro
+    ports:
+      - "2222:2222"  # SSH port exposed to host
+    networks:
+      - public-network
+      - private-network  # Bastion can access both networks
+    depends_on:
+      postgres-private:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pgrep", "sshd"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Test runner container
+  test-runner:
+    build:
+      context: .
+      dockerfile: tests/integration/Dockerfile.test
+    volumes:
+      - .:/app
+      - ./tests/integration/ssh-keys:/ssh-keys:ro
+    networks:
+      - public-network  # Can only access bastion, not postgres directly
+    depends_on:
+      ssh-bastion:
+        condition: service_healthy
+      postgres-private:
+        condition: service_healthy
+    environment:
+      - SSH_HOST=ssh-bastion
+      - SSH_PORT=2222
+      - SSH_USER=bastionuser
+      - SSH_PASSWORD=bastionpass
+      - POSTGRES_HOST=postgres-private
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=testuser
+      - POSTGRES_PASSWORD=testpass
+      - POSTGRES_DB=testdb
+
+networks:
+  public-network:
+    driver: bridge
+  private-network:
+    driver: bridge
+    internal: true  # No external access - only accessible via bastion
