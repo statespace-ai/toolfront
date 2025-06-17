@@ -19,25 +19,11 @@ services:
       retries: 3
       start_period: 30s
 
-  # Simple SSH bastion using ubuntu with SSH server
+  # SSH bastion server with proper SSH setup
   ssh-bastion:
-    image: ubuntu:22.04
-    command: >
-      bash -c "
-        apt-get update && 
-        apt-get install -y openssh-server postgresql-client netcat-openbsd &&
-        mkdir -p /var/run/sshd &&
-        echo 'bastionuser:bastionpass' | chpasswd &&
-        useradd -m -s /bin/bash bastionuser &&
-        echo 'bastionuser:bastionpass' | chpasswd &&
-        echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config &&
-        echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config &&
-        echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config &&
-        echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config &&
-        echo 'GatewayPorts yes' >> /etc/ssh/sshd_config &&
-        service ssh start &&
-        tail -f /dev/null
-      "
+    build:
+      context: tests/integration
+      dockerfile: Dockerfile.ssh-bastion
     ports:
       - "2222:22"  # SSH port exposed to host
     networks:
