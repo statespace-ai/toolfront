@@ -12,30 +12,34 @@ services:
       - ./tests/integration/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     networks:
       - private-network
-    ports:
-      - "5432"  # Only accessible within private network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
+      start_period: 30s
 
-  # SSH bastion server (simulates EC2 bastion in public subnet)
+  # Simple SSH bastion using ubuntu with SSH server
   ssh-bastion:
-    image: lscr.io/linuxserver/openssh-server:latest
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - PASSWORD_ACCESS=true
-      - USER_PASSWORD=bastionpass
-      - USER_NAME=bastionuser
-      - SUDO_ACCESS=false
-      - DOCKER_MODS=linuxserver/mods:openssh-server-ssh-tunnel
-    volumes:
-      - ./tests/integration/ssh-setup.sh:/custom-cont-init.d/ssh-setup.sh:ro
+    image: ubuntu:22.04
+    command: >
+      bash -c "
+        apt-get update && 
+        apt-get install -y openssh-server postgresql-client netcat-openbsd &&
+        mkdir -p /var/run/sshd &&
+        echo 'bastionuser:bastionpass' | chpasswd &&
+        useradd -m -s /bin/bash bastionuser &&
+        echo 'bastionuser:bastionpass' | chpasswd &&
+        echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config &&
+        echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config &&
+        echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config &&
+        echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config &&
+        echo 'GatewayPorts yes' >> /etc/ssh/sshd_config &&
+        service ssh start &&
+        tail -f /dev/null
+      "
     ports:
-      - "2222:2222"  # SSH port exposed to host
+      - "2222:22"  # SSH port exposed to host
     networks:
       - public-network
       - private-network  # Bastion can access both networks
@@ -44,9 +48,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "pgrep", "sshd"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
 
   # Test runner container
   test-runner:
@@ -55,7 +60,6 @@ services:
       dockerfile: tests/integration/Dockerfile.test
     volumes:
       - .:/app
-      - ./tests/integration/ssh-keys:/ssh-keys:ro
     networks:
       - public-network  # Can only access bastion, not postgres directly
     depends_on:
@@ -65,7 +69,7 @@ services:
         condition: service_healthy
     environment:
       - SSH_HOST=ssh-bastion
-      - SSH_PORT=2222
+      - SSH_PORT=22
       - SSH_USER=bastionuser
       - SSH_PASSWORD=bastionpass
       - POSTGRES_HOST=postgres-private

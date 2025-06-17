@@ -47,7 +47,7 @@ jobs:
         sleep 15
         
         echo "Checking SSH bastion health..."
-        timeout 60 bash -c 'until docker compose -f docker-compose.integration.yml exec -T ssh-bastion nc -z localhost 2222; do echo "Waiting for SSH..."; sleep 3; done'
+        timeout 60 bash -c 'until docker compose -f docker-compose.integration.yml exec -T ssh-bastion nc -z localhost 22; do echo "Waiting for SSH..."; sleep 3; done'
         
         echo "Checking PostgreSQL health..."
         timeout 60 bash -c 'until docker compose -f docker-compose.integration.yml exec -T postgres-private pg_isready -U testuser -d testdb; do echo "Waiting for PostgreSQL..."; sleep 3; done'

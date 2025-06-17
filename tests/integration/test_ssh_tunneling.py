@@ -31,7 +31,7 @@ class TestSSHTunneling:
         """Get connection parameters from environment."""
         return {
             "ssh_host": os.getenv("SSH_HOST", "ssh-bastion"),
-            "ssh_port": int(os.getenv("SSH_PORT", "2222")),
+            "ssh_port": int(os.getenv("SSH_PORT", "22")),
             "ssh_user": os.getenv("SSH_USER", "bastionuser"),
             "ssh_password": os.getenv("SSH_PASSWORD", "bastionpass"),
             "postgres_host": os.getenv("POSTGRES_HOST", "postgres-private"),
@@ -52,9 +52,9 @@ class TestSSHTunneling:
             timeout=10,
         )
 
-        assert (
-            ssh_result.returncode == 0
-        ), f"SSH bastion not reachable at {connection_params['ssh_host']}:{connection_params['ssh_port']}"
+        assert ssh_result.returncode == 0, (
+            f"SSH bastion not reachable at {connection_params['ssh_host']}:{connection_params['ssh_port']}"
+        )
         print(f"✅ SSH bastion reachable at {connection_params['ssh_host']}:{connection_params['ssh_port']}")
 
         # Test 2: PostgreSQL should NOT be directly reachable (it's in private network)
