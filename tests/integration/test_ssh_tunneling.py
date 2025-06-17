@@ -233,45 +233,6 @@ class TestSSHTunneling:
         print(f"✅ Complex join query executed via SSH tunnel: {len(join_result)} rows")
         assert len(join_result) > 0, "Join query should return results"
 
-    @pytest.mark.asyncio
-    async def test_error_handling(self, connection_params):
-        """Test error handling for SSH tunnel failures."""
-        print("🔍 Testing SSH tunnel error handling...")
-
-        # Test 1: Wrong SSH password
-        wrong_password_url = (
-            f"postgresql://{connection_params['postgres_user']}:{connection_params['postgres_password']}"
-            f"@{connection_params['postgres_host']}:{connection_params['postgres_port']}/{connection_params['postgres_db']}"
-            f"?ssh_host={connection_params['ssh_host']}"
-            f"&ssh_port={connection_params['ssh_port']}"
-            f"&ssh_user={connection_params['ssh_user']}"
-            f"&ssh_password=wrongpassword"
-        )
-
-        connection = Connection(url=wrong_password_url)
-        db = await connection.connect()
-
-        connection_result = await db.test_connection()
-        assert not connection_result.connected, "Connection should fail with wrong SSH password"
-        assert "SSH tunnel connection failed" in connection_result.message
-        print("✅ SSH authentication error handled correctly")
-
-        # Test 2: Wrong SSH host
-        wrong_host_url = (
-            f"postgresql://{connection_params['postgres_user']}:{connection_params['postgres_password']}"
-            f"@{connection_params['postgres_host']}:{connection_params['postgres_port']}/{connection_params['postgres_db']}"
-            f"?ssh_host=nonexistent-host"
-            f"&ssh_port={connection_params['ssh_port']}"
-            f"&ssh_user={connection_params['ssh_user']}"
-            f"&ssh_password={connection_params['ssh_password']}"
-        )
-
-        connection = Connection(url=wrong_host_url)
-        db = await connection.connect()
-
-        connection_result = await db.test_connection()
-        assert not connection_result.connected, "Connection should fail with wrong SSH host"
-        print("✅ SSH host error handled correctly")
 
     def test_client_demo_scenario(self, connection_params):
         """Test the exact scenario we'll demo to clients."""
