@@ -8,14 +8,17 @@
 </div>
 <br>
 
-> AI agents lack context about your databases, while teams keep rewriting the same queries because past work often gets lost. 
-> ToolFront connects coding agents to your databases so they can explore and query your data, write schema-aware code, and build a shared knowledge base from your team's work.
+<br>
+
+> Coding agents lack context about your databases, while teams keep rewriting the same queries because previous work gets lost. 
+> ToolFront connects AI agents to your databases with shared memory, making your team's data work faster and more collaborative.
 
 ## Features
 
-- **⚡ One-step setup**: Connect coding agents like Cursor, GitHub Copilot, and Claude to all your databases with a single command or config.
-- **🔒 Privacy-first**: Your data never leaves your premises, and is only shared between agents and databases through a secure MCP server.
-- **🧠 Collaborative learning**: The more your team uses ToolFront, the better your AI agents understand your databases and query patterns. Requires API key.
+- **🚀 One-step setup**: Connect coding agents like Cursor, Copilot, and Claude to all your databases with a single command or config.
+- **⚡ AI-powered DataOps:** Use ToolFront to explore your databases, iterate on queries, and write schema-aware code.
+- **🔒 Privacy-first**: Your data stays local, and is only shared between your AI agent and databases through a secure MCP server.
+- **🧠 Collaborative learning**: The more your team uses ToolFront, the better your AI agents remember your data. Requires API key.
 
 <br>
 <div align="center">
