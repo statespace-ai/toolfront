@@ -14,8 +14,7 @@ import pandas as pd
 from async_lru import _LRUCacheWrapper
 from jellyfish import jaro_winkler_similarity
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from rank_bm25 import BM25Okapi
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.exc import InvalidRequestError, StatementError
@@ -50,7 +49,7 @@ class DatabaseError(Exception):
 
 class MatchMode(str, Enum):
     REGEX = "regex"
-    TF_IDF = "tf_idf"
+    BM25 = "bm25"
     JARO_WINKLER = "jaro_winkler"
 
 
@@ -87,16 +86,19 @@ class SQLAlchemyMixin:
         try:
             return await self._execute_async(code, init_sql)
         except (InvalidRequestError, StatementError) as config_error:
-            logger.debug(f"Async failed due to configuration, trying sync: {config_error}")
+            logger.debug(
+                f"Async failed due to configuration, trying sync: {config_error}")
             return await self._execute_sync(code, init_sql, config_error)
         except Exception as async_error:
             # Check for greenlet-related errors
             if self._is_greenlet_error(async_error):
-                logger.debug(f"Async failed due to greenlet issue, trying sync: {async_error}")
+                logger.debug(
+                    f"Async failed due to greenlet issue, trying sync: {async_error}")
                 return await self._execute_sync(code, init_sql, async_error)
             else:
                 logger.error(f"Query failed: {async_error}")
-                raise DatabaseError(f"Query execution failed: {async_error}") from async_error
+                raise DatabaseError(
+                    f"Query execution failed: {async_error}") from async_error
 
     async def _execute_async(self, code: str, init_sql: str | None) -> pd.DataFrame:
         """Execute query using async engine."""
@@ -108,7 +110,8 @@ class SQLAlchemyMixin:
                     await conn.execute(text(init_sql))
                 result = await conn.execute(text(code))
                 data = result.fetchall()
-                logger.debug(f"Async query executed successfully: {code[:100]}...")
+                logger.debug(
+                    f"Async query executed successfully: {code[:100]}...")
                 return pd.DataFrame(data)  # .fillna('N/A')
         finally:
             await engine.dispose()
@@ -126,11 +129,14 @@ class SQLAlchemyMixin:
                     conn.commit()
                 result = conn.execute(text(code))
                 data = result.fetchall()
-                logger.debug(f"Sync query executed successfully: {code[:100]}...")
+                logger.debug(
+                    f"Sync query executed successfully: {code[:100]}...")
                 return pd.DataFrame(data)  # .fillna('N/A')
         except Exception as sync_error:
-            logger.error(f"Both async and sync failed. Async: {original_error}, Sync: {sync_error}")
-            raise DatabaseError(f"Query execution failed: {sync_error}") from sync_error
+            logger.error(
+                f"Both async and sync failed. Async: {original_error}, Sync: {sync_error}")
+            raise DatabaseError(
+                f"Query execution failed: {sync_error}") from sync_error
         finally:
             engine.dispose()
 
@@ -164,7 +170,8 @@ class Database(BaseModel, ABC):
     """Abstract base class for all databases."""
 
     url: URL = Field(description="URL of the database")
-    model_config = ConfigDict(ignored_types=(_LRUCacheWrapper,), arbitrary_types_allowed=True)
+    model_config = ConfigDict(ignored_types=(
+        _LRUCacheWrapper,), arbitrary_types_allowed=True)
 
     @field_validator("url", mode="before")
     def validate_url(cls, v: Any) -> URL:
@@ -205,31 +212,31 @@ class Database(BaseModel, ABC):
         """Execute a SQL query and return results as a DataFrame."""
         raise NotImplementedError("Subclasses must implement query")
 
-    async def scan_tables(self, pattern: str, mode: MatchMode = MatchMode.REGEX, limit: int = 10) -> list[str]:
-        """Match table names using different algorithms."""
+    async def search_tables(self, pattern: str, mode: MatchMode = MatchMode.REGEX, limit: int = 10) -> list[str]:
+        """Search for table names using different algorithms."""
         table_names = await self.get_tables()
         if not table_names:
             return []
 
         try:
             if mode == MatchMode.REGEX:
-                return self._scan_tables_regex(table_names, pattern, limit)
+                return self._search_tables_regex(table_names, pattern, limit)
             elif mode == MatchMode.JARO_WINKLER:
-                return self._scan_tables_jaro_winkler(table_names, pattern, limit)
-            elif mode == MatchMode.TF_IDF:
-                return self._scan_tables_tf_idf(table_names, pattern, limit)
+                return self._search_tables_jaro_winkler(table_names, pattern, limit)
+            elif mode == MatchMode.BM25:
+                return self._search_tables_bm25(table_names, pattern, limit)
         except re.error as e:
             raise DatabaseError(f"Invalid regex pattern '{pattern}': {e}")
         except Exception as e:
             logger.error(f"Table search failed: {e}")
             raise DatabaseError(f"Table search failed: {e}") from e
 
-    def _scan_tables_regex(self, table_names: list[str], pattern: str, limit: int) -> list[str]:
+    def _search_tables_regex(self, table_names: list[str], pattern: str, limit: int) -> list[str]:
         """Match tables using regex pattern."""
         regex = re.compile(pattern, re.IGNORECASE)
         return [name for name in table_names if regex.search(name)][:limit]
 
-    def _scan_tables_jaro_winkler(self, table_names: list[str], pattern: str, limit: int) -> list[str]:
+    def _search_tables_jaro_winkler(self, table_names: list[str], pattern: str, limit: int) -> list[str]:
         """Match tables using Jaro-Winkler similarity."""
         tokenized_pattern = " ".join(tokenize(pattern))
         similarities = [
@@ -237,22 +244,26 @@ class Database(BaseModel, ABC):
         ]
         return [name for name, _ in sorted(similarities, key=lambda x: x[1], reverse=True)][:limit]
 
-    def _scan_tables_tf_idf(self, table_names: list[str], pattern: str, limit: int) -> list[str]:
-        """Match tables using TF-IDF similarity."""
+    def _search_tables_bm25(self, table_names: list[str], pattern: str, limit: int) -> list[str]:
+        """Match tables using BM25 ranking algorithm."""
         query_tokens = tokenize(pattern)
         if not query_tokens:
             return []
 
         valid_tables = [(name, tokenize(name)) for name in table_names]
-        valid_tables = [(name, tokens) for name, tokens in valid_tables if tokens]
+        valid_tables = [(name, tokens)
+                        for name, tokens in valid_tables if tokens]
         if not valid_tables:
             return []
 
-        corpus = [" ".join(tokens) for _, tokens in valid_tables]
-        vectorizer = TfidfVectorizer()
-        corpus_vectors = vectorizer.fit_transform(corpus)
-        query_vector = vectorizer.transform([" ".join(query_tokens)])
-        scores = cosine_similarity(query_vector, corpus_vectors)[0]
+        # Create corpus of tokenized table names
+        corpus = [tokens for _, tokens in valid_tables]
+
+        # Initialize BM25 with the corpus
+        bm25 = BM25Okapi(corpus)
+
+        # Get BM25 scores for the query
+        scores = bm25.get_scores(query_tokens)
 
         return [
             name
