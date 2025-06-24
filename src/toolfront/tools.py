@@ -155,7 +155,7 @@ async def query(
         raise RuntimeError(f"Query execution failed: {str(e)}")
 
 
-async def search(
+async def search_tables(
     ctx: Context,
     connection: Connection = Field(...,
                                    description="The data source to search."),
