@@ -20,7 +20,7 @@ __all__ = [
     "inspect",
     "sample",
     "query",
-    "scan",
+    "search",
     "learn",
     "test",
 ]
