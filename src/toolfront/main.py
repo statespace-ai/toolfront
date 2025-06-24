@@ -45,8 +45,7 @@ def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     cleaned_urls = [url.lstrip("'").rstrip("'") for url in urls]
 
     # Test all connections asynchronously before starting the MCP server
-    url_map = {str(url_obj): url_obj for url_obj in map(
-        make_url, cleaned_urls)}
+    url_map = {str(url_obj): url_obj for url_obj in map(make_url, cleaned_urls)}
 
     asyncio.run(test_connections(cleaned_urls))
 

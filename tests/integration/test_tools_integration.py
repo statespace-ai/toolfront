@@ -129,8 +129,7 @@ class TestConcurrentConnections:
 
         # All should succeed
         for i, result in enumerate(results):
-            assert not isinstance(
-                result, Exception), f"Query {i} failed: {result}"
+            assert not isinstance(result, Exception), f"Query {i} failed: {result}"
             assert isinstance(result, pd.DataFrame)
             assert result.iloc[0]["query_id"] == i
 
