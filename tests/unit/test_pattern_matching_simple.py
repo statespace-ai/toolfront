@@ -91,40 +91,40 @@ class TestJaroWinklerPatternMatching:
         assert result == []
 
 
-class TestTfIdfPatternMatching:
-    """Test TF-IDF similarity-based table pattern matching."""
+class TestBM25PatternMatching:
+    """Test BM25 similarity-based table pattern matching."""
 
     def setup_method(self):
         self.db = TestDatabase()
 
     def test_exact_token_match(self, sample_table_names):
-        result = self.db._search_tables_tf_idf(sample_table_names, "users", 5)
+        result = self.db._search_tables_bm25(sample_table_names, "users", 5)
         # "users" should rank highly for exact token match
         assert "users" in result[:2]
 
     def test_empty_query_returns_empty(self, sample_table_names):
-        result = self.db._search_tables_tf_idf(sample_table_names, "", 5)
+        result = self.db._search_tables_bm25(sample_table_names, "", 5)
         assert result == []
 
     def test_empty_query_whitespace_only(self, sample_table_names):
-        # Whitespace gets tokenized as a single token, so it won't be empty
-        result = self.db._search_tables_tf_idf(sample_table_names, "   ", 5)
-        assert len(result) == 5  # Should return results based on TF-IDF scoring
+        # Whitespace gets tokenized as no tokens
+        result = self.db._search_tables_bm25(sample_table_names, "   ", 5)
+        assert len(result) == 0  # Should return results based on BM25 scoring
 
     def test_no_valid_tokens_in_tables(self):
         # Tables with only separators that produce no tokens
         tables = ["___", "...", "---"]
-        result = self.db._search_tables_tf_idf(tables, "users", 3)
+        result = self.db._search_tables_bm25(tables, "users", 3)
         assert result == []
 
     def test_limit_respected(self, sample_table_names):
-        result = self.db._search_tables_tf_idf(sample_table_names, "data", 3)
+        result = self.db._search_tables_bm25(sample_table_names, "data", 3)
         assert len(result) == 3
 
     def test_empty_table_list(self):
-        result = self.db._search_tables_tf_idf([], "users", 10)
+        result = self.db._search_tables_bm25([], "users", 10)
         assert result == []
 
     def test_single_table_list(self):
-        result = self.db._search_tables_tf_idf(["users"], "user", 10)
+        result = self.db._search_tables_bm25(["users"], "user", 10)
         assert result == ["users"]
