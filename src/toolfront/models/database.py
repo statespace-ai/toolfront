@@ -86,19 +86,16 @@ class SQLAlchemyMixin:
         try:
             return await self._execute_async(code, init_sql)
         except (InvalidRequestError, StatementError) as config_error:
-            logger.debug(
-                f"Async failed due to configuration, trying sync: {config_error}")
+            logger.debug(f"Async failed due to configuration, trying sync: {config_error}")
             return await self._execute_sync(code, init_sql, config_error)
         except Exception as async_error:
             # Check for greenlet-related errors
             if self._is_greenlet_error(async_error):
-                logger.debug(
-                    f"Async failed due to greenlet issue, trying sync: {async_error}")
+                logger.debug(f"Async failed due to greenlet issue, trying sync: {async_error}")
                 return await self._execute_sync(code, init_sql, async_error)
             else:
                 logger.error(f"Query failed: {async_error}")
-                raise DatabaseError(
-                    f"Query execution failed: {async_error}") from async_error
+                raise DatabaseError(f"Query execution failed: {async_error}") from async_error
 
     async def _execute_async(self, code: str, init_sql: str | None) -> pd.DataFrame:
         """Execute query using async engine."""
@@ -110,8 +107,7 @@ class SQLAlchemyMixin:
                     await conn.execute(text(init_sql))
                 result = await conn.execute(text(code))
                 data = result.fetchall()
-                logger.debug(
-                    f"Async query executed successfully: {code[:100]}...")
+                logger.debug(f"Async query executed successfully: {code[:100]}...")
                 return pd.DataFrame(data)  # .fillna('N/A')
         finally:
             await engine.dispose()
@@ -129,14 +125,11 @@ class SQLAlchemyMixin:
                     conn.commit()
                 result = conn.execute(text(code))
                 data = result.fetchall()
-                logger.debug(
-                    f"Sync query executed successfully: {code[:100]}...")
+                logger.debug(f"Sync query executed successfully: {code[:100]}...")
                 return pd.DataFrame(data)  # .fillna('N/A')
         except Exception as sync_error:
-            logger.error(
-                f"Both async and sync failed. Async: {original_error}, Sync: {sync_error}")
-            raise DatabaseError(
-                f"Query execution failed: {sync_error}") from sync_error
+            logger.error(f"Both async and sync failed. Async: {original_error}, Sync: {sync_error}")
+            raise DatabaseError(f"Query execution failed: {sync_error}") from sync_error
         finally:
             engine.dispose()
 
@@ -170,8 +163,7 @@ class Database(BaseModel, ABC):
     """Abstract base class for all databases."""
 
     url: URL = Field(description="URL of the database")
-    model_config = ConfigDict(ignored_types=(
-        _LRUCacheWrapper,), arbitrary_types_allowed=True)
+    model_config = ConfigDict(ignored_types=(_LRUCacheWrapper,), arbitrary_types_allowed=True)
 
     @field_validator("url", mode="before")
     def validate_url(cls, v: Any) -> URL:
@@ -251,8 +243,7 @@ class Database(BaseModel, ABC):
             return []
 
         valid_tables = [(name, tokenize(name)) for name in table_names]
-        valid_tables = [(name, tokens)
-                        for name, tokens in valid_tables if tokens]
+        valid_tables = [(name, tokens) for name, tokens in valid_tables if tokens]
         if not valid_tables:
             return []
 

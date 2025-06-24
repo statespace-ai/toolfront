@@ -166,7 +166,7 @@ async def search(
         - regex: Returns tables matching a regular expression pattern (case-sensitive). Pattern must be a valid regex expression.
         - bm25: Returns tables using BM25 (Best Match 25) ranking algorithm (case-insensitive). Pattern must be a sentence, phrase, or space-separated words.
         - jaro_winkler: Returns tables using Jaro-Winkler similarity algorithm (case-insensitive). Pattern must be a sentence, phrase, or space-separated words.
-    2. Search operates on fully-qualified table names (e.g., schema.table_name or database.schema.table_name).    
+    2. Search operates on fully-qualified table names (e.g., schema.table_name or database.schema.table_name).
     3. When search returns unexpected results, examine the returned tables and retry with a different pattern and/or search mode.
     """
 
