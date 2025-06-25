@@ -60,8 +60,8 @@ class Connection(BaseModel):
             return DuckDB(url=url)
         elif url.drivername == "mysql":
             return MySQL(url=url.set(drivername="mysql+aiomysql"))
-        elif url.drivername == "postgresql":
-            return PostgreSQL(url=url.set(drivername="postgresql+asyncpg"))
+        elif url.drivername in ("postgresql", "postgres"):
+            return PostgreSQL(url=url.set(drivername=f"{url.drivername}+asyncpg"))
         elif url.drivername == "snowflake":
             return Snowflake(url=url)
         elif url.drivername == "sqlite":
