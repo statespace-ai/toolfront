@@ -83,6 +83,16 @@ sqlite = [
 sqlserver = [
     "pyodbc>=5.0.0",
 ]
+all = [
+    "toolfront[bigquery]",
+    "toolfront[databricks]",
+    "toolfront[duckdb]",
+    "toolfront[mysql]",
+    "toolfront[postgresql]",
+    "toolfront[snowflake]",
+    "toolfront[sqlite]",
+    "toolfront[sqlserver]",
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
