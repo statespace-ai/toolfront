@@ -6,7 +6,7 @@ from toolfront.models.database import Database
 
 
 # Create a concrete Database implementation for testing
-class TestDatabase(Database):
+class MockDatabase(Database):
     def __init__(self):
         super().__init__(url=make_url("sqlite:///:memory:"))
 
@@ -30,7 +30,7 @@ class TestRegexPatternMatching:
     """Test regex-based table pattern matching."""
 
     def setup_method(self):
-        self.db = TestDatabase()
+        self.db = MockDatabase()
 
     def test_exact_match(self, sample_table_names):
         result = self.db._search_tables_regex(sample_table_names, "users", 10)
@@ -70,7 +70,7 @@ class TestJaroWinklerPatternMatching:
     """Test Jaro-Winkler similarity-based table pattern matching."""
 
     def setup_method(self):
-        self.db = TestDatabase()
+        self.db = MockDatabase()
 
     def test_exact_match_highest_score(self, sample_table_names):
         result = self.db._search_tables_jaro_winkler(sample_table_names, "users", 10)
@@ -95,7 +95,7 @@ class TestBM25PatternMatching:
     """Test BM25 similarity-based table pattern matching."""
 
     def setup_method(self):
-        self.db = TestDatabase()
+        self.db = MockDatabase()
 
     def test_exact_token_match(self, sample_table_names):
         result = self.db._search_tables_bm25(sample_table_names, "users", 5)
