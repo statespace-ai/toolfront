@@ -71,8 +71,7 @@ class Connection(BaseModel):
         if db_type == DatabaseType.MYSQL:
             if not importlib.util.find_spec("aiomysql"):
                 raise ImportError(
-                    "Missing dependencies for MySQL. "
-                    "Please install them using: pip install 'toolfront[mysql]'"
+                    "Missing dependencies for MySQL. Please install them using: pip install 'toolfront[mysql]'"
                 )
             url = url.set(drivername="mysql+aiomysql")
         elif db_type == DatabaseType.POSTGRESQL:
@@ -85,15 +84,13 @@ class Connection(BaseModel):
         elif db_type == DatabaseType.SQLITE:
             if not importlib.util.find_spec("aiosqlite"):
                 raise ImportError(
-                    "Missing dependencies for SQLite. "
-                    "Please install them using: pip install 'toolfront[sqlite]'"
+                    "Missing dependencies for SQLite. Please install them using: pip install 'toolfront[sqlite]'"
                 )
             url = url.set(drivername="sqlite+aiosqlite")
         elif db_type == DatabaseType.SQLSERVER:
             if not importlib.util.find_spec("pyodbc"):
                 raise ImportError(
-                    "Missing dependencies for SQLServer. "
-                    "Please install them using: pip install 'toolfront[sqlserver]'"
+                    "Missing dependencies for SQLServer. Please install them using: pip install 'toolfront[sqlserver]'"
                 )
             url = url.set(drivername="mssql+pyodbc")
 
