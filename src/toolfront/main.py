@@ -1,7 +1,5 @@
 import asyncio
 import logging
-import subprocess
-import sys
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -43,38 +41,8 @@ async def test_connections(urls: tuple[str, ...]) -> None:
     await asyncio.gather(*(_test_connection(url) for url in urls))
 
 
-def ensure_postgres_for_url(url: str) -> None:
-    """Install postgres support if needed for this URL"""
-    if not url.startswith(("postgresql://", "postgres://")):
-        return
-
-    try:
-        import psycopg2  # noqa: F401
-
-        logger.info("PostgreSQL support already installed")
-    except ImportError:
-        logger.info("PostgreSQL URL detected, installing psycopg2...")
-        try:
-            subprocess.run(["uv", "pip", "install", "psycopg2>=2.9.9"], check=True, capture_output=True, text=True)
-            logger.info("Successfully installed psycopg2")
-        except subprocess.CalledProcessError:
-            logger.info("Failed to install psycopg2, trying psycopg2-binary...")
-            try:
-                subprocess.run(
-                    ["uv", "pip", "install", "psycopg2-binary>=2.9.9"], check=True, capture_output=True, text=True
-                )
-                logger.info("Successfully installed psycopg2-binary")
-            except subprocess.CalledProcessError as e:
-                logger.error("Failed to install PostgreSQL support. Error: %s", e.stderr)
-                sys.exit(1)
-
-
 def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     cleaned_urls = [url.lstrip("'").rstrip("'") for url in urls]
-
-    # Check and install postgres support if needed
-    for url in cleaned_urls:
-        ensure_postgres_for_url(url)
 
     # Test all connections asynchronously before starting the MCP server
     url_map = {str(url_obj): url_obj for url_obj in map(make_url, cleaned_urls)}
