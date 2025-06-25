@@ -89,7 +89,6 @@ class TestDatabaseConnectivity:
         assert query_result.iloc[0]["mode"] == "sqlserver_test"
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_connection_retry_logic(self, postgres_url):
         """Test that connection retry logic works correctly."""
         # Test with invalid URL first
@@ -112,7 +111,6 @@ class TestConnectionFallback:
     """Test async/sync fallback behavior across database types."""
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_async_execution_postgresql(self, postgres_url):
         """Test async query execution with PostgreSQL."""
         connection = Connection(url=postgres_url)
@@ -124,7 +122,6 @@ class TestConnectionFallback:
         assert result.iloc[0]["mode"] == "async_test"
         assert result.iloc[0]["value"] == 1
 
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_async_execution_mysql(self, mysql_url):
         """Test async query execution with MySQL."""
@@ -138,7 +135,6 @@ class TestConnectionFallback:
         assert result.iloc[0]["value"] == 1
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_async_execution_sqlserver(self, sqlserver_url):
         """Test async query execution with SQL Server."""
         connection = Connection(url=sqlserver_url)
@@ -150,7 +146,6 @@ class TestConnectionFallback:
         assert result.iloc[0]["mode"] == "async_test"
         assert result.iloc[0]["value"] == 1
 
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_sync_fallback_in_memory_databases(self, sqlite_url, duckdb_url):
         """Test that in-memory databases work with sync fallback."""

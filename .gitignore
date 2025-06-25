@@ -120,3 +120,8 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Additional project-specific files
+.ruff_cache/
+AGENT.md
+CLAUDE.md
