@@ -2230,6 +2230,20 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+all = [
+    { name = "aiomysql" },
+    { name = "aiosqlite" },
+    { name = "asyncpg" },
+    { name = "databricks-sql-connector" },
+    { name = "duckdb" },
+    { name = "duckdb-engine" },
+    { name = "google-cloud-bigquery" },
+    { name = "google-cloud-bigquery-storage" },
+    { name = "psycopg2-binary" },
+    { name = "pyodbc" },
+    { name = "snowflake-sqlalchemy" },
+    { name = "sqlalchemy-bigquery" },
+]
 bigquery = [
     { name = "google-cloud-bigquery" },
     { name = "google-cloud-bigquery-storage" },
@@ -2310,8 +2324,16 @@ requires-dist = [
     { name = "snowflake-sqlalchemy", marker = "extra == 'snowflake'", specifier = ">=1.7.3" },
     { name = "sqlalchemy-bigquery", marker = "extra == 'bigquery'", specifier = ">=1.14.1" },
     { name = "sqlalchemy-utils", specifier = ">=0.41.2" },
+    { name = "toolfront", extras = ["bigquery"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["databricks"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["duckdb"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["mysql"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["postgresql"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["snowflake"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["sqlite"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["sqlserver"], marker = "extra == 'all'" },
 ]
-provides-extras = ["test", "dev", "bigquery", "databricks", "duckdb", "mysql", "postgresql", "snowflake", "sqlite", "sqlserver"]
+provides-extras = ["test", "dev", "bigquery", "databricks", "duckdb", "mysql", "postgresql", "snowflake", "sqlite", "sqlserver", "all"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -3,6 +3,7 @@ Data source abstraction layer for ToolFront.
 """
 
 import importlib
+import importlib.util
 import logging
 from typing import Any
 from urllib.parse import unquote
@@ -63,23 +64,37 @@ class Connection(BaseModel):
 
         db_type, db_class_name = db_map[driver_name]
 
-        try:
-            module = importlib.import_module(f"toolfront.models.databases.{db_type.value}")
-            db_class = getattr(module, db_class_name)
-        except ImportError as e:
-            raise ImportError(
-                f"Missing dependencies for {db_type.value}. "
-                f"Please install them using: pip install 'toolfront[{db_type.value}]'"
-            ) from e
+        module = importlib.import_module(f"toolfront.models.databases.{db_type.value}")
+        db_class = getattr(module, db_class_name)
 
         # Set the correct async driver for certain databases
         if db_type == DatabaseType.MYSQL:
+            if not importlib.util.find_spec("aiomysql"):
+                raise ImportError(
+                    "Missing dependencies for MySQL. "
+                    "Please install them using: pip install 'toolfront[mysql]'"
+                )
             url = url.set(drivername="mysql+aiomysql")
         elif db_type == DatabaseType.POSTGRESQL:
+            if not importlib.util.find_spec("asyncpg"):
+                raise ImportError(
+                    "Missing dependencies for PostgreSQL. "
+                    "Please install them using: pip install 'toolfront[postgresql]'"
+                )
             url = url.set(drivername=f"{driver_name}+asyncpg")
         elif db_type == DatabaseType.SQLITE:
+            if not importlib.util.find_spec("aiosqlite"):
+                raise ImportError(
+                    "Missing dependencies for SQLite. "
+                    "Please install them using: pip install 'toolfront[sqlite]'"
+                )
             url = url.set(drivername="sqlite+aiosqlite")
         elif db_type == DatabaseType.SQLSERVER:
+            if not importlib.util.find_spec("pyodbc"):
+                raise ImportError(
+                    "Missing dependencies for SQLServer. "
+                    "Please install them using: pip install 'toolfront[sqlserver]'"
+                )
             url = url.set(drivername="mssql+pyodbc")
 
         return db_class(url=url)
