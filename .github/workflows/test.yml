@@ -96,6 +96,9 @@ jobs:
     
     - name: Set up Python
       run: uv python install 3.12
+
+    - name: Create virtual environment
+      run: uv venv
     
     - name: Install dependencies
       run: uv pip install -e ".[all]"
