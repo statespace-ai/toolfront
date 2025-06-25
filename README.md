@@ -37,6 +37,32 @@ ToolFront runs on your computer through an [MCP](https://modelcontextprotocol.io
 - **Database connection URLs** of your databases - [see below](#databases)
 - **API key** (optional) to activate collaborative learning - [see below](#collaborative-in-context-learning)
 
+### Installation
+
+Install the core `toolfront` package using `uv` or `pip`:
+
+```bash
+# Using uv
+uv pip install toolfront
+
+# Using pip
+pip install toolfront
+```
+
+By default, `toolfront` does not include drivers for any specific database to keep the installation minimal. You will be prompted to install the necessary drivers the first time you connect to a new database.
+
+To install drivers for a specific database, use the `[database]` extra format. For example, to add support for PostgreSQL and Snowflake, you would run:
+
+```bash
+# Using uv
+uv pip install 'toolfront[postgresql,snowflake]'
+
+# Using pip
+pip install 'toolfront[postgresql,snowflake]'
+```
+
+See the [Databases](#databases) section for a full list of supported databases and their corresponding extras.
+
 ### Run ToolFront in your IDE
 
 [![Add to Cursor with UV](https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/buttons/button_cursor_uv.png)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoidXZ4IHRvb2xmcm9udCBEQVRBQkFTRS1VUkwtMSBEQVRBQkFTRS1VUkwtMiAtLWFwaS1rZXkgWU9VUi1BUEktS0VZIn0%3D) [![Add to GitHub Copilot with UV](https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/buttons/button_copilot_uv.png)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22toolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--API-KEY%22%2C%22YOUR_API_KEY%22%5D%7D) [![Add to Cursor with Docker](https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/buttons/button_cursor_docker.png)](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoiZG9ja2VyIiwiYXJncyI6WyJydW4iLCItaSIsImFudGlkbWcvdG9vbGZyb250IiwiREFUQUJBU0UtVVJMLTEiLCJEQVRBQkFTRS1VUkwtMiIsIi0tYXBpLWtleSIsIllPVVItQVBJLUtFWSJdfQo=) [![Add to GitHub Copilot with Docker](https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/buttons/button_copilot_docker.png)](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22antidmg%2Ftoolfront%22%2C%22DATABASE-URL-1%22%2C%22DATABASE-URL-2%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D)
@@ -139,16 +165,16 @@ User C — Agent C ──┘
 
 ToolFront supports the following databases:
 
-| Database | URL Format | Documentation |
-|----------|------------|---------------|
-| BigQuery | `bigquery://{project-id}?credentials_path={path-to-service-account.json}` | [Google Cloud Docs](https://cloud.google.com/bigquery/docs/authentication) |
-| Databricks | `databricks://token:{token}@{workspace}.cloud.databricks.com/{catalog}?http_path={warehouse-path}` | [Databricks Docs](https://docs.databricks.com/integrations/jdbc-odbc-bi.html#get-connection-details) |
-| DuckDB | `duckdb://{path-to-database.duckdb}` | [DuckDB Docs](https://duckdb.org/docs/api/python/dbapi.html) |
-| MySQL | `mysql://{user}:{password}@{host}:{port}/{database}` | [MySQL Docs](https://dev.mysql.com/doc/connector-python/en/connector-python-connectargs.html) |
-| PostgreSQL | `postgres://{user}:{password}@{hostname}:{port}/{database-name}` | [PostgreSQL Docs](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) |
-| Snowflake | `snowflake://{user}:{password}@{account}/{database}` | [Snowflake Docs](https://docs.snowflake.com/en/developer-guide/python-connector/python-connector-api#connection-parameters) |
-| SQL Server | `mssql://{user}:{password}@{server}:{port}/{database}` or `sqlserver://{user}:{password}@{server}:{port}/{database}` | [SQL Server Docs](https://docs.microsoft.com/en-us/sql/connect/python/pyodbc/python-sql-driver-pyodbc) |
-| SQLite | `sqlite://{path-to-database.sqlite}` | [SQLite Docs](https://docs.python.org/3/library/sqlite3.html#sqlite3.connect) |
+| Database | Extra Name | URL Format |
+|----------|------------|------------|
+| BigQuery | `bigquery` | `bigquery://{project-id}?credentials_path={path-to-service-account.json}` |
+| Databricks | `databricks` | `databricks://token:{token}@{workspace}.cloud.databricks.com/{catalog}?http_path={warehouse-path}` |
+| DuckDB | `duckdb` | `duckdb://{path-to-database.duckdb}` |
+| MySQL | `mysql` | `mysql://{user}:{password}@{host}:{port}/{database}` |
+| PostgreSQL | `postgresql` | `postgres://{user}:{password}@{hostname}:{port}/{database-name}` |
+| Snowflake | `snowflake` | `snowflake://{user}:{password}@{account}/{database}` |
+| SQL Server | `sqlserver` | `mssql://{user}:{password}@{server}:{port}/{database}` or `sqlserver://{user}:{password}@{server}:{port}/{database}` |
+| SQLite | `sqlite` | `sqlite://{path-to-database.sqlite}` |
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
