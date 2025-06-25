@@ -99,6 +99,8 @@ jobs:
     
     - name: Install dependencies
       run: uv pip install -e ".[all]"
+
+    - name: Wait for databases
       run: |
         echo "Waiting for PostgreSQL..."
         timeout 60 bash -c 'until python3 -c "import socket; socket.create_connection((\"localhost\", 5432), timeout=1)" 2>/dev/null; do sleep 1; done'
