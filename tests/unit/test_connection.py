@@ -82,8 +82,9 @@ class TestConnectionUrlHandling:
 
         assert connection.url == url_with_special
 
+    @patch("importlib.util.find_spec", return_value=True)
     @patch("importlib.import_module")
-    def test_url_map_usage(self, mock_import_module):
+    def test_url_map_usage(self, mock_import_module, mock_find_spec):
         """Test that url_map is used when provided."""
         mock_db_class = MagicMock()
         mock_import_module.return_value = MagicMock(PostgreSQL=mock_db_class)
@@ -103,8 +104,9 @@ class TestConnectionUrlHandling:
         called_url = mock_db_class.call_args[1]["url"]
         assert str(called_url).replace("+asyncpg", "") == str(real_url)
 
+    @patch("importlib.util.find_spec", return_value=True)
     @patch("importlib.import_module")
-    def test_url_map_fallback_to_direct_parsing(self, mock_import_module):
+    def test_url_map_fallback_to_direct_parsing(self, mock_import_module, mock_find_spec):
         """Test fallback to direct URL parsing when not in url_map."""
         mock_db_class = MagicMock()
         mock_import_module.return_value = MagicMock(PostgreSQL=mock_db_class)
@@ -119,8 +121,9 @@ class TestConnectionUrlHandling:
         # Should parse the URL directly since it's not in url_map
         mock_db_class.assert_called_once()
 
+    @patch("importlib.util.find_spec", return_value=True)
     @patch("importlib.import_module")
-    def test_no_url_map_provided(self, mock_import_module):
+    def test_no_url_map_provided(self, mock_import_module, mock_find_spec):
         """Test behavior when no url_map is provided."""
         mock_db_class = MagicMock()
         mock_import_module.return_value = MagicMock(PostgreSQL=mock_db_class)
@@ -134,8 +137,9 @@ class TestConnectionUrlHandling:
         # Should work without url_map
         mock_db_class.assert_called_once()
 
+    @patch("importlib.util.find_spec", return_value=True)
     @patch("importlib.import_module")
-    def test_url_unquoting(self, mock_import_module):
+    def test_url_unquoting(self, mock_import_module, mock_find_spec):
         """Test that URLs are properly unquoted."""
         mock_db_class = MagicMock()
         mock_import_module.return_value = MagicMock(PostgreSQL=mock_db_class)
