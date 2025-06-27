@@ -3,12 +3,45 @@ Data serialization utilities for converting DataFrames and other data structures
 """
 
 import re
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import Any
+from urllib.parse import parse_qs
 
 import pandas as pd
+from jellyfish import jaro_winkler_similarity
+from rank_bm25 import BM25Okapi
 
 from toolfront.config import MAX_DATA_ROWS
+
+
+class HTTPMethod(str, Enum):
+    """Valid HTTP methods."""
+
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+
+
+class SearchMode(str, Enum):
+    """Search mode for searching items."""
+
+    REGEX = "regex"
+    BM25 = "bm25"
+    JARO_WINKLER = "jaro_winkler"
+
+
+@dataclass
+class ConnectionResult:
+    """Result of a database connection test."""
+
+    connected: bool
+    message: str
 
 
 def tokenize(text: str) -> list[str]:
@@ -16,25 +49,97 @@ def tokenize(text: str) -> list[str]:
     return [token.lower() for token in re.split(r"[/._\s-]+", text) if token]
 
 
-def serialize_response(response: Any) -> dict[str, Any]:
-    """
-    Convert any response type to a JSON-serializable format.
+def search_items_regex(item_names: list[str], pattern: str, limit: int) -> list[str]:
+    """Search items using regex pattern."""
+    regex = re.compile(pattern)
+    return [name for name in item_names if regex.search(name)][:limit]
 
-    Handles pandas DataFrames using serialize_dataframe, and passes through
-    other types with minimal processing.
+
+def search_items_jaro_winkler(item_names: list[str], pattern: str, limit: int) -> list[str]:
+    """Search items using Jaro-Winkler similarity."""
+    tokenized_pattern = " ".join(tokenize(pattern))
+    similarities = [(name, jaro_winkler_similarity(" ".join(tokenize(name)), tokenized_pattern)) for name in item_names]
+    return [name for name, _ in sorted(similarities, key=lambda x: x[1], reverse=True)][:limit]
+
+
+def search_items_bm25(item_names: list[str], pattern: str, limit: int) -> list[str]:
+    """Search items using BM25 ranking algorithm."""
+    query_tokens = tokenize(pattern)
+    if not query_tokens:
+        return []
+
+    valid_items = [(name, tokenize(name)) for name in item_names]
+    valid_items = [(name, tokens) for name, tokens in valid_items if tokens]
+    if not valid_items:
+        return []
+
+    # Create corpus of tokenized item names
+    corpus = [tokens for _, tokens in valid_items]
+
+    # Initialize BM25 with the corpus
+    bm25 = BM25Okapi(corpus)
+
+    # Get BM25 scores for the query
+    scores = bm25.get_scores(query_tokens)
+
+    return [
+        name
+        for name, _ in sorted(zip([n for n, _ in valid_items], scores, strict=False), key=lambda x: x[1], reverse=True)
+    ][:limit]
+
+
+def search_items(
+    item_names: list[str], pattern: str, mode: SearchMode = SearchMode.REGEX, limit: int = 10
+) -> list[str]:
+    """Search for item names using different algorithms."""
+    if not item_names:
+        return []
+
+    if mode == SearchMode.REGEX:
+        return search_items_regex(item_names, pattern, limit)
+    elif mode == SearchMode.JARO_WINKLER:
+        return search_items_jaro_winkler(item_names, pattern, limit)
+    elif mode == SearchMode.BM25:
+        return search_items_bm25(item_names, pattern, limit)
+    else:
+        raise ValueError(f"Unknown search mode: {mode}")
+
+
+def parse_query_string(query_string: str) -> dict[str, Any]:
+    """
+    Parse a query string into a dictionary.
 
     Args:
-        response: Any response type from tools
+        query_string (str): The query string to parse, can start with 'query=' or just be the query parameters
 
     Returns:
-        Dictionary with serialized response data
-    """
-    # Handle pandas DataFrames specifically
-    if isinstance(response, pd.DataFrame):
-        return serialize_dataframe(response)
+        Dict[str, Any]: Dictionary containing the parsed query parameters
 
-    # Handle other types - return as-is with basic structure
-    return {"data": response, "type": type(response).__name__}
+    Example:
+        >>> parse_query_string("query='apiKey=abc123'")
+        {'apiKey': 'abc123'}
+        >>> parse_query_string("apiKey=abc123&param=value")
+        {'apiKey': 'abc123', 'param': 'value'}
+    """
+    # Remove 'query=' prefix if present
+    if query_string.startswith("query="):
+        query_string = query_string[6:]
+
+    # Remove surrounding quotes if present
+    query_string = query_string.strip("'\"")
+
+    # Parse the query string
+    parsed = parse_qs(query_string)
+
+    # Convert lists to single values where possible
+    return {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
+
+
+def serialize_response(response: Any) -> Any:
+    """Serialize a response object to a JSON-compatible format."""
+    if hasattr(response, "model_dump"):
+        return response.model_dump()
+    return response
 
 
 def serialize_dataframe(df: pd.DataFrame) -> dict[str, Any]:

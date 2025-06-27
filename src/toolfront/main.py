@@ -4,19 +4,64 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Literal
+from urllib.parse import parse_qs, urlparse, urlunparse
 
 import click
+import diskcache
 import httpx
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
-from sqlalchemy.engine.url import make_url
 
 from toolfront.config import API_KEY_HEADER, BACKEND_URL
 from toolfront.models.connection import Connection
-from toolfront.tools import discover, inspect, query, sample, search_queries, search_tables, test
+from toolfront.tools import (
+    discover,
+    inspect_endpoint,
+    inspect_table,
+    query_database,
+    request_api,
+    sample_table,
+    search_endpoints,
+    search_queries,
+    search_tables,
+    test,
+)
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("toolfront")
+logger.setLevel(logging.INFO)
+
+_cache = diskcache.Cache(".toolfront_cache")
+
+
+def get_openapi_spec(url: str) -> dict | None:
+    """Get OpenAPI spec with retries if cached result is None."""
+    cache_key = url
+
+    # Check if we have a cached result
+    if cache_key in _cache:
+        cached_result = _cache[cache_key]
+        if cached_result is not None:
+            logger.debug(f"Cache hit for {url}")
+            return cached_result
+        else:
+            # Remove None from cache and retry
+            logger.debug(f"Cached None for {url}, removing and retrying")
+            del _cache[cache_key]
+
+    # Download and cache if successful
+    try:
+        logger.debug(f"Downloading OpenAPI spec for {url}")
+        with httpx.Client() as client:
+            response = client.get(url)
+            response.raise_for_status()
+            spec = response.json()
+            # Only cache non-None results
+            _cache.set(cache_key, spec, expire=3600)  # 1 hour TTL
+            logger.debug(f"Successfully downloaded and cached spec for {url}")
+            return spec
+    except Exception as e:
+        logger.warning(f"Failed to download OpenAPI spec from {url}: {e}")
+        return None
 
 
 @dataclass
@@ -25,29 +70,47 @@ class AppContext:
     url_map: dict = Field(default_factory=dict)
 
 
-async def test_connections(urls: tuple[str, ...]) -> None:
-    """Test all connections in parallel"""
-    if not urls:
-        return
+async def process_datasource(url: str) -> tuple[str, dict]:
+    """Process datasource: parse, download spec, test connection"""
+    parsed = urlparse(url)
+    extra = {}
 
-    async def _test_connection(url: str) -> None:
-        """Test database connection"""
-        connection = Connection(url=url)
-        result = await connection.test_connection()
-        if not result.connected:
-            raise RuntimeError(f"Failed to connect to {url}: {result.message}")
-        logger.info(f"Connection successful to {url}")
+    if parsed.scheme in ("http", "https"):
+        spec = get_openapi_spec(url)  # Smart caching with None handling
+        clean_url = (
+            spec.get("servers", [{}])[0].get("url", parsed.netloc) if spec else f"{parsed.scheme}://{parsed.netloc}"
+        )
+        # Parse query parameters into a dictionary
+        query_params = parse_qs(parsed.query)
+        # Convert from lists to single values and exclude api_key
+        extra = {"openapi_spec": spec, "query_params": query_params}
+        url = clean_url if spec else url
 
-    await asyncio.gather(*(_test_connection(url) for url in urls))
+    else:
+        netloc = parsed.netloc.replace(parsed.password, "***") if parsed.password else parsed.netloc
+        clean_url = urlunparse((parsed.scheme, netloc, parsed.path, "", "", ""))
+
+    url_map = {url: {"parsed": parsed, "extra": extra}}
+
+    # Test connection with original URL (includes API keys, etc.)
+    result = await Connection.from_url(url).test_connection(url_map=url_map)
+
+    if result.connected:
+        logger.warning(f"Connection successful to {clean_url}")
+    else:
+        logger.warning(f"Connection failed to {clean_url}: {result.message}")
+
+    return url_map
 
 
-def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
+async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     cleaned_urls = [url.lstrip("'").rstrip("'") for url in urls]
 
-    # Test all connections asynchronously before starting the MCP server
-    url_map = {str(url_obj): url_obj for url_obj in map(make_url, cleaned_urls)}
+    # Process all datasources concurrently
+    datasource_results = await asyncio.gather(*[process_datasource(url) for url in cleaned_urls])
 
-    asyncio.run(test_connections(cleaned_urls))
+    # Build url_map from results
+    url_map = {k: v for d in datasource_results for k, v in d.items()}
 
     @asynccontextmanager
     async def app_lifespan(mcp_server: FastMCP) -> AsyncIterator[AppContext]:
@@ -62,9 +125,12 @@ def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     mcp = FastMCP("ToolFront MCP server", lifespan=app_lifespan)
 
     mcp.add_tool(discover)
-    mcp.add_tool(inspect)
-    mcp.add_tool(sample)
-    mcp.add_tool(query)
+    mcp.add_tool(inspect_endpoint)
+    mcp.add_tool(inspect_table)
+    mcp.add_tool(query_database)
+    mcp.add_tool(request_api)
+    mcp.add_tool(sample_table)
+    mcp.add_tool(search_endpoints)
     mcp.add_tool(search_tables)
     mcp.add_tool(test)
 
@@ -81,7 +147,7 @@ def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
 def main(api_key: str | None = None, transport: Literal["stdio", "sse"] = "stdio", urls: tuple[str, ...] = ()) -> None:
     """ToolFront CLI - Run the MCP server"""
     logger.info("Starting MCP server with urls: %s", urls)
-    mcp_instance = get_mcp(urls, api_key)
+    mcp_instance = asyncio.run(get_mcp(urls, api_key))
     mcp_instance.run(transport=transport)
 
 
