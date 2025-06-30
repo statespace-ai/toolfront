@@ -6,7 +6,7 @@ from httpx import HTTPStatusError
 from mcp.server.fastmcp import Context
 from pydantic import Field
 
-from toolfront.config import MAX_DATA_ROWS
+from toolfront.config import MAX_DATA_ROWS, NUM_ENDPOINT_SEARCH_ITEMS, NUM_QUERY_SEARCH_ITEMS, NUM_TABLE_SEARCH_ITEMS
 from toolfront.models.connection import APIConnection, DatabaseConnection
 from toolfront.models.database import SearchMode
 from toolfront.models.endpoint import Endpoint
@@ -204,7 +204,6 @@ async def search_tables(
     ctx: Context,
     connection: DatabaseConnection = Field(..., description="Database connection to search."),
     pattern: str = Field(..., description="Pattern to search for. "),
-    limit: int = Field(default=100, description="Number of results to return.", ge=1, le=MAX_DATA_ROWS),
     mode: SearchMode = Field(default=SearchMode.BM25, description="Search mode to use."),
 ) -> dict[str, Any]:
     """
@@ -230,12 +229,12 @@ async def search_tables(
     3. Begin with approximate search modes like BM25 and Jaro-Winkler, and only use regex to precisely search for a specific table name.
     """
     logger = logging.getLogger("toolfront")
-    logger.debug(f"Searching tables with pattern '{pattern}', mode '{mode}', limit {limit}")
+    logger.debug(f"Searching tables with pattern '{pattern}', mode '{mode}'")
 
     try:
         url_map = await _get_context_field("url_map", ctx)
         db = await connection.connect(url_map=url_map)
-        result = await db.search_tables(pattern=pattern, limit=limit, mode=mode)
+        result = await db.search_tables(pattern=pattern, limit=NUM_TABLE_SEARCH_ITEMS, mode=mode)
 
         return {"tables": result}  # Return as dict with key
     except Exception as e:
@@ -254,7 +253,6 @@ async def search_endpoints(
     ctx: Context,
     connection: APIConnection = Field(..., description="API connection to search."),
     pattern: str = Field(..., description="Pattern to search for. "),
-    limit: int = Field(default=100, description="Number of results to return.", ge=1, le=MAX_DATA_ROWS),
     mode: SearchMode = Field(default=SearchMode.REGEX, description="Search mode to use."),
 ) -> dict[str, Any]:
     """
@@ -280,12 +278,12 @@ async def search_endpoints(
     3. Begin with approximate search modes like BM25 and Jaro-Winkler, and only use regex to precisely search for a specific endpoint name.
     """
     logger = logging.getLogger("toolfront")
-    logger.debug(f"Searching endpoints with pattern '{pattern}', mode '{mode}', limit {limit}")
+    logger.debug(f"Searching endpoints with pattern '{pattern}', mode '{mode}'")
 
     try:
         url_map = await _get_context_field("url_map", ctx)
         api = await connection.connect(url_map=url_map)
-        result = await api.search_endpoints(pattern=pattern, mode=mode, limit=limit)
+        result = await api.search_endpoints(pattern=pattern, mode=mode, limit=NUM_ENDPOINT_SEARCH_ITEMS)
 
         return {"endpoints": result}  # Return as dict with key
     except Exception as e:
@@ -326,7 +324,7 @@ async def search_queries(
         raise RuntimeError("No HTTP session available for semantic search")
 
     try:
-        response = await http_session.get(f"query/{term}")
+        response = await http_session.get(f"query/{term}?limit={NUM_QUERY_SEARCH_ITEMS}")
         data = response.json()
         return serialize_response(data)
 
