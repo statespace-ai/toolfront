@@ -6,6 +6,7 @@ import importlib
 import importlib.util
 import logging
 from typing import Any
+from urllib.parse import unquote
 
 from pydantic import BaseModel, Field
 from sqlalchemy.engine.url import URL, make_url
@@ -62,13 +63,26 @@ class DatabaseConnection(Connection):
 
     url: str = Field(..., description="Full URL of the database.")
 
-    async def connect(self, url_map: dict[str, Any]) -> Database:
+    async def connect(self, url_map: dict[str, Any] | None = None) -> Database:
         """Get the appropriate connector for this data source
         Args:
             url_map: A dictionary mapping obfuscated URL strings to original URLs
         """
-        sqlalchemy_url = make_url(url_map[self.url].get("parsed").geturl())
-        return self._create_database(sqlalchemy_url)
+        # Get the original URL, considering URL mapping
+        original_url = url_map[self.url] if url_map and self.url in url_map else self.url
+
+        # Handle URL parsing correctly without losing password info
+        if isinstance(original_url, str):
+            original_url = unquote(original_url)
+        else:
+            # If it's already a URL object, use render to preserve credentials
+            original_url = original_url.render_as_string(hide_password=False)
+
+        # Parse the URL
+        url = make_url(original_url)
+
+        # Standard connection
+        return self._create_database(url)
 
     def _create_database(self, url: URL) -> Database:
         """Create a database instance without SSH tunnel."""

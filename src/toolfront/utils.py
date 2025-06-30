@@ -11,6 +11,7 @@ from urllib.parse import parse_qs
 
 import pandas as pd
 from jellyfish import jaro_winkler_similarity
+from pydantic import TypeAdapter
 from rank_bm25 import BM25Okapi
 
 from toolfront.config import MAX_DATA_ROWS
@@ -135,11 +136,30 @@ def parse_query_string(query_string: str) -> dict[str, Any]:
     return {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
 
 
-def serialize_response(response: Any) -> Any:
-    """Serialize a response object to a JSON-compatible format."""
-    if hasattr(response, "model_dump"):
-        return response.model_dump()
-    return response
+def serialize_response(response: Any) -> dict[str, Any]:
+    """
+    Serialize any response type to a JSON-serializable format.
+    - Handles pandas DataFrames using serialize_dataframe.
+    - For other types, attempts to use Pydantic's TypeAdapter for robust, compact serialization.
+    - Falls back to string conversion if serialization fails.
+
+    Args:
+        response: Any response type from tools
+
+    Returns:
+        Dictionary with serialized response data and type information.
+    """
+    # Handle pandas DataFrames specifically
+    if isinstance(response, pd.DataFrame):
+        return serialize_dataframe(response)
+    else:
+        try:
+            # Use Pydantic's TypeAdapter for robust serialization of most types
+            data = TypeAdapter(type(response)).dump_python(response)
+        except Exception:
+            # Fallback: convert to string if serialization fails
+            data = str(response)
+    return {"data": data, "type": type(response).__name__}
 
 
 def serialize_dataframe(df: pd.DataFrame) -> dict[str, Any]:
