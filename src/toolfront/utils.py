@@ -167,9 +167,9 @@ def serialize_response(response: Any) -> dict[str, Any]:
     """
     # Handle pandas DataFrames specifically
     if isinstance(response, pd.DataFrame):
-        return serialize_dataframe(response)
+        data = serialize_dataframe(response)
     elif isinstance(response, dict):
-        return serialize_dict(response)
+        data = serialize_dict(response)
     else:
         try:
             # Use Pydantic's TypeAdapter for robust serialization of most types
