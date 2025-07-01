@@ -7,14 +7,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from urllib.parse import parse_qs
 
 import pandas as pd
 from jellyfish import jaro_winkler_similarity
 from pydantic import TypeAdapter
 from rank_bm25 import BM25Okapi
 
-from toolfront.config import MAX_DATA_ROWS
+from toolfront.config import MAX_DATA_CHARS, MAX_DATA_ROWS
 
 
 class HTTPMethod(str, Enum):
@@ -30,7 +29,7 @@ class HTTPMethod(str, Enum):
 
 
 class SearchMode(str, Enum):
-    """Search mode for searching items."""
+    """Search mode."""
 
     REGEX = "regex"
     BM25 = "bm25"
@@ -103,43 +102,65 @@ def search_items(
     elif mode == SearchMode.BM25:
         return search_items_bm25(item_names, pattern, limit)
     else:
-        raise ValueError(f"Unknown search mode: {mode}")
+        raise NotImplementedError(f"Unknown search mode: {mode}")
 
 
-def parse_query_string(query_string: str) -> dict[str, Any]:
+def serialize_value(v: Any) -> Any:
+    """Serialize individual values, handling special types like datetime and NaN."""
+    # Convert pandas and Python datetime objects to ISO format, handle NaT/NaN
+    if pd.isna(v):
+        return None
+    if isinstance(v, datetime | pd.Timestamp):
+        return v.isoformat()
+    if isinstance(v, pd.Period):
+        return v.asfreq("D").to_timestamp().isoformat()
+    elif not hasattr(v, "__dict__"):
+        return str(v)
+    return v
+
+
+def serialize_dict(d: dict[str, Any]) -> dict[str, Any]:
     """
-    Parse a query string into a dictionary.
+    Convert a dictionary to a JSON-serializable response format with truncation.
+
+    Serializes dictionary data and handles automatic truncation when the string
+    representation exceeds MAX_DATA_CHARS.
 
     Args:
-        query_string (str): The query string to parse, can start with 'query=' or just be the query parameters
+        d: The dictionary to convert and format
 
     Returns:
-        Dict[str, Any]: Dictionary containing the parsed query parameters
-
-    Example:
-        >>> parse_query_string("query='apiKey=abc123'")
-        {'apiKey': 'abc123'}
-        >>> parse_query_string("apiKey=abc123&param=value")
-        {'apiKey': 'abc123', 'param': 'value'}
+        Dictionary with 'data' (original or truncated dict), 'char_count' (total characters),
+        and optional 'message' (truncation notice when data is truncated)
     """
-    # Remove 'query=' prefix if present
-    if query_string.startswith("query="):
-        query_string = query_string[6:]
+    # Convert dict to string to check length
+    dict_str = str(d)
+    total_chars = len(dict_str)
 
-    # Remove surrounding quotes if present
-    query_string = query_string.strip("'\"")
+    # Handle truncation if needed
+    is_truncated = total_chars > MAX_DATA_CHARS
+    if not is_truncated:
+        return d
+    else:
+        dict_str = dict_str[:MAX_DATA_CHARS] + "..."
 
-    # Parse the query string
-    parsed = parse_qs(query_string)
+    result = {
+        "data": dict_str,
+    }
 
-    # Convert lists to single values where possible
-    return {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
+    if is_truncated:
+        result["message"] = (
+            f"Results truncated to {MAX_DATA_CHARS} characters (showing {MAX_DATA_CHARS} of {total_chars} total characters)"
+        )
+
+    return result
 
 
 def serialize_response(response: Any) -> dict[str, Any]:
     """
     Serialize any response type to a JSON-serializable format.
     - Handles pandas DataFrames using serialize_dataframe.
+    - Handles dictionaries using serialize_dict for truncation.
     - For other types, attempts to use Pydantic's TypeAdapter for robust, compact serialization.
     - Falls back to string conversion if serialization fails.
 
@@ -152,6 +173,8 @@ def serialize_response(response: Any) -> dict[str, Any]:
     # Handle pandas DataFrames specifically
     if isinstance(response, pd.DataFrame):
         return serialize_dataframe(response)
+    elif isinstance(response, dict):
+        return serialize_dict(response)
     else:
         try:
             # Use Pydantic's TypeAdapter for robust serialization of most types
@@ -176,19 +199,6 @@ def serialize_dataframe(df: pd.DataFrame) -> dict[str, Any]:
         Dictionary with 'data' (table structure), 'row_count' (total rows), and
         optional 'message' (truncation notice when data is truncated)
     """
-
-    def serialize_value(v: Any) -> Any:
-        """Serialize individual values, handling special types like datetime and NaN."""
-        # Convert pandas and Python datetime objects to ISO format, handle NaT/NaN
-        if pd.isna(v):
-            return None
-        if isinstance(v, datetime | pd.Timestamp):
-            return v.isoformat()
-        if isinstance(v, pd.Period):
-            return v.asfreq("D").to_timestamp().isoformat()
-        elif not hasattr(v, "__dict__"):
-            return str(v)
-        return v
 
     # Build rows including index, serializing each cell
     rows_with_indices = []
