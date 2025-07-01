@@ -81,14 +81,21 @@ async def process_datasource(url: str) -> tuple[str, dict]:
     if parsed.scheme in ("http", "https"):
         spec = get_openapi_spec(url)
 
-        clean_url = (
-            spec.get("servers", [{}])[0].get("url", parsed.netloc) if spec else f"{parsed.scheme}://{parsed.netloc}"
-        )
+        api_url = spec.get("servers", [{}])[0].get("url", None)
+
+        # If no API URL is provided, use the parsed URL
+        if api_url is None:
+            api_url = parsed.netloc
+        else:
+            # If the API URL is a relative path, prepend the parsed URL
+            if api_url.startswith("/"):
+                api_url = f"https://{parsed.netloc}{api_url}"
+
         # Parse query parameters into a dictionary
         query_params = parse_qs(parsed.query)
         # Convert from lists to single values and exclude api_key
         extra = {"openapi_spec": spec, "query_params": query_params}
-        url = clean_url if spec else url
+        clean_url = api_url if spec else url
 
     else:
         netloc = parsed.netloc.replace(parsed.password, "***") if parsed.password else parsed.netloc

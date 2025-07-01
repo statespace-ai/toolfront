@@ -22,7 +22,7 @@ class API(BaseModel, ABC):
 
     url: ParseResult = Field(description="URL of the API")
     openapi_spec: dict[str, Any] = Field(default_factory=dict, description="OpenAPI specification.")
-    query_params: dict[str, Any] = Field(default_factory=dict, description="Additional request parameters.")
+    query_params: dict[str, Any] | None = Field(None, description="Additional request parameters.")
 
     @field_validator("url", mode="before")
     def validate_url(cls, v: Any) -> ParseResult:
@@ -98,7 +98,7 @@ class API(BaseModel, ABC):
                 method=method.upper(),
                 url=f"{self.url.geturl()}{path}",
                 json=body,
-                params=params | self.query_params,
+                params=(params or {}) | self.query_params,
                 headers=headers,
             )
             return response.json()
