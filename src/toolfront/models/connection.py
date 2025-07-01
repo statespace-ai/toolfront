@@ -3,7 +3,7 @@ import importlib.util
 import logging
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from sqlalchemy.engine.url import URL, make_url
 
 from toolfront.models.api import API
@@ -56,17 +56,13 @@ class APIConnection(Connection):
 class DatabaseConnection(Connection):
     """Enhanced data source with smart path resolution."""
 
-    url: str = Field(..., description="Full URL of the database.")
+    url: SecretStr = Field(..., description="Full URL of the database.")
 
     async def connect(self, url_map: dict[str, Any] | None = None) -> Database:
-        """Get the appropriate connector for this data source
-        Args:
-            url_map: A dictionary mapping obfuscated URL strings to original URLs
-        """
-
-        url = make_url(self.url) if self.url else url_map.get(self.url, {}).get("parsed", {}).geturl()
-
-        # Standard connection
+        """Get the appropriate connector for this data source"""
+        # Get the actual secret value for connection
+        actual_url = self.url.get_secret_value()
+        url = make_url(actual_url)
         return self._create_database(url)
 
     def _create_database(self, url: URL) -> Database:

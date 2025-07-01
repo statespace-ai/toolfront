@@ -41,6 +41,7 @@ async def discover(ctx: Context) -> dict[str, list[dict]]:
     2. Passwords and secrets are obfuscated in the URL for security, but you can use the URLs as-is in other tools.
     """
     url_map = await _get_context_field("url_map", ctx)
+    # Return the keys directly - SecretStr objects will automatically obfuscate passwords
     return {"datasources": list(url_map.keys())}
 
 

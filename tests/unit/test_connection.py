@@ -24,7 +24,7 @@ class TestConnectionDriverSelection:
 
         for url in test_urls:
             connection = DatabaseConnection(url=url)
-            assert connection.url == url
+            assert connection.url.get_secret_value() == url
 
     def test_unsupported_driver_error(self):
         """Test that unsupported drivers raise ValueError during connect."""
@@ -73,14 +73,14 @@ class TestConnectionUrlHandling:
         connection = DatabaseConnection(url="postgresql://user:pass@localhost:5432/mydb")
 
         # Should not raise an error during creation
-        assert connection.url == "postgresql://user:pass@localhost:5432/mydb"
+        assert connection.url.get_secret_value() == "postgresql://user:pass@localhost:5432/mydb"
 
     def test_url_parsing_with_special_characters(self):
         """Test URL parsing with special characters in password."""
         url_with_special = "postgresql://user:p%40ss@localhost:5432/mydb"
         connection = DatabaseConnection(url=url_with_special)
 
-        assert connection.url == url_with_special
+        assert connection.url.get_secret_value() == url_with_special
 
     @patch("importlib.util.find_spec", return_value=True)
     @patch("importlib.import_module")
@@ -163,7 +163,7 @@ class TestUrlValidation:
         url_with_params = "postgresql://user:pass@localhost:5432/db?sslmode=require"
         connection = DatabaseConnection(url=url_with_params)
 
-        assert connection.url == url_with_params
+        assert connection.url.get_secret_value() == url_with_params
 
     def test_file_based_database_urls(self):
         """Test file-based database URLs."""
@@ -174,11 +174,11 @@ class TestUrlValidation:
 
         for url in file_urls:
             connection = DatabaseConnection(url=url)
-            assert connection.url == url
+            assert connection.url.get_secret_value() == url
 
     def test_special_characters_in_password(self):
         """Test URLs with special characters in password."""
         url_with_special = "postgresql://user:p%40ss@localhost:5432/mydb"
         connection = DatabaseConnection(url=url_with_special)
 
-        assert connection.url == url_with_special
+        assert connection.url.get_secret_value() == url_with_special

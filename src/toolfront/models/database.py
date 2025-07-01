@@ -73,9 +73,9 @@ class SQLAlchemyMixin:
             logger.debug(f"Async failed due to configuration, trying sync: {config_error}")
             return await self._execute_sync(code, init_sql, config_error)
         except Exception as async_error:
-            # Check for greenlet-related errors
-            if self._is_greenlet_error(async_error):
-                logger.debug(f"Async failed due to greenlet issue, trying sync: {async_error}")
+            # Check for greenlet-related errors or asyncpg authentication errors
+            if self._is_greenlet_error(async_error) or self._is_asyncpg_auth_error(async_error):
+                logger.debug(f"Async failed due to greenlet/auth issue, trying sync: {async_error}")
                 return await self._execute_sync(code, init_sql, async_error)
             else:
                 logger.error(f"Query failed: {async_error}")
@@ -140,6 +140,17 @@ class SQLAlchemyMixin:
             or "greenlet" in error_str
             or "greenlet_spawn" in error_str
             or "await_only" in error_str
+        )
+
+    def _is_asyncpg_auth_error(self, error: Exception) -> bool:
+        """Check if error is related to asyncpg authentication issues."""
+        error_str = str(error).lower()
+        error_type = type(error).__name__
+        return (
+            "internalclienterror" in error_type.lower()
+            or "authentication" in error_str
+            or "scram" in error_str
+            or "'nonetype' object has no attribute 'group'" in error_str
         )
 
 

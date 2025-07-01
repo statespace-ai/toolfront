@@ -4,14 +4,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Literal
-from urllib.parse import parse_qs, urlparse, urlunparse
+from urllib.parse import parse_qs, urlparse
 
 import click
 import diskcache
 import httpx
 import jsonref
 from mcp.server.fastmcp import FastMCP
-from pydantic import Field
+from pydantic import Field, SecretStr
 
 from toolfront.config import API_KEY_HEADER, BACKEND_URL
 from toolfront.models.connection import Connection
@@ -147,17 +147,34 @@ async def process_datasource(url: str) -> tuple[str, dict]:
             "auth_query_params": auth_query_params,
         }
 
-    else:
-        netloc = parsed.netloc.replace(parsed.password, "***") if parsed.password else parsed.netloc
-        url = urlunparse((parsed.scheme, netloc, parsed.path, "", "", ""))
+    # Store SecretStr objects for automatic obfuscation
+    # API URLs don't need SecretStr (no passwords typically), database URLs do
+    url_key = url if parsed.scheme in ("http", "https") else SecretStr(url)
 
-    url_map = {url: {"parsed": parsed, "extra": extra}}
+    url_map = {url_key: {"parsed": parsed, "extra": extra}}
 
-    result = await Connection.from_url(url).test_connection(url_map=url_map)
-    if result.connected:
-        logger.warning(f"Connection successful to {url}")
-    else:
-        logger.warning(f"Connection failed to {url}: {result.message}")
+    try:
+        logger.info("Creating connection from URL (password automatically hidden)")
+        # Pass the actual URL string to Connection.from_url, it will create its own SecretStr
+        connection = Connection.from_url(url)
+        logger.info(f"Connection type: {type(connection)}")
+
+        logger.info("Testing connection")
+        result = await connection.test_connection(url_map=url_map)
+
+        if result.connected:
+            logger.warning("Connection successful")
+        else:
+            logger.warning(f"Connection failed: {result.message}")
+    except Exception as e:
+        logger.error(f"Exception during connection process: {type(e).__name__}: {e}")
+        import traceback
+
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        # Create a failed result to maintain compatibility
+        from toolfront.models.database import ConnectionResult
+
+        result = ConnectionResult(connected=False, message=f"Connection error: {e}")
 
     return url_map
 
