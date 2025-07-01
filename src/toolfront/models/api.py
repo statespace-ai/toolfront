@@ -6,7 +6,7 @@ from urllib.parse import ParseResult, urlparse
 import httpx
 from pydantic import BaseModel, Field, field_validator
 
-from toolfront.utils import ConnectionResult, SearchMode, search_items
+from toolfront.utils import ConnectionResult, HTTPMethod, SearchMode, search_items
 
 logger = logging.getLogger("toolfront")
 
@@ -43,8 +43,9 @@ class API(BaseModel, ABC):
         endpoints = []
         for path, methods in self.openapi_spec.get("paths", {}).items():
             for method in methods:
-                if method.upper() in ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]:
-                    endpoints.append(f"{method.upper()} {path}")
+                method_upper = method.upper()
+                if method_upper in [http_method.value.upper() for http_method in HTTPMethod]:
+                    endpoints.append(f"{method_upper} {path}")
 
         return endpoints
 
@@ -71,7 +72,7 @@ class API(BaseModel, ABC):
 
     async def request(
         self,
-        method: str,
+        method: HTTPMethod,
         path: str,
         body: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
@@ -95,7 +96,7 @@ class API(BaseModel, ABC):
 
         async with httpx.AsyncClient() as client:
             response = await client.request(
-                method=method.upper(),
+                method=method.value.upper(),
                 url=f"{self.url.geturl()}{path}",
                 json=body,
                 params=(params or {}) | self.query_params,
