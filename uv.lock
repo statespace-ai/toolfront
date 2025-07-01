@@ -2195,6 +2195,9 @@ duckdb = [
     { name = "duckdb" },
     { name = "duckdb-engine" },
 ]
+mssql = [
+    { name = "pyodbc" },
+]
 mysql = [
     { name = "aiomysql" },
 ]
@@ -2203,10 +2206,6 @@ postgres = [
     { name = "psycopg2-binary" },
 ]
 postgresql = [
-    { name = "asyncpg" },
-    { name = "psycopg2-binary" },
-]
-psql = [
     { name = "asyncpg" },
     { name = "psycopg2-binary" },
 ]
@@ -2239,7 +2238,6 @@ requires-dist = [
     { name = "async-lru", specifier = ">=2.0.5" },
     { name = "asyncpg", marker = "extra == 'postgres'", specifier = ">=0.30.0" },
     { name = "asyncpg", marker = "extra == 'postgresql'", specifier = ">=0.30.0" },
-    { name = "asyncpg", marker = "extra == 'psql'", specifier = ">=0.30.0" },
     { name = "click", specifier = ">=8.1.8" },
     { name = "databricks-sql-connector", marker = "extra == 'databricks'", specifier = ">=2.7.0" },
     { name = "db-dtypes", specifier = ">=1.4.3" },
@@ -2257,9 +2255,9 @@ requires-dist = [
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.0.0" },
     { name = "psycopg2-binary", marker = "extra == 'postgres'", specifier = ">=2.9.9" },
     { name = "psycopg2-binary", marker = "extra == 'postgresql'", specifier = ">=2.9.9" },
-    { name = "psycopg2-binary", marker = "extra == 'psql'", specifier = ">=2.9.9" },
     { name = "pyarrow", specifier = "<19.0.0" },
     { name = "pydantic", specifier = ">=2.11.4" },
+    { name = "pyodbc", marker = "extra == 'mssql'", specifier = ">=5.0.0" },
     { name = "pyodbc", marker = "extra == 'sqlserver'", specifier = ">=5.0.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0.0" },
@@ -2280,7 +2278,7 @@ requires-dist = [
     { name = "toolfront", extras = ["sqlite"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["sqlserver"], marker = "extra == 'all'" },
 ]
-provides-extras = ["test", "dev", "bigquery", "databricks", "duckdb", "mysql", "postgresql", "postgres", "psql", "snowflake", "sqlite", "sqlserver", "all"]
+provides-extras = ["test", "dev", "bigquery", "databricks", "duckdb", "mysql", "postgresql", "postgres", "snowflake", "sqlite", "sqlserver", "mssql", "all"]
 
 [package.metadata.requires-dev]
 dev = [

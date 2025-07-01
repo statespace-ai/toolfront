@@ -1,7 +1,3 @@
-"""
-Data source abstraction layer for ToolFront.
-"""
-
 import importlib
 import importlib.util
 import logging

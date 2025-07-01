@@ -34,8 +34,8 @@
 
 - **🌊 Seamless**: Bring AI to all your databases, warehouses, and APIs.
 - **⚡ Instant**: Get up and running in seconds with a single command.
-- **🧩 Pluggable**: Works with any LLM, library, and IDE that supports MCP.
-- **🧠 Self-improving**: Your AI learns and gets smarter and faster with continued use.
+- **🧩 Pluggable**: Works with any LLM, agent library, and IDE that supports MCP.
+- **🧠 Self-improving**: Your AI learns from experience, becoming smarter and faster over time.
 - **🔒 Secure**: Your data stays local, private, and under your control.
 
 
@@ -144,15 +144,15 @@ See the table below for the list of supported databases, drivers (e.g., `uvx "to
 | Databricks | `databricks` | `databricks://token:{token}@{workspace}.cloud.databricks.com/{catalog}?http_path={warehouse-path}` |
 | DuckDB | `duckdb` | `duckdb://{path-to-database.duckdb}` |
 | MySQL | `mysql` | `mysql://{user}:{password}@{host}:{port}/{database}` |
-| PostgreSQL | `postgresql`, `postgres`, `psql` | `postgres://{user}:{password}@{hostname}:{port}/{database-name}` |
+| PostgreSQL | `postgresql`, `postgres` | `postgres://{user}:{password}@{hostname}:{port}/{database-name}` |
 | Snowflake | `snowflake` | `snowflake://{user}:{password}@{account}/{database}` |
-| SQL Server | `sqlserver` | `mssql://{user}:{password}@{server}:{port}/{database}` or `sqlserver://{user}:{password}@{server}:{port}/{database}` |
+| SQL Server | `mssql`, `sqlserver` | `mssql://{user}:{password}@{server}:{port}/{database}` |
 | SQLite | `sqlite` | `sqlite://{path-to-database.sqlite}` |
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
 > [!TIP]
-> **Working with local data files?** Add `duckdb://:memory:` to your config to analyze local Parquet, CSV, Excel, or JSON files.
+> **Working with local data files?** Add `duckdb://:memory:` to your config to analyze local Parquet, CSV, Excel, and JSON files.
 
 
 ### APIs
