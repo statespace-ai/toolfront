@@ -81,33 +81,32 @@ async def process_datasource(url: str) -> tuple[str, dict]:
     if parsed.scheme in ("http", "https"):
         spec = get_openapi_spec(url)
 
-        api_url = spec.get("servers", [{}])[0].get("url", None)
+        url = spec.get("servers", [{}])[0].get("url", None)
 
         # If no API URL is provided, use the parsed URL
-        if api_url is None:
-            api_url = parsed.netloc
+        if url is None:
+            url = parsed.netloc
         else:
             # If the API URL is a relative path, prepend the parsed URL
-            if api_url.startswith("/"):
-                api_url = f"https://{parsed.netloc}{api_url}"
+            if url.startswith("/"):
+                url = f"https://{parsed.netloc}{url}"
 
         # Parse query parameters into a dictionary
         query_params = parse_qs(parsed.query)
         # Convert from lists to single values and exclude api_key
         extra = {"openapi_spec": spec, "query_params": query_params}
-        clean_url = api_url if spec else url
 
     else:
         netloc = parsed.netloc.replace(parsed.password, "***") if parsed.password else parsed.netloc
-        clean_url = urlunparse((parsed.scheme, netloc, parsed.path, "", "", ""))
+        url = urlunparse((parsed.scheme, netloc, parsed.path, "", "", ""))
 
     url_map = {url: {"parsed": parsed, "extra": extra}}
 
     result = await Connection.from_url(url).test_connection(url_map=url_map)
     if result.connected:
-        logger.warning(f"Connection successful to {clean_url}")
+        logger.warning(f"Connection successful to {url}")
     else:
-        logger.warning(f"Connection failed to {clean_url}: {result.message}")
+        logger.warning(f"Connection failed to {url}: {result.message}")
 
     return url_map
 
