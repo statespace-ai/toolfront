@@ -71,8 +71,8 @@ class TestSerializeResponse:
         result = serialize_response(sample_dataframe)
         # Should delegate to serialize_dataframe
         assert "data" in result
-        assert "row_count" in result["data"]
-        assert result["type"] == "DataFrame"
+        assert "row_count" in result
+        assert result["data"]["type"] == "table"
 
     def test_string_input(self):
         result = serialize_response("hello world")

@@ -134,13 +134,11 @@ def serialize_dict(d: dict[str, Any]) -> dict[str, Any]:
 
     # Handle truncation if needed
     is_truncated = total_chars > MAX_DATA_CHARS
-    if not is_truncated:
-        return d
-    else:
-        dict_str = dict_str[:MAX_DATA_CHARS] + "..."
+    dict_value = d if not is_truncated else dict_str[:MAX_DATA_CHARS] + "..."
 
     result = {
-        "data": dict_str,
+        "data": dict_value,
+        "type": "dict",
     }
 
     if is_truncated:
@@ -167,9 +165,9 @@ def serialize_response(response: Any) -> dict[str, Any]:
     """
     # Handle pandas DataFrames specifically
     if isinstance(response, pd.DataFrame):
-        data = serialize_dataframe(response)
+        return serialize_dataframe(response)
     elif isinstance(response, dict):
-        data = serialize_dict(response)
+        return serialize_dict(response)
     else:
         try:
             # Use Pydantic's TypeAdapter for robust serialization of most types
@@ -177,7 +175,7 @@ def serialize_response(response: Any) -> dict[str, Any]:
         except Exception:
             # Fallback: convert to string if serialization fails
             data = str(response)
-    return {"data": data, "type": type(response).__name__}
+        return {"data": data, "type": type(response).__name__}
 
 
 def serialize_dataframe(df: pd.DataFrame) -> dict[str, Any]:

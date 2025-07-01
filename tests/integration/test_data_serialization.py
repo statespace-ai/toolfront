@@ -5,7 +5,7 @@ import pytest
 
 from toolfront.models.connection import DatabaseConnection
 from toolfront.models.query import Query as QueryModel
-from toolfront.tools import query_database
+from toolfront.tools import query
 from toolfront.utils import serialize_dataframe, serialize_response
 
 
@@ -19,7 +19,7 @@ async def execute_query(url: str, sql: str) -> str:
         pass
 
     ctx = MockContext()
-    return await query_database(ctx, query_obj)
+    return await query(ctx, query_obj)
 
 
 async def execute_ddl(url: str, sql: str) -> None:
