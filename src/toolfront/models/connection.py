@@ -41,7 +41,7 @@ class APIConnection(Connection):
     async def connect(self, url_map: dict[str, Any]) -> API:
         """Connect to the API."""
         # Get the OpenAPI spec from the URL map
-        extra = url_map[self.url].get("extra", {})
+        extra = url_map.get(self.url, {}).get("extra", {})
         return API(url=self.url, **extra)
 
     async def test_connection(self, url_map: dict[str, Any]) -> ConnectionResult:
