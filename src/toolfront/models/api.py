@@ -23,6 +23,8 @@ class API(BaseModel, ABC):
     url: ParseResult = Field(description="URL of the API")
     openapi_spec: dict[str, Any] = Field(default_factory=dict, description="OpenAPI specification.")
     query_params: dict[str, Any] | None = Field(None, description="Additional request parameters.")
+    auth_headers: dict[str, Any] | None = Field(None, description="Authentication headers.")
+    auth_query_params: dict[str, Any] | None = Field(None, description="Authentication query parameters.")
 
     @field_validator("url", mode="before")
     def validate_url(cls, v: Any) -> ParseResult:
@@ -72,7 +74,7 @@ class API(BaseModel, ABC):
 
     async def request(
         self,
-        method: HTTPMethod,
+        method: str,
         path: str,
         body: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
@@ -94,12 +96,29 @@ class API(BaseModel, ABC):
             APIError: If an invalid HTTP method is provided
         """
 
-        async with httpx.AsyncClient() as client:
+        # Merge all query parameters (regular + auth)
+        all_params = {}
+        if params:
+            all_params.update(params)
+        if self.query_params:
+            all_params.update(self.query_params)
+        if self.auth_query_params:
+            all_params.update(self.auth_query_params)
+
+        # Merge all headers (auth + user-provided)
+        all_headers = {}
+        if self.auth_headers:
+            all_headers.update(self.auth_headers)
+        if headers:
+            all_headers.update(headers)
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.request(
-                method=method.value.upper(),
+                method=method.upper(),
                 url=f"{self.url.geturl()}{path}",
                 json=body,
-                params=(params or {}) | self.query_params,
-                headers=headers,
+                params=all_params,
+                headers=all_headers,
             )
+            response.raise_for_status()
             return response.json()

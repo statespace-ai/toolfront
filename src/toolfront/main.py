@@ -81,11 +81,12 @@ async def process_datasource(url: str) -> tuple[str, dict]:
     if parsed.scheme in ("http", "https"):
         spec = get_openapi_spec(url)
 
-        url = spec.get("servers", [{}])[0].get("url", None)
+        servers = spec.get("servers", [])
+        url = servers[0].get("url", None) if servers else None
 
         # If no API URL is provided, use the parsed URL
         if url is None:
-            url = parsed.netloc
+            url = f"{parsed.scheme}://{parsed.netloc}"
         else:
             # If the API URL is a relative path, prepend the parsed URL
             if url.startswith("/"):
@@ -93,8 +94,58 @@ async def process_datasource(url: str) -> tuple[str, dict]:
 
         # Parse query parameters into a dictionary
         query_params = parse_qs(parsed.query)
-        # Convert from lists to single values and exclude api_key
-        extra = {"openapi_spec": spec, "query_params": query_params}
+        # Convert from lists to single values
+        query_params = {k: v[0] if len(v) == 1 else v for k, v in query_params.items()}
+
+        # Handle authentication based on OpenAPI spec
+        auth_headers = {}
+        auth_query_params = {}
+
+        # Common auth parameter names
+        auth_param_names = ["apikey", "api_key", "token", "access_token", "bearer", "key", "auth"]
+
+        # Check OpenAPI spec for security schemes
+        if spec and "components" in spec and "securitySchemes" in spec["components"]:
+            for _scheme_name, scheme in spec["components"]["securitySchemes"].items():
+                if scheme.get("type") == "apiKey":
+                    param_name = scheme.get("name")
+                    param_location = scheme.get("in", "query")
+
+                    # Find matching parameter in query params (case-insensitive)
+                    for qp_name, qp_value in list(query_params.items()):
+                        if qp_name.lower() == param_name.lower():
+                            if param_location == "header":
+                                auth_headers[param_name] = qp_value
+                                del query_params[qp_name]
+                            elif param_location == "query":
+                                auth_query_params[qp_name] = qp_value
+                                del query_params[qp_name]
+                            break
+                elif scheme.get("type") == "http" and scheme.get("scheme") == "bearer":
+                    # Look for bearer/token in query params
+                    for qp_name, qp_value in list(query_params.items()):
+                        if qp_name.lower() in ["bearer", "token", "access_token"]:
+                            auth_headers["Authorization"] = f"Bearer {qp_value}"
+                            del query_params[qp_name]
+                            break
+        else:
+            # No spec or security schemes - use heuristics
+            for qp_name, qp_value in list(query_params.items()):
+                if qp_name.lower() in auth_param_names:
+                    if qp_name.lower() in ["bearer", "token", "access_token"]:
+                        auth_headers["Authorization"] = f"Bearer {qp_value}"
+                        del query_params[qp_name]
+                    else:
+                        # Default to keeping in query params (like Polygon)
+                        auth_query_params[qp_name] = qp_value
+                        del query_params[qp_name]
+
+        extra = {
+            "openapi_spec": spec,
+            "query_params": query_params,
+            "auth_headers": auth_headers,
+            "auth_query_params": auth_query_params,
+        }
 
     else:
         netloc = parsed.netloc.replace(parsed.password, "***") if parsed.password else parsed.netloc
