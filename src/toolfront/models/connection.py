@@ -2,7 +2,6 @@ import importlib
 import importlib.util
 import logging
 from typing import Any
-from urllib.parse import unquote
 
 from pydantic import BaseModel, Field
 from sqlalchemy.engine.url import URL, make_url
@@ -46,11 +45,11 @@ class APIConnection(Connection):
         return API(url=self.url, **extra)
 
     async def test_connection(self, url_map: dict[str, Any]) -> ConnectionResult:
-        """Test the connection to the API."""
+        """Test database connection"""
         try:
             api = await self.connect(url_map=url_map)
             return await api.test_connection()
-        except Exception as e:
+        except ImportError as e:
             return ConnectionResult(connected=False, message=str(e))
 
 
@@ -64,18 +63,7 @@ class DatabaseConnection(Connection):
         Args:
             url_map: A dictionary mapping obfuscated URL strings to original URLs
         """
-        # Get the original URL, considering URL mapping
-        original_url = url_map[self.url] if url_map and self.url in url_map else self.url
-
-        # Handle URL parsing correctly without losing password info
-        if isinstance(original_url, str):
-            original_url = unquote(original_url)
-        else:
-            # If it's already a URL object, use render to preserve credentials
-            original_url = original_url.render_as_string(hide_password=False)
-
-        # Parse the URL
-        url = make_url(original_url)
+        url = make_url(url_map.get(self.url, {}).get("parsed", {}).geturl())
 
         # Standard connection
         return self._create_database(url)

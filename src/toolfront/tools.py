@@ -24,29 +24,12 @@ __all__ = [
     "search_tables",
     "search_endpoints",
     "search_queries",
-    "test",
 ]
 
 
 async def _get_context_field(field: str, ctx: Context) -> Any:
     """Get the context of the current request."""
     return getattr(getattr(getattr(ctx, "request_context", None), "lifespan_context", None), field, None)
-
-
-async def test(
-    ctx: Context,
-    connection: DatabaseConnection | APIConnection = Field(..., description="Database or API connection to test."),
-) -> dict[str, Any]:
-    """
-    Test whether a data source is connected.
-
-    TestInstructions:
-    1. Only use this tool if you suspect the connection to a data source is not working, and want to troubleshoot it.
-    """
-    url_map = await _get_context_field("url_map", ctx)
-    db = await connection.connect(url_map=url_map)
-    result = await db.test_connection()
-    return {"connected": result.connected, "message": result.message}
 
 
 async def discover(ctx: Context) -> dict[str, list[dict]]:

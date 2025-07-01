@@ -9,6 +9,7 @@ from urllib.parse import parse_qs, urlparse, urlunparse
 import click
 import diskcache
 import httpx
+import jsonref
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
@@ -24,7 +25,6 @@ from toolfront.tools import (
     search_endpoints,
     search_queries,
     search_tables,
-    test,
 )
 
 logger = logging.getLogger("toolfront")
@@ -55,12 +55,14 @@ def get_openapi_spec(url: str) -> dict | None:
             response = client.get(url)
             response.raise_for_status()
             spec = response.json()
+
+            parsed_spec = jsonref.replace_refs(spec)
             # Only cache non-None results
-            _cache.set(cache_key, spec, expire=3600)  # 1 hour TTL
-            logger.debug(f"Successfully downloaded and cached spec for {url}")
-            return spec
+            _cache.set(cache_key, parsed_spec, expire=3600)  # 1 hour TTL
+            logger.info(f"Successfully retrieved spec for {url}")
+            return parsed_spec
     except Exception as e:
-        logger.warning(f"Failed to download OpenAPI spec from {url}: {e}")
+        logger.warning(f"Failed to retrieve spec from {url}: {e}")
         return None
 
 
@@ -72,11 +74,13 @@ class AppContext:
 
 async def process_datasource(url: str) -> tuple[str, dict]:
     """Process datasource: parse, download spec, test connection"""
+
     parsed = urlparse(url)
     extra = {}
 
     if parsed.scheme in ("http", "https"):
-        spec = get_openapi_spec(url)  # Smart caching with None handling
+        spec = get_openapi_spec(url)
+
         clean_url = (
             spec.get("servers", [{}])[0].get("url", parsed.netloc) if spec else f"{parsed.scheme}://{parsed.netloc}"
         )
@@ -92,9 +96,7 @@ async def process_datasource(url: str) -> tuple[str, dict]:
 
     url_map = {url: {"parsed": parsed, "extra": extra}}
 
-    # Test connection with original URL (includes API keys, etc.)
     result = await Connection.from_url(url).test_connection(url_map=url_map)
-
     if result.connected:
         logger.warning(f"Connection successful to {clean_url}")
     else:
@@ -132,7 +134,6 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     mcp.add_tool(sample_table)
     mcp.add_tool(search_endpoints)
     mcp.add_tool(search_tables)
-    mcp.add_tool(test)
 
     if api_key:
         mcp.add_tool(search_queries)

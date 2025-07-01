@@ -33,10 +33,10 @@ class API(BaseModel, ABC):
 
     async def test_connection(self) -> ConnectionResult:
         """Test the connection to the API."""
-        try:
+        if self.openapi_spec is not None:
             return ConnectionResult(connected=True, message="API connection successful")
-        except Exception as e:
-            return ConnectionResult(connected=False, message=f"Connection failed: {e}")
+        else:
+            return ConnectionResult(connected=False, message="API connection failed")
 
     async def get_endpoints(self) -> list[str]:
         """Get the available endpoints from the OpenAPI specification."""
