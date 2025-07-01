@@ -1,6 +1,6 @@
 <p align="center">
   <a>
-    <img src="img/logo.png" width="150" alt="ToolFront Logo">
+    <img src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/logo.png" width="150" alt="ToolFront Logo">
   </a>
 </p>
 
@@ -26,7 +26,7 @@
 
 <br>
 <div align="center">
-<img alt="diagram" src="img/diagram.png" width="500">
+<img alt="ToolFront diagram" src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/diagram.png" width="500">
 </div>
 
 
