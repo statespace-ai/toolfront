@@ -63,7 +63,8 @@ class DatabaseConnection(Connection):
         Args:
             url_map: A dictionary mapping obfuscated URL strings to original URLs
         """
-        url = make_url(url_map.get(self.url, {}).get("parsed", {}).geturl())
+
+        url = make_url(self.url) if self.url else url_map.get(self.url, {}).get("parsed", {}).geturl()
 
         # Standard connection
         return self._create_database(url)

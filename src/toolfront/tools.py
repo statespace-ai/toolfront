@@ -150,7 +150,6 @@ async def query_database(
         url_map = await _get_context_field("url_map", ctx)
         db = await query.connection.connect(url_map=url_map)
         result = await db.query(**query.model_dump(exclude={"connection", "description"}))
-
         asyncio.create_task(remember_query(success=True))
         return serialize_response(result)
     except Exception as e:
