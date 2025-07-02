@@ -38,10 +38,9 @@
 - **🧠 Self-improving**: Your AI learns from experience, becoming smarter and faster over time.
 - **🔒 Secure**: Your data stays local, private, and under your control.
 
-
 ## Quickstart
 
-ToolFront runs on your computer through an **[MCP server](https://modelcontextprotocol.io/)**, a secure protocol that lets apps provide context to LLM models.
+ToolFront runs on your computer through an **[MCP server](https://modelcontextprotocol.io/)**, a secure protocol to connect apps to LLMs.
 
 ### Prerequisites
 
@@ -50,7 +49,7 @@ ToolFront runs on your computer through an **[MCP server](https://modelcontextpr
 - **API key** (optional) to activate self-improving AI with the learning API
 
 
-### Run ToolFront inside your AI Framework or IDE
+### Run inside your AI Framework or IDE
 
 First, create an MCP config by following the instructions for your chosen framework or IDE. 
 
@@ -59,8 +58,7 @@ First, create an MCP config by following the instructions for your chosen framew
 | [**Cursor**](https://docs.cursor.com/context/model-context-protocol#manual-configuration) | Settings → Cursor Settings → MCP Tools (or create `.cursor/mcp.json` file) | [🔗 Quick Install](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJ0b29sZnJvbnRbYWxsXSIsIkRBVEFCQVNFLVVSTCIsIkFQSS1VUkwiLCItLWFwaS1rZXkiLCJZT1VSLUFQSS1LRVkiXX0=) | [🔗 Quick Install](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoiZG9ja2VyIiwiYXJncyI6WyJydW4iLCItaSIsImFudGlkbWcvdG9vbGZyb250IiwiREFUQUJBU0UtVVJMIiwiQVBJLVVSTCIsIi0tYXBpLWtleSIsIllPVVItQVBJLUtFWSJdfQ==) |
 | [**GitHub Copilot (VSCode)**](https://docs.github.com/en/copilot/customizing-copilot/using-model-context-protocol/extending-copilot-chat-with-mcp) | Copilot icon → Edit preferences → Copilot Chat → MCP | [🔗 Quick Install](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22toolfront%5Ball%5D%22%2C%22DATABASE-URL%22%2C%22API-URL%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D) | [🔗 Quick Install](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22antidmg/toolfront%22%2C%22DATABASE-URL%22%2C%22API-URL%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D) |
 
-
-Then, add as many databse and API URLs to the MCP configuration as you need
+Then, add as many databse and API URLs to the MCP configuration as you need:
 
 <details open>
 <summary><strong>Edit UV Config</strong></summary>
@@ -109,9 +107,9 @@ You're all set! You can now ask your AI agent about your databases.
 > [!TIP]
 > By default, `uvx toolfront[all]` installs all database drivers. For a lighter setup, you can directly install the extra drivers you need e.g. `uvx toolfront[postgres,mysql]`. See [Databases](#databases) for the full list of extras.
 
-### Run ToolFront's MCP directly
+### Run directly
 
-You can also spin up the the ToolFront MCP server with SSE or stdio using the the `--transport` flag.
+Spin up the ToolFront MCP server with SSE or stdio using the the `--transport` flag.
 
 ```bash
 # Using uvx and SSE
@@ -129,9 +127,12 @@ You can also activate self-improving AI by passing your learning API key with th
 
 ## Learning API
 
-> AI agents can be frustrating. Every interaction feels like starting from scratch, while models constantly relearn what they already knew. ToolFront fixes this with a learning API for your AI, surfacing the right knowledge exactly when it's needed so your AI can learn instantly.
+> AI agents can be frustrating. Every interaction feels like starting from scratch, while models constantly relearn what they already knew. ToolFront fixes this with a learning API, surfacing the right knowledge exactly when it's needed so your AI can learn instantly.
 
 The learning API uses [in-context learning](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html#in-context-learning-key-concept), a novel training-free learning framework pioneered by OpenAI. By augmenting your LLM's context with ever-growing query samples, your agents can reason by analogy over your databases and APIs to quickly arrive at the correct answer.
+
+> [!NOTE]
+> **Beta Access**: The learning API is currently in open beta. To get an API key, please email esteban@kruskal.ai or join our [Discord community](https://discord.gg/rRyM7zkZTf).
 
 ## Data Sources
 
@@ -141,16 +142,16 @@ ToolFront supports both databases and APIs:
 
 See the table below for the list of supported databases, drivers (e.g., `uvx "toolfront[snowflake,databricks]"`) and connection URL formats.
 
-| Database | Driver | URL Format |
-|----------|------------|------------|
-| BigQuery | `bigquery` | `bigquery://{project-id}?credentials_path={path-to-account-credentials.json}` |
-| Databricks | `databricks` | `databricks://token:{token}@{workspace}.cloud.databricks.com/{catalog}?http_path={warehouse-path}` |
-| DuckDB | `duckdb` | `duckdb://{path-to-database.duckdb}` |
-| MySQL | `mysql` | `mysql://{user}:{password}@{host}:{port}/{database}` |
-| PostgreSQL | `postgresql`, `postgres` | `postgres://{user}:{password}@{hostname}:{port}/{database-name}` |
-| Snowflake | `snowflake` | `snowflake://{user}:{password}@{account}/{database}` |
-| SQL Server | `mssql`, `sqlserver` | `mssql://{user}:{password}@{server}:{port}/{database}` |
-| SQLite | `sqlite` | `sqlite://{path-to-database.sqlite}` |
+| Database    | Driver                  | URL Format                                                                                         |
+|-------------|-------------------------|----------------------------------------------------------------------------------------------------|
+| BigQuery    | `bigquery`              | `bigquery://{project-id}?credentials_path={path-to-account-credentials.json}`                      |
+| Databricks  | `databricks`            | `databricks://token:{token}@{workspace}.cloud.databricks.com/{catalog}?http_path={warehouse-path}` |
+| DuckDB      | `duckdb`                | `duckdb://{path-to-database.duckdb}`                                                               |
+| MySQL       | `mysql`                 | `mysql://{user}:{password}@{host}:{port}/{database}`                                               |
+| PostgreSQL  | `postgresql`, `postgres`| `postgres://{user}:{password}@{hostname}:{port}/{database-name}`                                   |
+| Snowflake   | `snowflake`             | `snowflake://{user}:{password}@{account}/{database}`                                               |
+| SQL Server  | `mssql`, `sqlserver`    | `mssql://{user}:{password}@{server}:{port}/{database}`                                             |
+| SQLite      | `sqlite`                | `sqlite://{path-to-database.sqlite}`                                                               |
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
@@ -162,16 +163,16 @@ Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolf
 
 ToolFronts supports virtually **all** APIs that have an [OpenAPI](https://www.openapis.org/) or [Swagger](https://swagger.io/) specification. See the table below for a list of common APIs and their specification URLs.
 
-| API | Specification URL |
-|-----|------------------|
-| Wikipedia | `https://en.wikipedia.org/api/rest_v1/?spec` |
-| GitHub | `https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json` |
-| Stripe | `https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json` |
-| Slack | `https://raw.githubusercontent.com/slackapi/slack-api-specs/master/web-api/slack_web_openapi_v2.json` |
-| Discord | `https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json` |
+| API       | Specification URL                                                                                                     |
+|-----------|-----------------------------------------------------------------------------------------------------------------------|
+| Wikipedia | `https://en.wikipedia.org/api/rest_v1/?spec`                                                                          |
+| GitHub    | `https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json`  |
+| Stripe    | `https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json`                                          |
+| Slack     | `https://raw.githubusercontent.com/slackapi/slack-api-specs/master/web-api/slack_web_openapi_v2.json`                 |
+| Discord   | `https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json`                                  |
 
 > [!NOTE]
-> **Authentication**: For APIs that require authentication, append your API key or token to the specification URL (e.g., `https://api.polygon.io/spec?token=YOUR-API-TOKEN`). ToolFront will automatically detect and use the authentication parameters in the appropriate places.
+> **Authentication**: For APIs that require authentication, append your API key or token to the specification URL (e.g., `https://api.com/openapi.json?token=YOUR-API-TOKEN`). ToolFront will automatically detect and use the authentication parameters in the appropriate places.
 
 ## Tools
 
@@ -188,8 +189,8 @@ MCP tools are functions that AI agents can call to interact with external system
 | `request`           | Make requests to API endpoints                                   | ✗                |
 | `search_endpoints`  | Search API endpoints by pattern or similarity                    | ✗                |
 | `search_tables`     | Search database tables by pattern or similarity                  | ✗                |
-| `search_requests`   | Retrieve and learn from relevant historical requests             | ✓                |
-| `search_queries`    | Retrieve and learn from relevant historical queries              | ✓                |
+| `search_requests`   | Retrieve and learn from relevant requests samples                | ✓                |
+| `search_queries`    | Retrieve and learn from relevant query samples                   | ✓                |
 
 ## FAQ
 
