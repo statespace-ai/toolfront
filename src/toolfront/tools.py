@@ -27,12 +27,12 @@ __all__ = [
 ]
 
 
-async def _get_context_field(field: str, ctx: Context) -> Any:
+def _get_context_field(field: str, ctx: Context) -> Any:
     """Get the context of the current request."""
     return getattr(getattr(getattr(ctx, "request_context", None), "lifespan_context", None), field, None)
 
 
-async def _get_url_objects(ctx: Context) -> list:
+def _get_url_objects(ctx: Context) -> list:
     """Get the list of URL objects from context."""
     return _get_context_field("url_objects", ctx) or []
 
@@ -41,7 +41,7 @@ async def _resolve_connection_if_needed(connection: DatabaseConnection | APIConn
     """Resolve display URLs back to actual connection objects if needed."""
     # Always try to resolve by matching display strings to original URLs
     display_str = str(connection.url)
-    url_objects = await _get_url_objects(ctx)
+    url_objects = _get_url_objects(ctx)
     
     for url_obj in url_objects:
         if url_obj.matches_display_string(display_str):
@@ -61,9 +61,16 @@ async def discover(ctx: Context) -> dict[str, list[dict]]:
     1. Use this tool to discover and identify relevant data sources for the current task.
     2. Passwords and secrets are obfuscated in the URL for security, but you can use the URLs as-is in other tools.
     """
-    url_objects = await _get_url_objects(ctx)
-    # Simple string conversion - __str__() automatically masks secrets
-    return {"datasources": [str(url_obj) for url_obj in url_objects]}
+    try:
+        url_objects = _get_url_objects(ctx)
+        if url_objects is None:
+            return {"datasources": ["ERROR: url_objects is None"]}
+        if hasattr(url_objects, '__iter__'):
+            return {"datasources": [str(url_obj) for url_obj in url_objects]}
+        else:
+            return {"datasources": [f"ERROR: url_objects is not iterable, type: {type(url_objects)}"]}
+    except Exception as e:
+        return {"datasources": [f"ERROR: {e}"]}
 
 
 async def inspect_table(

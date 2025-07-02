@@ -70,7 +70,11 @@ def get_openapi_spec(url: str) -> dict | None:
 @dataclass
 class AppContext:
     http_session: httpx.AsyncClient | None = None
-    url_objects: list = Field(default_factory=list)  # Store original URL objects directly
+    url_objects: list = None  # Store original URL objects directly
+    
+    def __post_init__(self):
+        if self.url_objects is None:
+            self.url_objects = []
 
 
 async def process_datasource(url: str) -> tuple:
