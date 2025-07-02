@@ -30,7 +30,7 @@ class Connection(BaseModel):
         if url.startswith("http"):
             return APIConnection(url=url)
         else:
-            return DatabaseConnection(url=url)
+            return DatabaseConnection(url=SecretStr(url))
 
 
 class APIConnection(Connection):

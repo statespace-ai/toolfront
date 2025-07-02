@@ -11,7 +11,7 @@ import diskcache
 import httpx
 import jsonref
 from mcp.server.fastmcp import FastMCP
-from pydantic import Field, SecretStr
+from pydantic import Field
 
 from toolfront.config import API_KEY_HEADER, BACKEND_URL
 from toolfront.models.connection import Connection
@@ -26,6 +26,7 @@ from toolfront.tools import (
     search_queries,
     search_tables,
 )
+from toolfront.utils import mask_database_password
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
@@ -147,11 +148,12 @@ async def process_datasource(url: str) -> tuple[str, dict]:
             "auth_query_params": auth_query_params,
         }
 
-    # Store SecretStr objects for automatic obfuscation
-    # API URLs don't need SecretStr (no passwords typically), database URLs do
-    url_key = url if parsed.scheme in ("http", "https") else SecretStr(url)
+    # For database URLs, store display version with masked password
+    # API URLs don't need masking (no passwords typically)
+    display_url = url if parsed.scheme in ("http", "https") else mask_database_password(url)
 
-    url_map = {url_key: {"parsed": parsed, "extra": extra}}
+    # Use the actual URL as key, but store the display version
+    url_map = {url: {"parsed": parsed, "extra": extra, "display_url": display_url}}
 
     try:
         logger.info("Creating connection from URL (password automatically hidden)")
