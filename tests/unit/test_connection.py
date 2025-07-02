@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.engine.url import make_url
 
-from toolfront.models.connection import DatabaseConnection
+from toolfront.models.connection import DatabaseConnection, Connection
 
 
 class TestConnectionDriverSelection:
@@ -92,7 +92,7 @@ class TestConnectionUrlHandling:
         obfuscated_url = "postgresql://user:***@localhost:5432/mydb"
         real_url = make_url("postgresql://user:realpass@localhost:5432/mydb")
 
-        connection = DatabaseConnection(url=obfuscated_url)
+        connection = Connection.from_url(obfuscated_url)
         url_map = {obfuscated_url: real_url}
 
         import asyncio

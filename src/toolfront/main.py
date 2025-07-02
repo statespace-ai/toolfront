@@ -173,7 +173,6 @@ async def process_datasource(url: str) -> tuple:
     metadata = {"parsed": parsed, "extra": extra}
 
     try:
-        logger.info("Creating connection from URL (password automatically hidden)")
         # Pass the URL info to Connection.from_url
         if parsed.scheme in ("http", "https"):
             connection = Connection.from_url(
@@ -184,22 +183,11 @@ async def process_datasource(url: str) -> tuple:
             )
         else:
             connection = Connection.from_url(url)
-        logger.info(f"Connection type: {type(connection)}")
 
-        logger.info("Testing connection")
-        # For testing, we don't need the complex url_map structure
+        # Test connection
         result = await connection.test_connection(url_map={})
-
-        if result.connected:
-            logger.warning("Connection successful")
-        else:
-            logger.warning(f"Connection failed: {result.message}")
     except Exception as e:
-        logger.error(f"Exception during connection process: {type(e).__name__}: {e}")
-        import traceback
-
-        logger.error(f"Full traceback: {traceback.format_exc()}")
-        # Create a failed result to maintain compatibility
+        logger.debug(f"Connection test failed: {e}")
         from toolfront.models.database import ConnectionResult
 
         result = ConnectionResult(connected=False, message=f"Connection error: {e}")

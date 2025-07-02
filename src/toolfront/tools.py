@@ -61,16 +61,8 @@ async def discover(ctx: Context) -> dict[str, list[dict]]:
     1. Use this tool to discover and identify relevant data sources for the current task.
     2. Passwords and secrets are obfuscated in the URL for security, but you can use the URLs as-is in other tools.
     """
-    try:
-        url_objects = _get_url_objects(ctx)
-        if url_objects is None:
-            return {"datasources": ["ERROR: url_objects is None"]}
-        if hasattr(url_objects, '__iter__'):
-            return {"datasources": [str(url_obj) for url_obj in url_objects]}
-        else:
-            return {"datasources": [f"ERROR: url_objects is not iterable, type: {type(url_objects)}"]}
-    except Exception as e:
-        return {"datasources": [f"ERROR: {e}"]}
+    url_objects = _get_url_objects(ctx)
+    return {"datasources": [str(url_obj) for url_obj in url_objects]}
 
 
 async def inspect_table(

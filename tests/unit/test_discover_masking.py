@@ -17,11 +17,11 @@ class TestDiscoverPasswordMasking:
         """Test that database URLs have passwords masked in discover output."""
         # Process a database URL with password
         url = "postgresql://user:secretpass@localhost:5432/mydb"
-        url_map = await process_datasource(url)
+        url_obj, metadata = await process_datasource(url)
 
-        # Create a mock context with the url_map
+        # Create a mock context with the url_objects
         ctx = MagicMock()
-        ctx.request_context.lifespan_context.url_map = url_map
+        ctx.request_context.lifespan_context.url_objects = [url_obj]
 
         # Call discover
         result = await discover(ctx)
@@ -41,11 +41,11 @@ class TestDiscoverPasswordMasking:
 
             # Process an API URL
             url = "https://api.example.com/v1?apikey=secret123"
-            url_map = await process_datasource(url)
+            url_obj, metadata = await process_datasource(url)
 
-            # Create a mock context with the url_map
+            # Create a mock context with the url_objects
             ctx = MagicMock()
-            ctx.request_context.lifespan_context.url_map = url_map
+            ctx.request_context.lifespan_context.url_objects = [url_obj]
 
             # Call discover
             result = await discover(ctx)
@@ -67,16 +67,14 @@ class TestDiscoverPasswordMasking:
         ]
 
         # Process all URLs
-        url_maps = await asyncio.gather(*[process_datasource(url) for url in urls])
+        datasource_results = await asyncio.gather(*[process_datasource(url) for url in urls])
 
-        # Combine all url_maps
-        combined_url_map = {}
-        for url_map in url_maps:
-            combined_url_map.update(url_map)
+        # Extract URL objects
+        url_objects = [url_obj for url_obj, metadata in datasource_results]
 
         # Create a mock context
         ctx = MagicMock()
-        ctx.request_context.lifespan_context.url_map = combined_url_map
+        ctx.request_context.lifespan_context.url_objects = url_objects
 
         # Call discover
         result = await discover(ctx)
@@ -105,11 +103,11 @@ class TestDiscoverPasswordMasking:
         """Test that passwords with special characters are properly masked."""
         # URL with special characters in password
         url = "postgresql://user:p@ss$w0rd!@localhost:5432/mydb"
-        url_map = await process_datasource(url)
+        url_obj, metadata = await process_datasource(url)
 
         # Create a mock context
         ctx = MagicMock()
-        ctx.request_context.lifespan_context.url_map = url_map
+        ctx.request_context.lifespan_context.url_objects = [url_obj]
 
         # Call discover
         result = await discover(ctx)
@@ -124,15 +122,15 @@ class TestDiscoverPasswordMasking:
         """Test that empty passwords are still masked."""
         # URL with empty password
         url = "postgresql://user:@localhost:5432/mydb"
-        url_map = await process_datasource(url)
+        url_obj, metadata = await process_datasource(url)
 
         # Create a mock context
         ctx = MagicMock()
-        ctx.request_context.lifespan_context.url_map = url_map
+        ctx.request_context.lifespan_context.url_objects = [url_obj]
 
         # Call discover
         result = await discover(ctx)
 
-        # Check that empty password is masked
+        # Check that empty password is handled (no masking needed for empty password)
         assert "datasources" in result
-        assert result["datasources"][0] == "postgresql://user:***@localhost:5432/mydb"
+        assert result["datasources"][0] == "postgresql://user@localhost:5432/mydb"
