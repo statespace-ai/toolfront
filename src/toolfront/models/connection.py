@@ -3,7 +3,7 @@ import importlib.util
 import logging
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from sqlalchemy.engine.url import URL, make_url
 
 from toolfront.models.api import API
@@ -39,10 +39,10 @@ class Connection(BaseModel):
             # Check if this is a display URL that needs to be resolved
             if url_map and "***" in url:
                 # This is a display URL, find the actual structured URL object
-                for url_obj in url_map.keys():
+                for url_obj in url_map:
                     if str(url_obj) == url:  # Match display string
                         return DatabaseConnection(url=url_obj)
-            
+
             # Parse as new URL
             db_url = DatabaseURL.from_url_string(url)
             return DatabaseConnection(url=db_url)
@@ -60,18 +60,15 @@ class APIConnection(Connection):
         # Extract auth parameters from the structured URL
         auth_headers = {k: v.get_secret_value() for k, v in self.url.auth_headers.items()}
         auth_query_params = {k: v.get_secret_value() for k, v in self.url.auth_query_params.items()}
-        
+
         # Get OpenAPI spec from metadata if available
         openapi_spec = None
-        if hasattr(self, '_metadata') and self._metadata:
-            extra = self._metadata.get('extra', {})
-            openapi_spec = extra.get('openapi_spec')
-        
+        if hasattr(self, "_metadata") and self._metadata:
+            extra = self._metadata.get("extra", {})
+            openapi_spec = extra.get("openapi_spec")
+
         return API(
-            url=base_url,
-            auth_headers=auth_headers,
-            auth_query_params=auth_query_params,
-            openapi_spec=openapi_spec
+            url=base_url, auth_headers=auth_headers, auth_query_params=auth_query_params, openapi_spec=openapi_spec
         )
 
     async def test_connection(self, url_map: dict[str, Any]) -> ConnectionResult:

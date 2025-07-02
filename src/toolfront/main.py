@@ -11,7 +11,6 @@ import diskcache
 import httpx
 import jsonref
 from mcp.server.fastmcp import FastMCP
-from pydantic import Field, SecretStr
 
 from toolfront.config import API_KEY_HEADER, BACKEND_URL
 from toolfront.models.connection import Connection
@@ -72,7 +71,7 @@ class AppContext:
     http_session: httpx.AsyncClient | None = None
     url_objects: list = None  # Store original URL objects directly
     metadata_map: dict = None  # Store metadata by URL string
-    
+
     def __post_init__(self):
         if self.url_objects is None:
             self.url_objects = []
@@ -82,7 +81,7 @@ class AppContext:
 
 async def process_datasource(url: str) -> tuple:
     """Process datasource: parse, download spec, test connection
-    
+
     Returns:
         tuple: (url_object, metadata)
     """
@@ -163,10 +162,7 @@ async def process_datasource(url: str) -> tuple:
     if parsed.scheme in ("http", "https"):
         # Create API URL with auth info
         url_obj = APIURL.from_url_string(
-            url,
-            auth_headers=auth_headers,
-            auth_query_params=auth_query_params,
-            query_params=query_params
+            url, auth_headers=auth_headers, auth_query_params=auth_query_params, query_params=query_params
         )
     else:
         # Create database URL
@@ -180,14 +176,12 @@ async def process_datasource(url: str) -> tuple:
         # Create connection using the structured URL object
         if parsed.scheme in ("http", "https"):
             connection = Connection.from_url(
-                url, 
-                auth_headers=auth_headers,
-                auth_query_params=auth_query_params,
-                query_params=query_params
+                url, auth_headers=auth_headers, auth_query_params=auth_query_params, query_params=query_params
             )
         else:
             # Use the structured URL object directly for database connections
             from toolfront.models.connection import DatabaseConnection
+
             connection = DatabaseConnection(url=url_obj)
         logger.info(f"Connection type: {type(connection)}")
 

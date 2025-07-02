@@ -7,7 +7,7 @@ from mcp.server.fastmcp import Context
 from pydantic import Field
 
 from toolfront.config import MAX_DATA_ROWS, NUM_ENDPOINT_SEARCH_ITEMS, NUM_QUERY_SEARCH_ITEMS, NUM_TABLE_SEARCH_ITEMS
-from toolfront.models.connection import APIConnection, Connection, DatabaseConnection
+from toolfront.models.connection import APIConnection, DatabaseConnection
 from toolfront.models.database import SearchMode
 from toolfront.models.endpoint import Endpoint
 from toolfront.models.query import Query
@@ -42,13 +42,15 @@ def _get_metadata_map(ctx: Context) -> dict:
     return _get_context_field("metadata_map", ctx) or {}
 
 
-async def _resolve_connection_if_needed(connection: DatabaseConnection | APIConnection, ctx: Context) -> DatabaseConnection | APIConnection:
+async def _resolve_connection_if_needed(
+    connection: DatabaseConnection | APIConnection, ctx: Context
+) -> DatabaseConnection | APIConnection:
     """Resolve display URLs back to actual connection objects if needed."""
     # Always try to resolve by matching display strings to original URLs
     display_str = str(connection.url)
     url_objects = _get_url_objects(ctx)
     metadata_map = _get_metadata_map(ctx)
-    
+
     for url_obj in url_objects:
         if url_obj.matches_display_string(display_str):
             if isinstance(connection, DatabaseConnection):
@@ -60,7 +62,7 @@ async def _resolve_connection_if_needed(connection: DatabaseConnection | APIConn
                 metadata = metadata_map.get(str(url_obj), {})
                 api_connection._metadata = metadata  # Store metadata on the connection
                 return api_connection
-    
+
     return connection
 
 
@@ -76,7 +78,7 @@ async def discover(ctx: Context) -> dict[str, list[dict]]:
         url_objects = _get_url_objects(ctx)
         if url_objects is None:
             return {"datasources": ["ERROR: url_objects is None"]}
-        if hasattr(url_objects, '__iter__'):
+        if hasattr(url_objects, "__iter__"):
             return {"datasources": [str(url_obj) for url_obj in url_objects]}
         else:
             return {"datasources": [f"ERROR: url_objects is not iterable, type: {type(url_objects)}"]}
@@ -174,7 +176,7 @@ async def query_database(
         3. Before writing queries, inspect and/or sample the underlying tables to understand their structure and prevent errors.
         4. When a query fails or returns unexpected results, examine the underlying tables to diagnose the issue and then retry.
     """
-    http_session = await _get_context_field("http_session", ctx)
+    http_session = _get_context_field("http_session", ctx)
 
     async def remember_query(success: bool, error_message: str | None = None) -> None:
         """Remember a query by its ID and description."""
@@ -354,7 +356,7 @@ async def search_queries(
        - Note the table and column names they reference
        - Understand the relationships and JOINs they use
     """
-    http_session = await _get_context_field("http_session", ctx)
+    http_session = _get_context_field("http_session", ctx)
 
     if not http_session:
         raise RuntimeError("No HTTP session available for semantic search")
