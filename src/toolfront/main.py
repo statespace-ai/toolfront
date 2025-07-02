@@ -71,10 +71,13 @@ def get_openapi_spec(url: str) -> dict | None:
 class AppContext:
     http_session: httpx.AsyncClient | None = None
     url_objects: list = None  # Store original URL objects directly
+    metadata_map: dict = None  # Store metadata by URL string
     
     def __post_init__(self):
         if self.url_objects is None:
             self.url_objects = []
+        if self.metadata_map is None:
+            self.metadata_map = {}
 
 
 async def process_datasource(url: str) -> tuple:
@@ -214,8 +217,9 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     # Process all datasources concurrently
     datasource_results = await asyncio.gather(*[process_datasource(url) for url in cleaned_urls])
 
-    # Collect URL objects
+    # Collect URL objects and metadata
     url_objects = [url_obj for url_obj, metadata in datasource_results]
+    metadata_map = {str(url_obj): metadata for url_obj, metadata in datasource_results}
 
     @asynccontextmanager
     async def app_lifespan(mcp_server: FastMCP) -> AsyncIterator[AppContext]:
@@ -223,9 +227,9 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
         if api_key:
             headers = {API_KEY_HEADER: api_key}
             async with httpx.AsyncClient(headers=headers, base_url=BACKEND_URL) as http_client:
-                yield AppContext(http_session=http_client, url_objects=url_objects)
+                yield AppContext(http_session=http_client, url_objects=url_objects, metadata_map=metadata_map)
         else:
-            yield AppContext(url_objects=url_objects)
+            yield AppContext(url_objects=url_objects, metadata_map=metadata_map)
 
     mcp = FastMCP("ToolFront MCP server", lifespan=app_lifespan)
 

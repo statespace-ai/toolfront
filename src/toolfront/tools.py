@@ -37,18 +37,29 @@ def _get_url_objects(ctx: Context) -> list:
     return _get_context_field("url_objects", ctx) or []
 
 
+def _get_metadata_map(ctx: Context) -> dict:
+    """Get the metadata map from context."""
+    return _get_context_field("metadata_map", ctx) or {}
+
+
 async def _resolve_connection_if_needed(connection: DatabaseConnection | APIConnection, ctx: Context) -> DatabaseConnection | APIConnection:
     """Resolve display URLs back to actual connection objects if needed."""
     # Always try to resolve by matching display strings to original URLs
     display_str = str(connection.url)
     url_objects = _get_url_objects(ctx)
+    metadata_map = _get_metadata_map(ctx)
     
     for url_obj in url_objects:
         if url_obj.matches_display_string(display_str):
             if isinstance(connection, DatabaseConnection):
                 return DatabaseConnection(url=url_obj)
             elif isinstance(connection, APIConnection):
-                return APIConnection(url=url_obj)
+                # For API connections, we need to pass the OpenAPI spec too
+                api_connection = APIConnection(url=url_obj)
+                # Store metadata for later use by the API object
+                metadata = metadata_map.get(str(url_obj), {})
+                api_connection._metadata = metadata  # Store metadata on the connection
+                return api_connection
     
     return connection
 

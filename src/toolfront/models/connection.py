@@ -61,10 +61,17 @@ class APIConnection(Connection):
         auth_headers = {k: v.get_secret_value() for k, v in self.url.auth_headers.items()}
         auth_query_params = {k: v.get_secret_value() for k, v in self.url.auth_query_params.items()}
         
+        # Get OpenAPI spec from metadata if available
+        openapi_spec = None
+        if hasattr(self, '_metadata') and self._metadata:
+            extra = self._metadata.get('extra', {})
+            openapi_spec = extra.get('openapi_spec')
+        
         return API(
             url=base_url,
             auth_headers=auth_headers,
-            auth_query_params=auth_query_params
+            auth_query_params=auth_query_params,
+            openapi_spec=openapi_spec
         )
 
     async def test_connection(self, url_map: dict[str, Any]) -> ConnectionResult:
