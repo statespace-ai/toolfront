@@ -90,7 +90,7 @@ async def process_datasource(url: str) -> tuple:
     if parsed.scheme in ("http", "https"):
         spec = get_openapi_spec(url)
 
-        servers = spec.get("servers", [])
+        servers = spec.get("servers", []) if spec else []
         url = servers[0].get("url", None) if servers else None
 
         # If no API URL is provided, use the parsed URL
@@ -173,7 +173,8 @@ async def process_datasource(url: str) -> tuple:
     metadata = {"parsed": parsed, "extra": extra}
 
     try:
-        # Pass the URL info to Connection.from_url
+        logger.info("Creating connection from URL (password automatically hidden)")
+        # Create connection using the structured URL object
         if parsed.scheme in ("http", "https"):
             connection = Connection.from_url(
                 url, 
@@ -182,12 +183,24 @@ async def process_datasource(url: str) -> tuple:
                 query_params=query_params
             )
         else:
-            connection = Connection.from_url(url)
+            # Use the structured URL object directly for database connections
+            from toolfront.models.connection import DatabaseConnection
+            connection = DatabaseConnection(url=url_obj)
+        logger.info(f"Connection type: {type(connection)}")
 
+        logger.info("Testing connection")
         # Test connection
         result = await connection.test_connection(url_map={})
+
+        if result.connected:
+            logger.warning("Connection successful")
+        else:
+            logger.warning(f"Connection failed: {result.message}")
     except Exception as e:
-        logger.debug(f"Connection test failed: {e}")
+        logger.error(f"Exception during connection process: {type(e).__name__}: {e}")
+        import traceback
+
+        logger.error(f"Full traceback: {traceback.format_exc()}")
         from toolfront.models.database import ConnectionResult
 
         result = ConnectionResult(connected=False, message=f"Connection error: {e}")
