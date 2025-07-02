@@ -11,10 +11,11 @@ import diskcache
 import httpx
 import jsonref
 from mcp.server.fastmcp import FastMCP
-from pydantic import Field
+from pydantic import Field, SecretStr
 
 from toolfront.config import API_KEY_HEADER, BACKEND_URL
 from toolfront.models.connection import Connection
+from toolfront.models.url import APIURL, DatabaseURL
 from toolfront.tools import (
     discover,
     inspect_endpoint,
@@ -26,7 +27,6 @@ from toolfront.tools import (
     search_queries,
     search_tables,
 )
-from toolfront.utils import mask_database_password
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
@@ -70,11 +70,15 @@ def get_openapi_spec(url: str) -> dict | None:
 @dataclass
 class AppContext:
     http_session: httpx.AsyncClient | None = None
-    url_map: dict = Field(default_factory=dict)
+    url_objects: list = Field(default_factory=list)  # Store original URL objects directly
 
 
-async def process_datasource(url: str) -> tuple[str, dict]:
-    """Process datasource: parse, download spec, test connection"""
+async def process_datasource(url: str) -> tuple:
+    """Process datasource: parse, download spec, test connection
+    
+    Returns:
+        tuple: (url_object, metadata)
+    """
 
     parsed = urlparse(url)
     extra = {}
@@ -148,21 +152,39 @@ async def process_datasource(url: str) -> tuple[str, dict]:
             "auth_query_params": auth_query_params,
         }
 
-    # For database URLs, store display version with masked password
-    # API URLs don't need masking (no passwords typically)
-    display_url = url if parsed.scheme in ("http", "https") else mask_database_password(url)
+    # Create structured URL objects
+    if parsed.scheme in ("http", "https"):
+        # Create API URL with auth info
+        url_obj = APIURL.from_url_string(
+            url,
+            auth_headers=auth_headers,
+            auth_query_params=auth_query_params,
+            query_params=query_params
+        )
+    else:
+        # Create database URL
+        url_obj = DatabaseURL.from_url_string(url)
 
-    # Use the actual URL as key, but store the display version
-    url_map = {url: {"parsed": parsed, "extra": extra, "display_url": display_url}}
+    # Store metadata with the URL object
+    metadata = {"parsed": parsed, "extra": extra}
 
     try:
         logger.info("Creating connection from URL (password automatically hidden)")
-        # Pass the actual URL string to Connection.from_url, it will create its own SecretStr
-        connection = Connection.from_url(url)
+        # Pass the URL info to Connection.from_url
+        if parsed.scheme in ("http", "https"):
+            connection = Connection.from_url(
+                url, 
+                auth_headers=auth_headers,
+                auth_query_params=auth_query_params,
+                query_params=query_params
+            )
+        else:
+            connection = Connection.from_url(url)
         logger.info(f"Connection type: {type(connection)}")
 
         logger.info("Testing connection")
-        result = await connection.test_connection(url_map=url_map)
+        # For testing, we don't need the complex url_map structure
+        result = await connection.test_connection(url_map={})
 
         if result.connected:
             logger.warning("Connection successful")
@@ -178,7 +200,7 @@ async def process_datasource(url: str) -> tuple[str, dict]:
 
         result = ConnectionResult(connected=False, message=f"Connection error: {e}")
 
-    return url_map
+    return url_obj, metadata
 
 
 async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
@@ -187,8 +209,8 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     # Process all datasources concurrently
     datasource_results = await asyncio.gather(*[process_datasource(url) for url in cleaned_urls])
 
-    # Build url_map from results
-    url_map = {k: v for d in datasource_results for k, v in d.items()}
+    # Collect URL objects
+    url_objects = [url_obj for url_obj, metadata in datasource_results]
 
     @asynccontextmanager
     async def app_lifespan(mcp_server: FastMCP) -> AsyncIterator[AppContext]:
@@ -196,9 +218,9 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
         if api_key:
             headers = {API_KEY_HEADER: api_key}
             async with httpx.AsyncClient(headers=headers, base_url=BACKEND_URL) as http_client:
-                yield AppContext(http_session=http_client, url_map=url_map)
+                yield AppContext(http_session=http_client, url_objects=url_objects)
         else:
-            yield AppContext(url_map=url_map)
+            yield AppContext(url_objects=url_objects)
 
     mcp = FastMCP("ToolFront MCP server", lifespan=app_lifespan)
 
