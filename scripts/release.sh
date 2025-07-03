@@ -1,6 +1,22 @@
 #!/bin/bash
 set -e
 
+# Parse command line arguments
+CHANGELOG_FILE=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --changelog)
+      CHANGELOG_FILE="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option $1"
+      echo "Usage: $0 [--changelog <file>]"
+      exit 1
+      ;;
+  esac
+done
+
 # Check if we have uncommitted changes
 if ! git diff-index --quiet HEAD --; then
     echo "Error: You have uncommitted changes. Please commit or stash them first."
@@ -59,5 +75,15 @@ git push
 # Create and push tag
 git tag "v$NEW_VERSION"
 git push origin "v$NEW_VERSION"
+
+# Create GitHub release
+echo "Creating GitHub release..."
+if [ -n "$CHANGELOG_FILE" ] && [ -f "$CHANGELOG_FILE" ]; then
+    echo "Using changelog from: $CHANGELOG_FILE"
+    gh release create "v$NEW_VERSION" --notes-file "$CHANGELOG_FILE" --title "v$NEW_VERSION"
+else
+    echo "Creating minimal release notes"
+    gh release create "v$NEW_VERSION" --notes "Release v$NEW_VERSION" --title "v$NEW_VERSION"
+fi
 
 echo "Successfully released version $NEW_VERSION"
