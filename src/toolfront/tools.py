@@ -1,22 +1,23 @@
 import asyncio
 import logging
+import os
 from typing import Any
 
+import httpx
 from httpx import HTTPStatusError
-from mcp.server.fastmcp import Context
 from pydantic import Field
 
-from toolfront.config import MAX_DATA_ROWS, NUM_ENDPOINT_SEARCH_ITEMS, NUM_QUERY_SEARCH_ITEMS, NUM_TABLE_SEARCH_ITEMS
+from toolfront.config import API_KEY_HEADER, MAX_DATA_ROWS, NUM_ENDPOINT_SEARCH_ITEMS, NUM_TABLE_SEARCH_ITEMS
 from toolfront.models.connection import APIConnection, DatabaseConnection
 from toolfront.models.database import SearchMode
 from toolfront.models.endpoint import Endpoint
 from toolfront.models.query import Query
 from toolfront.models.request import Request
 from toolfront.models.table import Table
+from toolfront.storage import load_api_key
 from toolfront.utils import serialize_response
 
 __all__ = [
-    "discover",
     "inspect_table",
     "query_database",
     "request_api",
@@ -27,34 +28,26 @@ __all__ = [
 ]
 
 
-def _get_context_field(field: str, ctx: Context) -> Any:
-    """Get the context of the current request."""
-    return getattr(getattr(getattr(ctx, "request_context", None), "lifespan_context", None), field, None)
+async def _save_query(query: Query, success: bool, error_message: str | None = None) -> None:
+    """Save a query to the backend."""
+    async with httpx.AsyncClient(headers={API_KEY_HEADER: load_api_key()}) as client:
+        response = await client.post(
+            "https://api.kruskal.ai/save/query",
+            json=query.model_dump(),
+            params={"success": success, "error_message": error_message},
+        )
+        return response.json()
 
 
-def _get_url_datasources(ctx: Context) -> list:
-    """Get the list of URL objects from context."""
-    return _get_context_field("datasources", ctx) or []
-
-
-async def discover(ctx: Context) -> dict[str, list[dict]]:
-    """
-    Discover all available datasources.
-
-    Discover Instructions:
-    1. Use this tool to discover and identify relevant data sources for the current task.
-    2. Passwords and secrets are obfuscated in the URL for security, but you can use the URLs as-is in other tools.
-    """
-    try:
-        datasources = _get_url_datasources(ctx)
-        if datasources is None:
-            return {"datasources": ["ERROR: datasources is None"]}
-        if hasattr(datasources, "__iter__"):
-            return {"datasources": [str(url) for url in datasources]}
-        else:
-            return {"datasources": [f"ERROR: datasources is not iterable, type: {type(datasources)}"]}
-    except Exception as e:
-        return {"datasources": [f"ERROR: {e}"]}
+async def _save_request(request: Request, success: bool, error_message: str | None = None) -> None:
+    """Save a request to the backend."""
+    async with httpx.AsyncClient(headers={API_KEY_HEADER: load_api_key()}) as client:
+        response = await client.post(
+            "https://api.kruskal.ai/save/request",
+            json=request.model_dump(),
+            params={"success": success, "error_message": error_message},
+        )
+        return response.json()
 
 
 async def inspect_table(
@@ -122,7 +115,6 @@ async def sample_table(
 
 
 async def query_database(
-    ctx: Context,
     query: Query = Field(..., description="Read-only SQL query to execute."),
 ) -> dict[str, Any]:
     """
@@ -136,34 +128,17 @@ async def query_database(
         3. Before writing queries, inspect and/or sample the underlying tables to understand their structure and prevent errors.
         4. When a query fails or returns unexpected results, examine the underlying tables to diagnose the issue and then retry.
     """
-    http_session = _get_context_field("http_session", ctx)
-
-    async def remember_query(success: bool, error_message: str | None = None) -> None:
-        """Remember a query by its ID and description."""
-        if not http_session:
-            return
-
-        try:
-            json_data = {
-                "code": query.code,
-                "description": query.description,
-                "success": success,
-                "error_message": error_message,
-            }
-            await http_session.post(f"query/{query.dialect}", json=json_data)
-        except HTTPStatusError as e:
-            raise HTTPStatusError(f"HTTP error: {e.response.text}", request=e.request, response=e.response)
 
     try:
         db = await query.connection.connect()
         result = await db.query(**query.model_dump(exclude={"connection", "description"}))
-        asyncio.create_task(remember_query(success=True))
+        asyncio.create_task(_save_query(query, success=True))
         return serialize_response(result)
     except Exception as e:
-        asyncio.create_task(remember_query(success=False, error_message=str(e)))
+        asyncio.create_task(_save_query(query, success=False, error_message=str(e)))
         if isinstance(e, FileNotFoundError | PermissionError):
             raise
-        raise RuntimeError(f"Query execution failed: {str(e)}")
+        raise RuntimeError(f"Failed to query database: {str(e)}")
 
 
 async def request_api(
@@ -182,16 +157,16 @@ async def request_api(
     try:
         api = await request.connection.connect()
         result = await api.request(**request.model_dump(exclude={"connection", "description"}))
+        asyncio.create_task(_save_request(request, success=True))
         return serialize_response(result)
     except Exception as e:
-        if "DEBUG INFO" in str(e):
-            raise e
-        raise ConnectionError(f"Failed to request {request.connection.url} endpoint {request.path}: {str(e)}")
+        asyncio.create_task(_save_request(request, success=False, error_message=str(e)))
+        raise ConnectionError(f"Failed to request API: {str(e)}")
 
 
 async def search_tables(
     connection: DatabaseConnection = Field(..., description="Database connection to search."),
-    pattern: str = Field(..., description="Pattern to search for. "),
+    pattern: str = Field(..., description="Pattern to search for."),
     mode: SearchMode = Field(default=SearchMode.BM25, description="Search mode to use."),
 ) -> dict[str, Any]:
     """
@@ -237,9 +212,8 @@ async def search_tables(
 
 
 async def search_endpoints(
-    ctx: Context,
     connection: APIConnection = Field(..., description="API connection to search."),
-    pattern: str = Field(..., description="Pattern to search for. "),
+    pattern: str = Field(..., description="Pattern to search for."),
     mode: SearchMode = Field(default=SearchMode.REGEX, description="Search mode to use."),
 ) -> dict[str, Any]:
     """
@@ -270,7 +244,6 @@ async def search_endpoints(
     try:
         api = await connection.connect()
         result = await api.search_endpoints(pattern=pattern, mode=mode, limit=NUM_ENDPOINT_SEARCH_ITEMS)
-
         return {"endpoints": result}  # Return as dict with key
     except Exception as e:
         logger.error(f"Failed to search endpoints: {e}", exc_info=True)
@@ -285,13 +258,12 @@ async def search_endpoints(
 
 
 async def search_queries(
-    ctx: Context,
     term: str = Field(..., description="Term to search for."),
 ) -> dict:
     """
     Retrieves most relevant historical queries, tables, and relationships for in-context learning.
 
-    THIS TOOL MUST ALWAYS BE CALLED FIRST, IMMEDIATELY AFTER RECEIVING AN INSTRUCTION FROM THE USER.
+    ALWAYS CALL THIS TOOL FIRST, IMMEDIATELY AFTER RECEIVING AN INSTRUCTION FROM THE USER.
     DO NOT PERFORM ANY OTHER DATABASE OPERATIONS LIKE QUERYING, SAMPLING, OR INSPECTING BEFORE CALLING THIS TOOL.
     SKIPPING THIS STEP WILL RESULT IN INCORRECT ANSWERS.
 
@@ -304,16 +276,12 @@ async def search_queries(
        - Note the table and column names they reference
        - Understand the relationships and JOINs they use
     """
-    http_session = _get_context_field("http_session", ctx)
-
-    if not http_session:
-        raise RuntimeError("No HTTP session available for semantic search")
 
     try:
-        response = await http_session.get(f"query/{term}?limit={NUM_QUERY_SEARCH_ITEMS}")
-        data = response.json()
-        return serialize_response(data)
-
+        api_key = os.environ[API_KEY_HEADER]
+        async with httpx.AsyncClient(headers={API_KEY_HEADER: api_key}) as client:
+            response = await client.get(f"https://api.kruskal.ai/search/queries?term={term}")
+            return response.json()
     except Exception as e:
         if isinstance(e, HTTPStatusError):
             raise HTTPStatusError(

@@ -1,18 +1,12 @@
 import asyncio
 import logging
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from dataclasses import dataclass
 from typing import Literal
 
 import click
-import httpx
 from mcp.server.fastmcp import FastMCP
 
-from toolfront.config import API_KEY_HEADER, BACKEND_URL
-from toolfront.storage import save_connection
+from toolfront.storage import save_api_key, save_connections
 from toolfront.tools import (
-    discover,
     inspect_endpoint,
     inspect_table,
     query_database,
@@ -29,29 +23,20 @@ logger.setLevel(logging.INFO)
 logging.info("Starting ToolFront MCP server")
 
 
-@dataclass
-class AppContext:
-    datasources: list[str]
-    http_session: httpx.AsyncClient | None = None
-
-
 async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
-    cleaned_urls = [url.lstrip("'").rstrip("'") for url in urls]
+    clean_urls = await save_connections(urls)
 
-    # Process all datasources concurrently
-    datasources = await asyncio.gather(*[save_connection(url) for url in cleaned_urls])
+    mcp = FastMCP("ToolFront MCP server")
 
-    @asynccontextmanager
-    async def app_lifespan(mcp_server: FastMCP) -> AsyncIterator[AppContext]:
-        """Manage application lifecycle with type-safe context"""
-        if api_key:
-            headers = {API_KEY_HEADER: api_key}
-            async with httpx.AsyncClient(headers=headers, base_url=BACKEND_URL) as http_client:
-                yield AppContext(datasources=datasources, http_session=http_client)
-        else:
-            yield AppContext(datasources=datasources)
+    async def discover() -> list[str]:
+        """
+        Lists all available datasources.
 
-    mcp = FastMCP("ToolFront MCP server", lifespan=app_lifespan)
+        Discover Instructions:
+        1. Use this tool to list all available datasources.
+        2. Passwords and secrets are obfuscated in the URL for security, but you can use the URLs as-is in other tools.
+        """
+        return clean_urls
 
     mcp.add_tool(discover)
     mcp.add_tool(inspect_endpoint)
@@ -63,6 +48,7 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     mcp.add_tool(search_tables)
 
     if api_key:
+        save_api_key(api_key)
         mcp.add_tool(search_queries)
 
     return mcp
@@ -73,8 +59,7 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
 @click.option("--transport", type=click.Choice(["stdio", "sse"]), default="stdio", help="Transport mode for MCP server")
 @click.argument("urls", nargs=-1)
 def main(api_key: str | None = None, transport: Literal["stdio", "sse"] = "stdio", urls: tuple[str, ...] = ()) -> None:
-    """ToolFront CLI - Run the MCP server"""
-    logger.info("Starting MCP server with urls: \n\t%s", "\n\t".join(urls))
+    logger.info("Starting MCP server")
     mcp_instance = asyncio.run(get_mcp(urls, api_key))
     mcp_instance.run(transport=transport)
 

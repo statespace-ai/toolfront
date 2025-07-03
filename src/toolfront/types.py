@@ -1,7 +1,3 @@
-"""
-Shared types and enums used across the toolfront package.
-"""
-
 from dataclasses import dataclass
 from enum import Enum
 

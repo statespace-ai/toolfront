@@ -1,8 +1,6 @@
-"""
-Connection storage and caching utilities.
-"""
-
+import asyncio
 import logging
+import os
 from urllib.parse import urlparse
 
 import diskcache
@@ -10,8 +8,20 @@ import httpx
 import jsonref
 from sqlalchemy.engine.url import make_url
 
+from toolfront.config import API_KEY_HEADER
+
 logger = logging.getLogger("toolfront")
 _cache = diskcache.Cache(".toolfront_cache")
+
+
+def save_api_key(api_key: str) -> None:
+    """Save the API key to the environment."""
+    os.environ[API_KEY_HEADER] = api_key
+
+
+def load_api_key() -> str:
+    """Get the API key from the environment."""
+    return os.getenv("KRUSKAL_API_KEY")
 
 
 def _get_or_download_openapi_spec(spec_url: str) -> dict | None:
@@ -38,6 +48,11 @@ def _get_or_download_openapi_spec(spec_url: str) -> dict | None:
     except Exception as e:
         logger.warning(f"Failed to download OpenAPI spec from {spec_url}: {e}")
         return None
+
+
+async def save_connections(urls: list[str]) -> list[str]:
+    """Save a list of connections to the cache."""
+    return await asyncio.gather(*[save_connection(url) for url in urls])
 
 
 async def save_connection(url: str) -> str:
