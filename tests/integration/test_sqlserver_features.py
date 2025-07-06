@@ -5,7 +5,6 @@ import contextlib
 import pytest
 
 from toolfront.models.connection import DatabaseConnection
-from toolfront.models.url import DatabaseURL
 
 
 class TestSQLServerFeatures:

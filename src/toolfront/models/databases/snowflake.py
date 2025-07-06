@@ -1,12 +1,12 @@
 import pandas as pd
-from async_lru import alru_cache
 
-from toolfront.config import ALRU_CACHE_TTL
+from toolfront.config import CACHE_TTL
 from toolfront.models.database import Database, DatabaseError, SQLAlchemyMixin
+from toolfront.storage import cache
 
 
 class Snowflake(SQLAlchemyMixin, Database):
-    @alru_cache(maxsize=None, ttl=ALRU_CACHE_TTL)
+    @cache(expire=CACHE_TTL)
     async def get_tables(self) -> list[str]:
         """For Snowflake, this method returns both tables and views combined"""
         try:
@@ -17,7 +17,7 @@ class Snowflake(SQLAlchemyMixin, Database):
             tables_data = await self.query(tables_code)
             views_data = await self.query(views_code)
 
-            # Combine the results
+            # Comb?ine the results
             combined_data = pd.DataFrame()
 
             if tables_data is not None and not tables_data.empty:
