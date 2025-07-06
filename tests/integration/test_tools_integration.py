@@ -3,7 +3,6 @@
 import pytest
 
 from toolfront.models.connection import DatabaseConnection
-from toolfront.models.url import DatabaseURL
 from toolfront.models.database import SearchMode
 
 
