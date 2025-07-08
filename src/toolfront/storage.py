@@ -91,6 +91,8 @@ async def save_connection(url: str) -> str:
         else:
             logger.error(f"Failed to connect to {url}: {result.message}")
             raise ConnectionError(f"Failed to connect to {url}: {result.message}")
+    elif url.startswith("file://"):
+        return url
     else:
         # Handle database URLs
         from toolfront.models.connection import DatabaseConnection

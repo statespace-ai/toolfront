@@ -7,15 +7,25 @@ import httpx
 from httpx import HTTPStatusError
 from pydantic import Field
 
-from toolfront.config import API_KEY_HEADER, MAX_DATA_ROWS, NUM_ENDPOINT_SEARCH_ITEMS, NUM_TABLE_SEARCH_ITEMS
-from toolfront.models.connection import APIConnection, DatabaseConnection
+from toolfront.config import (
+    API_KEY_HEADER,
+    MAX_DATA_ROWS,
+    NUM_DOCUMENT_SEARCH_ITEMS,
+    NUM_ENDPOINT_SEARCH_ITEMS,
+    NUM_TABLE_SEARCH_ITEMS,
+)
+from toolfront.models.connection import APIConnection, DatabaseConnection, StorageConnection
 from toolfront.models.database import SearchMode
+from toolfront.models.document import Document
 from toolfront.models.endpoint import Endpoint
 from toolfront.models.query import Query
 from toolfront.models.request import Request
 from toolfront.models.table import Table
 from toolfront.storage import load_api_key
 from toolfront.utils import serialize_response
+
+logger = logging.getLogger("toolfront")
+
 
 __all__ = [
     "inspect_table",
@@ -86,10 +96,35 @@ async def inspect_endpoint(
     3. Always inspect endpoints before writing queries to understand their structure and prevent errors
     """
     try:
+        logger.debug(f"Inspecting endpoint: {endpoint.connection.url} {endpoint.path}")
         api = await endpoint.connection.connect()
         return serialize_response(await api.inspect_endpoint(**endpoint.model_dump(exclude={"connection"})))
     except Exception as e:
+        logger.error(f"Failed to inspect endpoint: {e}", exc_info=True)
         raise ConnectionError(f"Failed to inspect {endpoint.connection.url} endpoint {endpoint.path}: {str(e)}")
+
+
+async def inspect_document(
+    document: Document = Field(..., description="Document to inspect."),
+) -> dict[str, Any]:
+    """
+    Inspect the structure of a document.
+
+    ALWAYS INSPECT DOCUMENTS BEFORE USING THEM TO PREVENT ERRORS.
+    ENSURE THE DOCUMENT EXISTS BEFORE ATTEMPTING TO INSPECT IT.
+
+    Inspect Instructions:
+    1. Use this tool to understand document structure like sections, sheet names, etc.
+    2. Inspecting documents helps understand the structure of the data
+    3. Always inspect documents before reading them to prevent errors.
+    """
+    try:
+        logger.debug(f"Inspecting document: {document.connection.url} {document.path}")
+        document = await document.connection.connect()
+        return serialize_response(await document.inspect_document(**document.model_dump(exclude={"connection"})))
+    except Exception as e:
+        logger.error(f"Failed to inspect document: {e}", exc_info=True)
+        raise ConnectionError(f"Failed to inspect {document.connection.url} document {document.path}: {str(e)}")
 
 
 async def sample_table(
@@ -108,10 +143,28 @@ async def sample_table(
     3. Always sample tables before writing queries to understand their structure and prevent errors.
     """
     try:
+        logger.debug(f"Sampling table: {table.connection.url} {table.path}")
         db = await table.connection.connect()
         return serialize_response(await db.sample_table(table.path, n=n))
     except Exception as e:
         raise ConnectionError(f"Failed to sample table in {table.connection.url} table {table.path}: {str(e)}")
+
+
+async def sample_document(
+    document: Document = Field(..., description="Document to sample."),
+) -> dict[str, Any]:
+    """
+    Get a sample of data from a document.
+    """
+    try:
+        logger.debug(f"Sampling document: {document.connection.url} {document.path}")
+        document = await document.connection.connect()
+        return serialize_response(await document.sample_document(**document.model_dump(exclude={"connection"})))
+    except Exception as e:
+        logger.error(f"Failed to sample document: {e}", exc_info=True)
+        raise ConnectionError(
+            f"Failed to sample document in {document.connection.url} document {document.path}: {str(e)}"
+        )
 
 
 async def query_database(
@@ -130,11 +183,13 @@ async def query_database(
     """
 
     try:
+        logger.debug(f"Querying database: {query.connection.url} {query.code}")
         db = await query.connection.connect()
         result = await db.query(**query.model_dump(exclude={"connection", "description"}))
         asyncio.create_task(_save_query(query, success=True))
         return serialize_response(result)
     except Exception as e:
+        logger.error(f"Failed to query database: {e}", exc_info=True)
         asyncio.create_task(_save_query(query, success=False, error_message=str(e)))
         if isinstance(e, FileNotFoundError | PermissionError):
             raise
@@ -155,6 +210,7 @@ async def request_api(
         3. When a request fails or returns unexpected results, examine the endpoint to diagnose the issue and then retry.
     """
     try:
+        logger.debug(f"Requesting API: {request.connection.url} {request.path}")
         api = await request.connection.connect()
         result = await api.request(**request.model_dump(exclude={"connection", "description"}))
         asyncio.create_task(_save_request(request, success=True))
@@ -191,24 +247,15 @@ async def search_tables(
             * Use to search for similar table names.
     3. Begin with approximate search modes like BM25 and Jaro-Winkler, and only use regex to precisely search for a specific table name.
     """
-    logger = logging.getLogger("toolfront")
-    logger.debug(f"Searching tables with pattern '{pattern}', mode '{mode}'")
 
     try:
+        logger.debug(f"Searching tables: {connection.url} {pattern} {mode}")
         db = await connection.connect()
         result = await db.search_tables(pattern=pattern, limit=NUM_TABLE_SEARCH_ITEMS, mode=mode)
-
         return {"tables": result}  # Return as dict with key
     except Exception as e:
         logger.error(f"Failed to search tables: {e}", exc_info=True)
-        if "pattern" in str(e).lower() and mode == SearchMode.REGEX:
-            raise ConnectionError(
-                f"Failed to search {connection.url} - Invalid regex pattern: {pattern}. Please try a different pattern or use a different search mode."
-            )
-        elif "connection" in str(e).lower() or "connect" in str(e).lower():
-            raise ConnectionError(f"Failed to connect to {connection.url} - {str(e)}")
-        else:
-            raise ConnectionError(f"Failed to search tables in {connection.url} - {str(e)}")
+        raise ConnectionError(f"Failed to search tables in {connection.url} - {str(e)}")
 
 
 async def search_endpoints(
@@ -238,23 +285,52 @@ async def search_endpoints(
             * Use to search for similar endpoint names.
     3. Begin with approximate search modes like BM25 and Jaro-Winkler, and only use regex to precisely search for a specific endpoint name.
     """
-    logger = logging.getLogger("toolfront")
-    logger.debug(f"Searching endpoints with pattern '{pattern}', mode '{mode}'")
 
     try:
+        logger.debug(f"Searching endpoints: {connection.url} {pattern} {mode}")
         api = await connection.connect()
         result = await api.search_endpoints(pattern=pattern, mode=mode, limit=NUM_ENDPOINT_SEARCH_ITEMS)
         return {"endpoints": result}  # Return as dict with key
     except Exception as e:
         logger.error(f"Failed to search endpoints: {e}", exc_info=True)
-        if "pattern" in str(e).lower() and mode == SearchMode.REGEX:
-            raise ConnectionError(
-                f"Failed to search {connection.url} - Invalid regex pattern: {pattern}. Please try a different pattern or use a different search mode."
-            )
-        elif "connection" in str(e).lower() or "connect" in str(e).lower():
-            raise ConnectionError(f"Failed to connect to {connection.url} - {str(e)}")
-        else:
-            raise ConnectionError(f"Failed to search endpoints in {connection.url} - {str(e)}")
+        raise ConnectionError(f"Failed to search endpoints in {connection.url} - {str(e)}")
+
+
+async def search_documents(
+    connection: StorageConnection = Field(..., description="Storage connection to search."),
+    pattern: str = Field(..., description="Pattern to search for."),
+    mode: SearchMode = Field(default=SearchMode.REGEX, description="Search mode to use."),
+) -> dict[str, Any]:
+    """
+    Find and return documents that match the given pattern.
+
+    NEVER CALL THIS TOOL MORE THAN NECESSARY. DO NOT ADJUST THE LIMIT PARAMETER UNLESS REQUIRED.
+
+    Document Search Instructions:
+    1. This tool searches for document names in "file://path" format (e.g., "file:///Users/path/to/dir").
+    2. Determine the best search mode to use:
+        - regex:
+            * Returns documents matching a regular expression pattern
+            * Pattern must be a valid regex expression
+            * Use when you need precise document matching
+        - bm25:
+            * Returns documents using case-insensitive BM25 (Best Match 25) ranking algorithm
+            * Pattern must be a sentence, phrase, or space-separated words
+            * Use when searching document names with descriptive keywords
+        - jaro_winkler:
+            * Returns documents using case-insensitive Jaro-Winkler similarity algorithm
+            * Pattern must be an existing document name.
+            * Use to search for similar document names.
+    3. Begin with approximate search modes like BM25 and Jaro-Winkler, and only use regex to precisely search for a specific document name.
+    """
+    try:
+        logger.debug(f"Searching documents: {connection.url} {pattern} {mode}")
+        storage = await connection.connect()
+        result = await storage.search_documents(pattern=pattern, mode=mode, limit=NUM_DOCUMENT_SEARCH_ITEMS)
+        return {"documents": result}
+    except Exception as e:
+        logger.error(f"Failed to search documents: {e}", exc_info=True)
+        raise ConnectionError(f"Failed to search documents in {connection.url} - {str(e)}")
 
 
 async def search_queries(
@@ -278,6 +354,7 @@ async def search_queries(
     """
 
     try:
+        logger.debug(f"Searching queries: {term}")
         api_key = os.environ[API_KEY_HEADER]
         async with httpx.AsyncClient(headers={API_KEY_HEADER: api_key}) as client:
             response = await client.get(f"https://api.kruskal.ai/search/queries?term={term}")

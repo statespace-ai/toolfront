@@ -7,11 +7,14 @@ from mcp.server.fastmcp import FastMCP
 
 from toolfront.storage import save_api_key, save_connections
 from toolfront.tools import (
+    inspect_document,
     inspect_endpoint,
     inspect_table,
     query_database,
     request_api,
+    sample_document,
     sample_table,
+    search_documents,
     search_endpoints,
     search_queries,
     search_tables,
@@ -41,9 +44,12 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     mcp.add_tool(discover)
     mcp.add_tool(inspect_endpoint)
     mcp.add_tool(inspect_table)
+    mcp.add_tool(inspect_document)
     mcp.add_tool(query_database)
     mcp.add_tool(request_api)
     mcp.add_tool(sample_table)
+    mcp.add_tool(sample_document)
+    mcp.add_tool(search_documents)
     mcp.add_tool(search_endpoints)
     mcp.add_tool(search_tables)
 

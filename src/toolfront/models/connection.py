@@ -9,6 +9,7 @@ from sqlalchemy.engine.url import URL, make_url
 from toolfront.models.api import API
 from toolfront.models.database import ConnectionResult, Database
 from toolfront.models.databases import DatabaseType, db_map
+from toolfront.models.storage import Storage
 from toolfront.storage import load_connection, load_openapi_spec_from_clean_url, load_spec_url_from_clean_url
 
 logger = logging.getLogger("toolfront.connection")
@@ -142,3 +143,11 @@ class DatabaseConnection(Connection):
         module = importlib.import_module(f"toolfront.models.databases.{db_type.value}")
         db_class = getattr(module, db_class_name)
         return db_class(url=url)
+
+
+class StorageConnection(Connection):
+    url: str = Field(..., description="Full storage URL.")
+
+    async def connect(cls) -> Storage:
+        url: ParseResult = urlparse(cls.url)
+        return Storage(url=url)

@@ -67,6 +67,9 @@ class API(BaseModel, ABC):
     async def search_endpoints(self, pattern: str, mode: SearchMode = SearchMode.REGEX, limit: int = 10) -> list[str]:
         """Search for endpoints using different algorithms."""
         endpoints = await self.get_endpoints()
+        if not endpoints:
+            return []
+
         try:
             return search_items(endpoints, pattern, mode, limit)
         except Exception as e:
