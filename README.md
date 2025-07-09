@@ -211,6 +211,8 @@ ToolFront stands out with *multi-database* support, *self-improving* AI, and a *
 
 The CE/CL API uses [in-context learning](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html#in-context-learning-key-concept), a novel training-free learning framework pioneered by OpenAI. By augmenting your LLM's context with relevant samples, your agents can reason by analogy over your databases and APIs to quickly arrive at the correct answer.
 
+CE/CL requires an API key and sends your queries and request syntax to an external service. Your data and secrets always remain secure on your local system and are never transmitted.
+
 </details>
 
 
