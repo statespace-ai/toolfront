@@ -3,7 +3,7 @@ from abc import ABC
 
 from pydantic import BaseModel, Field
 
-from toolfront.models.connection import StorageConnection
+from toolfront.models.connections.library import LibraryConnection
 
 logger = logging.getLogger("toolfront")
 
@@ -17,9 +17,9 @@ class DocumentError(Exception):
 class Document(BaseModel, ABC):
     """Abstract base class for documents."""
 
-    connection: StorageConnection = Field(..., description="Storage connection.")
+    connection: LibraryConnection = Field(..., description="Library connection.")
 
     path: str = Field(
         ...,
-        description="Full document path in slash notation e.g. '/Users/path/to/dir/file.pdf' or 'relative/path/to/dir/file.pdf'",
+        description="Absolute document path in slash notation e.g. '/Users/path/to/dir/file.pdf''",
     )

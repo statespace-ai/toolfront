@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from functools import wraps
 from urllib.parse import urlparse
 
 import diskcache
@@ -10,6 +11,9 @@ from platformdirs import user_cache_dir
 from sqlalchemy.engine.url import make_url
 
 from toolfront.config import API_KEY_HEADER
+from toolfront.models.connections.api import APIConnection
+from toolfront.models.connections.database import DatabaseConnection
+from toolfront.models.connections.library import LibraryConnection
 
 logger = logging.getLogger("toolfront")
 
@@ -20,7 +24,8 @@ _cache = diskcache.Cache(cache_dir)
 
 def save_api_key(api_key: str) -> None:
     """Save the API key to the environment."""
-    os.environ[API_KEY_HEADER] = api_key
+    if api_key:
+        os.environ[API_KEY_HEADER] = api_key
 
 
 def load_api_key() -> str:
@@ -63,7 +68,6 @@ async def save_connection(url: str) -> str:
     """Save a connection to the cache."""
     if url.startswith("http"):
         # Handle OpenAPI spec URLs
-        from toolfront.models.connection import APIConnection
 
         parsed = urlparse(url)
         openapi_spec = _get_or_download_openapi_spec(url)
@@ -92,11 +96,13 @@ async def save_connection(url: str) -> str:
             logger.error(f"Failed to connect to {url}: {result.message}")
             raise ConnectionError(f"Failed to connect to {url}: {result.message}")
     elif url.startswith("file://"):
+        result = await LibraryConnection.test_connection(url)
+
+        if result.connected:
+            logger.info(f"Successfully connected to {url}")
+            return url
         return url
     else:
-        # Handle database URLs
-        from toolfront.models.connection import DatabaseConnection
-
         parsed = make_url(url)
 
         # Create obfuscated version (make_url automatically obfuscates passwords)
@@ -169,8 +175,6 @@ def cache(expire: int = None):
     """Async caching decorator using diskcache."""
 
     def decorator(func):
-        from functools import wraps
-
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # Create cache key - includes instance (self) automatically

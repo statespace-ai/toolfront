@@ -5,20 +5,8 @@ from typing import Literal
 import click
 from mcp.server.fastmcp import FastMCP
 
-from toolfront.storage import save_api_key, save_connections
-from toolfront.tools import (
-    inspect_document,
-    inspect_endpoint,
-    inspect_table,
-    query_database,
-    request_api,
-    sample_document,
-    sample_table,
-    search_documents,
-    search_endpoints,
-    search_queries,
-    search_tables,
-)
+from toolfront.cache import save_api_key, save_connections
+from toolfront.models.databases import db_map
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
@@ -31,6 +19,9 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
 
     mcp = FastMCP("ToolFront MCP server")
 
+    # Save API key if provided
+    save_api_key(api_key)
+
     async def discover() -> list[str]:
         """
         Lists all available datasources.
@@ -41,21 +32,45 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
         """
         return clean_urls
 
+    # Always include discover tool
     mcp.add_tool(discover)
-    mcp.add_tool(inspect_endpoint)
-    mcp.add_tool(inspect_table)
-    mcp.add_tool(inspect_document)
-    mcp.add_tool(query_database)
-    mcp.add_tool(request_api)
-    mcp.add_tool(sample_table)
-    mcp.add_tool(sample_document)
-    mcp.add_tool(search_documents)
-    mcp.add_tool(search_endpoints)
-    mcp.add_tool(search_tables)
 
-    if api_key:
-        save_api_key(api_key)
-        mcp.add_tool(search_queries)
+    # Check for different URL patterns
+    has_api_urls = any(url.startswith("https://") for url in clean_urls)
+    has_library_urls = any(url.startswith("file://") for url in clean_urls)
+    has_db_urls = any(url.split("://")[0] in db_map for url in clean_urls if "://" in url)
+
+    # Add API tools if we have API URLs
+    if has_api_urls:
+        from toolfront.tools.api import inspect_endpoint, request_api, search_endpoints
+
+        mcp.add_tool(inspect_endpoint)
+        mcp.add_tool(request_api)
+
+        # Only add search_endpoints if we have both API URLs and API key
+        if api_key:
+            mcp.add_tool(search_endpoints)
+
+    # Add library tools if we have library URLs
+    if has_library_urls:
+        from toolfront.tools.library import read_document, sample_document, search_documents
+
+        mcp.add_tool(sample_document)
+        mcp.add_tool(search_documents)
+        mcp.add_tool(read_document)
+
+    # Add database tools if we have database URLs
+    if has_db_urls:
+        from toolfront.tools.database import inspect_table, query_database, sample_table, search_queries, search_tables
+
+        mcp.add_tool(inspect_table)
+        mcp.add_tool(query_database)
+        mcp.add_tool(sample_table)
+        mcp.add_tool(search_tables)
+
+        # Add search_queries if we have both database URLs and API key
+        if api_key:
+            mcp.add_tool(search_queries)
 
     return mcp
 
