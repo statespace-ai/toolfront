@@ -5,6 +5,7 @@ from typing import Any
 import httpx
 from pydantic import Field
 
+from toolfront.cache import load_api_key
 from toolfront.config import (
     API_KEY_HEADER,
     NUM_ENDPOINT_SEARCH_ITEMS,
@@ -13,7 +14,6 @@ from toolfront.models.actions.request import Request
 from toolfront.models.atomics.endpoint import Endpoint
 from toolfront.models.connections.api import APIConnection
 from toolfront.models.database import SearchMode
-from toolfront.cache import load_api_key
 from toolfront.utils import serialize_response
 
 logger = logging.getLogger("toolfront")
