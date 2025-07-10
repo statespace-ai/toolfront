@@ -14,6 +14,20 @@ class HTTPMethod(str, Enum):
     OPTIONS = "OPTIONS"
 
 
+class DocumentType(str, Enum):
+    """Document type."""
+
+    PDF = "pdf"
+    DOCX = "docx"
+    PPTX = "pptx"
+    EXCEL = "excel"
+    JSON = "json"
+    TXT = "txt"
+    XML = "xml"
+    YAML = "yaml"
+    RTF = "rtf"
+    MD = "md"
+
 class SearchMode(str, Enum):
     """Search mode."""
 

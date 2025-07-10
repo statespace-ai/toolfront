@@ -53,9 +53,8 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
 
     # Add library tools if we have library URLs
     if has_library_urls:
-        from toolfront.tools.library import read_document, sample_document, search_documents
+        from toolfront.tools.library import read_document, search_documents
 
-        mcp.add_tool(sample_document)
         mcp.add_tool(search_documents)
         mcp.add_tool(read_document)
 

@@ -9,14 +9,10 @@ from urllib.parse import ParseResult, urlparse
 from pydantic import BaseModel, Field, field_validator
 
 from toolfront.models.database import SearchMode
-from toolfront.types import ConnectionResult
+from toolfront.types import ConnectionResult, DocumentType
 from toolfront.utils import search_items
 
 logger = logging.getLogger("toolfront")
-
-MAX_SAMPLE_CHARS = 10000
-MAX_SAMPLE_ROWS = 50
-PAGE_SAMPLE_CHARS = 1000
 
 DOCUMENT_EXTENSIONS = {
     ".docx",
@@ -50,6 +46,27 @@ class Library(BaseModel, ABC):
             v = urlparse(v)
         return v
 
+    def _validate_pagination_params(self, page_percentile: float | None, page_number: int | None) -> None:
+        """Validate that page_percentile and page_number are mutually exclusive."""
+        if page_percentile is not None and page_number is not None:
+            raise ValueError(
+                "page_percentile and page_number are mutually exclusive")
+
+        if page_percentile is not None and (page_percentile < 0 or page_percentile > 1):
+            raise ValueError("page_percentile must be between 0 and 1")
+
+        if page_number is not None and page_number < 1:
+            raise ValueError("page_number must be >= 1")
+
+    def _get_target_page(self, page_percentile: float | None, page_number: int | None, total_pages: int) -> int:
+        """Get the target page number, defaulting to page 1 if no pagination specified."""
+        if page_percentile is not None:
+            return max(1, min(total_pages, int(page_percentile * total_pages) + 1))
+        elif page_number is not None:
+            return max(1, min(total_pages, page_number))
+        else:
+            return 1  # Always default to page 1
+
     async def test_connection(self) -> ConnectionResult:
         """Test the connection to the library."""
         return ConnectionResult(connected=True, message="Library connection successful")
@@ -71,79 +88,82 @@ class Library(BaseModel, ABC):
         files = await self.get_documents()
         return search_items(files, pattern, mode, limit)
 
-    # DOCX Methods
-    def _sample_docx(self, path: str) -> str:
-        """Sample DOCX document."""
+    def _read_docx(self, path: str, pagination: int | float = 0) -> str:
+        """Read a single page from DOCX document."""
         try:
             from docx import Document as DocxDocument
 
-            doc = DocxDocument(path)
-            text = ""
-            for paragraph in doc.paragraphs[:10]:  # Sample first 10 paragraphs
-                text += paragraph.text + "\n"
-            return text[:MAX_SAMPLE_CHARS]
-        except ImportError:
-            return "DOCX support requires python-docx library"
-        except Exception as e:
-            return f"Error reading DOCX file: {str(e)}"
+            # Convert pagination parameter
+            if isinstance(pagination, float):
+                page_percentile = pagination if pagination > 0 else None
+                page_number = None
+            else:
+                page_percentile = None
+                page_number = pagination if pagination > 0 else None
 
-    def _read_docx(self, path: str) -> str:
-        """Read DOCX document."""
-        try:
-            from docx import Document as DocxDocument
+            self._validate_pagination_params(page_percentile, page_number)
 
             doc = DocxDocument(path)
-            text = ""
-            for paragraph in doc.paragraphs:
-                text += paragraph.text + "\n"
+
+            # For DOCX, estimate pages based on paragraphs (~10 paragraphs per page)
+            paragraphs_per_page = 10
+            total_paragraphs = len(doc.paragraphs)
+            estimated_pages = max(
+                1, (total_paragraphs + paragraphs_per_page - 1) // paragraphs_per_page)
+
+            target_page = self._get_target_page(
+                page_percentile, page_number, estimated_pages)
+
+            # Calculate paragraph range for the target page
+            start_paragraph = (target_page - 1) * paragraphs_per_page
+            end_paragraph = min(
+                total_paragraphs, start_paragraph + paragraphs_per_page)
+
+            text = f"Page {target_page} of {estimated_pages} (estimated based on paragraphs):\n\n"
+            for i in range(start_paragraph, end_paragraph):
+                if i < len(doc.paragraphs):
+                    text += doc.paragraphs[i].text + "\n"
+
             return text
         except ImportError:
             return "DOCX support requires python-docx library"
         except Exception as e:
             return f"Error reading DOCX file: {str(e)}"
 
-    # Excel Methods
-    def _sample_excel(self, path: str) -> str:
-        """Sample Excel document."""
+    def _read_excel(self, path: str, pagination: int | float = 0) -> str:
+        """Read a single sheet from Excel document."""
         try:
             import pandas as pd
 
-            df = pd.read_excel(path, nrows=MAX_SAMPLE_ROWS)
-            return f"Shape: {df.shape}\nColumns: {list(df.columns)}\n\nSample data:\n{df.head().to_string()}"
-        except ImportError:
-            return "Excel support requires pandas and openpyxl libraries"
-        except Exception as e:
-            return f"Error reading Excel file: {str(e)}"
+            # Convert pagination parameter
+            if isinstance(pagination, float):
+                page_percentile = pagination if pagination > 0 else None
+                page_number = None
+            else:
+                page_percentile = None
+                page_number = pagination if pagination > 0 else None
 
-    def _read_excel(self, path: str) -> str:
-        """Read Excel document."""
-        try:
-            import pandas as pd
+            self._validate_pagination_params(page_percentile, page_number)
 
             excel_data = pd.read_excel(path, sheet_name=None)
-            result = ""
-            for sheet_name, df in excel_data.items():
-                result += f"Sheet: {sheet_name}\n"
-                result += f"Shape: {df.shape}\n"
-                result += f"Columns: {list(df.columns)}\n"
-                result += df.to_string() + "\n\n"
+            sheet_names = list(excel_data.keys())
+            total_sheets = len(sheet_names)
+
+            target_sheet_idx = self._get_target_page(
+                page_percentile, page_number, total_sheets) - 1
+            target_sheet_name = sheet_names[target_sheet_idx]
+            df = excel_data[target_sheet_name]
+
+            result = f"Sheet {target_sheet_idx + 1} of {total_sheets}: {target_sheet_name}\n"
+            result += f"Shape: {df.shape}\n"
+            result += f"Columns: {list(df.columns)}\n"
+            result += df.to_string() + "\n"
+
             return result
         except ImportError:
             return "Excel support requires pandas and openpyxl libraries"
         except Exception as e:
             return f"Error reading Excel file: {str(e)}"
-
-    # JSON Methods
-    def _sample_json(self, path: str) -> str:
-        """Sample JSON document."""
-        try:
-            with Path(path).open("r", encoding="utf-8") as file:
-                data = json.load(file)
-                return json.dumps(data, indent=2, ensure_ascii=False)[:MAX_SAMPLE_CHARS]
-        except json.JSONDecodeError as e:
-            return f"Error parsing JSON: {str(e)}"
-        except Exception as e:
-            return f"Error reading JSON file: {str(e)}"
 
     def _read_json(self, path: str) -> str:
         """Read JSON document."""
@@ -156,16 +176,6 @@ class Library(BaseModel, ABC):
         except Exception as e:
             return f"Error reading JSON file: {str(e)}"
 
-    # Markdown Methods
-    def _sample_markdown(self, path: str) -> str:
-        """Sample Markdown document."""
-        try:
-            with Path(path).open("r", encoding="utf-8") as file:
-                text = file.read()
-                return text[:MAX_SAMPLE_CHARS]
-        except Exception as e:
-            return f"Error reading Markdown file: {str(e)}"
-
     def _read_markdown(self, path: str) -> str:
         """Read Markdown document."""
         try:
@@ -174,25 +184,29 @@ class Library(BaseModel, ABC):
         except Exception as e:
             return f"Error reading Markdown file: {str(e)}"
 
-    # PDF Methods
-    def _sample_pdf(self, path: str) -> str:
-        """Sample PDF document."""
+    def _read_pdf(self, path: str, pagination: int | float = 0) -> str:
+        """Read a single page from PDF document."""
         try:
             from pypdf import PdfReader
 
+            # Convert pagination parameter
+            if isinstance(pagination, float):
+                page_percentile = pagination if pagination > 0 else None
+                page_number = None
+            else:
+                page_percentile = None
+                page_number = pagination if pagination > 0 else None
+
+            self._validate_pagination_params(page_percentile, page_number)
+
             reader = PdfReader(path)
-            text = ""
-            total_chars = 0
+            total_pages = len(reader.pages)
 
-            for page_num, page in enumerate(reader.pages, 1):
-                # Sample first PAGE_SAMPLE_CHARS chars of page
-                page_text = page.extract_text()[:PAGE_SAMPLE_CHARS]
-                text += f"Page {page_num}: {page_text}...\n"
-                total_chars += len(text)
+            target_page_idx = self._get_target_page(
+                page_percentile, page_number, total_pages) - 1
 
-                if total_chars >= MAX_SAMPLE_CHARS:
-                    text = text[:MAX_SAMPLE_CHARS]
-                    break
+            text = f"Page {target_page_idx + 1} of {total_pages}:\n\n"
+            text += reader.pages[target_page_idx].extract_text()
 
             return text
         except ImportError:
@@ -200,89 +214,38 @@ class Library(BaseModel, ABC):
         except Exception as e:
             return f"Error reading PDF file: {str(e)}"
 
-    def _read_pdf(self, path: str) -> str:
-        """Read PDF document."""
-        try:
-            from pypdf import PdfReader
-
-            reader = PdfReader(path)
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text() + "\n"
-            return text
-        except ImportError:
-            return "PDF support requires pypdf library"
-        except Exception as e:
-            return f"Error reading PDF file: {str(e)}"
-
-    # PowerPoint Methods
-    def _sample_powerpoint(self, path: str) -> str:
-        """Sample PowerPoint document."""
+    def _read_powerpoint(self, path: str, pagination: int | float = 0) -> str:
+        """Read a single slide from PowerPoint document."""
         try:
             from pptx import Presentation
 
+            # Convert pagination parameter
+            if isinstance(pagination, float):
+                page_percentile = pagination if pagination > 0 else None
+                page_number = None
+            else:
+                page_percentile = None
+                page_number = pagination if pagination > 0 else None
+
+            self._validate_pagination_params(page_percentile, page_number)
+
             prs = Presentation(path)
-            text = ""
-            total_chars = 0
+            total_slides = len(prs.slides)
 
-            for i, slide in enumerate(prs.slides):
-                slide_text = f"Slide {i + 1}:\n"
-                for shape in slide.shapes:
-                    if hasattr(shape, "text"):
-                        slide_text += shape.text + "\n"
-                slide_text += "\n"
+            target_slide_idx = self._get_target_page(
+                page_percentile, page_number, total_slides) - 1
 
-                # Sample first PAGE_SAMPLE_CHARS chars from slide
-                slide_sample = slide_text[:PAGE_SAMPLE_CHARS]
-                text += slide_sample
-                total_chars += len(slide_sample)
-
-                if total_chars >= MAX_SAMPLE_CHARS:
-                    text = text[:MAX_SAMPLE_CHARS]
-                    break
+            slide = prs.slides[target_slide_idx]
+            text = f"Slide {target_slide_idx + 1} of {total_slides}:\n\n"
+            for shape in slide.shapes:
+                if hasattr(shape, "text"):
+                    text += shape.text + "\n"
 
             return text
         except ImportError:
             return "PowerPoint support requires python-pptx library"
         except Exception as e:
             return f"Error reading PowerPoint file: {str(e)}"
-
-    def _read_powerpoint(self, path: str) -> str:
-        """Read PowerPoint document."""
-        try:
-            from pptx import Presentation
-
-            prs = Presentation(path)
-            text = ""
-            for i, slide in enumerate(prs.slides):
-                text += f"Slide {i + 1}:\n"
-                for shape in slide.shapes:
-                    if hasattr(shape, "text"):
-                        text += shape.text + "\n"
-                text += "\n"
-            return text
-        except ImportError:
-            return "PowerPoint support requires python-pptx library"
-        except Exception as e:
-            return f"Error reading PowerPoint file: {str(e)}"
-
-    # RTF Methods
-    def _sample_rtf(self, path: str) -> str:
-        """Sample RTF document."""
-        try:
-            from striprtf.striprtf import rtf_to_text
-
-            with Path(path).open("r", encoding="utf-8") as file:
-                rtf_content = file.read()
-                text = rtf_to_text(rtf_content)
-                return text[:MAX_SAMPLE_CHARS]
-        except ImportError:
-            # Fallback to raw RTF if striprtf not available
-            with Path(path).open("r", encoding="utf-8") as file:
-                content = file.read()[:MAX_SAMPLE_CHARS]
-                return f"RTF content (requires striprtf library for text extraction):\n{content}"
-        except Exception as e:
-            return f"Error reading RTF file: {str(e)}"
 
     def _read_rtf(self, path: str) -> str:
         """Read RTF document."""
@@ -300,15 +263,6 @@ class Library(BaseModel, ABC):
         except Exception as e:
             return f"Error reading RTF file: {str(e)}"
 
-    # TXT Methods
-    def _sample_txt(self, path: str) -> str:
-        """Sample TXT document."""
-        try:
-            with Path(path).open("r", encoding="utf-8") as file:
-                return file.read()[:MAX_SAMPLE_CHARS]
-        except Exception as e:
-            return f"Error reading TXT file: {str(e)}"
-
     def _read_txt(self, path: str) -> str:
         """Read TXT document."""
         try:
@@ -316,32 +270,6 @@ class Library(BaseModel, ABC):
                 return file.read()
         except Exception as e:
             return f"Error reading TXT file: {str(e)}"
-
-    # XML Methods
-    def _sample_xml(self, path: str) -> str:
-        """Sample XML document."""
-        try:
-            tree = ET.parse(path)
-            root = tree.getroot()
-
-            result = f"Root element: {root.tag}\n"
-            result += f"Root attributes: {root.attrib}\n\n"
-
-            for i, child in enumerate(root):
-                if i >= 5:  # Limit to first 5 elements
-                    result += "... (truncated)\n"
-                    break
-                result += f"Element: {child.tag}\n"
-                result += f"Attributes: {child.attrib}\n"
-                if child.text and child.text.strip():
-                    result += f"Text: {child.text.strip()}\n"
-                result += "\n"
-
-            return result[:MAX_SAMPLE_CHARS]
-        except Exception:
-            # Fallback to plain text if parsing fails
-            with Path(path).open("r", encoding="utf-8") as file:
-                return file.read()[:MAX_SAMPLE_CHARS]
 
     def _read_xml(self, path: str) -> str:
         """Read XML document."""
@@ -366,22 +294,6 @@ class Library(BaseModel, ABC):
             with Path(path).open("r", encoding="utf-8") as file:
                 return file.read()
 
-    # YAML Methods
-    def _sample_yaml(self, path: str) -> str:
-        """Sample YAML document."""
-        try:
-            import yaml
-
-            with Path(path).open("r", encoding="utf-8") as file:
-                data = yaml.safe_load(file)
-                return yaml.dump(data, indent=2, default_flow_style=False)[:MAX_SAMPLE_CHARS]
-        except ImportError:
-            # Fallback to plain text if PyYAML not available
-            with Path(path).open("r", encoding="utf-8") as file:
-                return file.read()[:MAX_SAMPLE_CHARS]
-        except Exception as e:
-            return f"Error parsing YAML: {str(e)}"
-
     def _read_yaml(self, path: str) -> str:
         """Read YAML document."""
         try:
@@ -397,58 +309,36 @@ class Library(BaseModel, ABC):
         except Exception as e:
             return f"Error parsing YAML: {str(e)}"
 
-    async def sample_document(self, path: str) -> str:
-        """Sample the file using appropriate method based on file extension."""
-        file_extension = path.split(".")[-1].lower()
+    async def read_document(
+        self, document_type: DocumentType, document_path: str, pagination: int | float = 0
+    ) -> str:
+        """Read the file using appropriate method based on file extension.
 
+        Args:
+            document_type: Type of the document to read.
+            document_path: Path to the document.
+            pagination: Page/section number (1-indexed int) or percentile (0.0-1.0 float) to read.
+        """
         # Switch based on file extension
-        if file_extension == "docx":
-            return self._sample_docx(path)
-        elif file_extension == "xlsx":
-            return self._sample_excel(path)
-        elif file_extension == "json":
-            return self._sample_json(path)
-        elif file_extension == "md":
-            return self._sample_markdown(path)
-        elif file_extension == "pdf":
-            return self._sample_pdf(path)
-        elif file_extension == "pptx":
-            return self._sample_powerpoint(path)
-        elif file_extension == "rtf":
-            return self._sample_rtf(path)
-        elif file_extension == "txt":
-            return self._sample_txt(path)
-        elif file_extension == "xml":
-            return self._sample_xml(path)
-        elif file_extension == "yaml" or file_extension == "yml":
-            return self._sample_yaml(path)
+        if document_type == DocumentType.DOCX:
+            return self._read_docx(document_path, pagination)
+        elif document_type == DocumentType.EXCEL:
+            return self._read_excel(document_path, pagination)
+        elif document_type == DocumentType.JSON:
+            return self._read_json(document_path)
+        elif document_type == DocumentType.MD:
+            return self._read_markdown(document_path)
+        elif document_type == DocumentType.PDF:
+            return self._read_pdf(document_path, pagination)
+        elif document_type == DocumentType.PPTX:
+            return self._read_powerpoint(document_path, pagination)
+        elif document_type == DocumentType.RTF:
+            return self._read_rtf(document_path)
+        elif document_type == DocumentType.TXT:
+            return self._read_txt(document_path)
+        elif document_type == DocumentType.XML:
+            return self._read_xml(document_path)
+        elif document_type == DocumentType.YAML:
+            return self._read_yaml(document_path)
         else:
-            return f"Unsupported file type: {file_extension}"
-
-    async def read_document(self, path: str) -> str:
-        """Read the file using appropriate method based on file extension."""
-        file_extension = path.split(".")[-1].lower()
-
-        # Switch based on file extension
-        if file_extension == "docx":
-            return self._read_docx(path)
-        elif file_extension == "xlsx":
-            return self._read_excel(path)
-        elif file_extension == "json":
-            return self._read_json(path)
-        elif file_extension == "md":
-            return self._read_markdown(path)
-        elif file_extension == "pdf":
-            return self._read_pdf(path)
-        elif file_extension == "pptx":
-            return self._read_powerpoint(path)
-        elif file_extension == "rtf":
-            return self._read_rtf(path)
-        elif file_extension == "txt":
-            return self._read_txt(path)
-        elif file_extension == "xml":
-            return self._read_xml(path)
-        elif file_extension == "yaml" or file_extension == "yml":
-            return self._read_yaml(path)
-        else:
-            return f"Unsupported file type: {file_extension}"
+            return f"Unsupported document type: {document_type}"

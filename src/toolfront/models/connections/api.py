@@ -20,5 +20,5 @@ class APIConnection(Connection):
         spec = load_from_cache(self.url)
         if not spec:
             raise ConnectionError(f"Spec not found in cache: {self.url}")
-        
+
         return API(spec=spec)

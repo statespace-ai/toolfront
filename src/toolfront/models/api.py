@@ -112,16 +112,9 @@ class API(BaseModel, ABC):
         auth_headers, auth_query_params = self.spec.get_auth_headers_and_query_params()
 
         # Merge parameters and headers
-        all_params = {
-            **(params or {}),
-            **(self.query_params or {}), 
-            **(auth_query_params or {})
-        }
-        
-        all_headers = {
-            **(auth_headers or {}),
-            **(headers or {})
-        }
+        all_params = {**(params or {}), **(self.query_params or {}), **(auth_query_params or {})}
+
+        all_headers = {**(auth_headers or {}), **(headers or {})}
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.request(
