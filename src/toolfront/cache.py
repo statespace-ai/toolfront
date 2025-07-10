@@ -10,7 +10,6 @@ import diskcache
 from platformdirs import user_cache_dir
 from sqlalchemy.engine.url import make_url
 
-from toolfront.config import SPEC_DOWNLOAD_TTL
 from toolfront.models.connections.api import APIConnection
 from toolfront.models.connections.database import DatabaseConnection
 from toolfront.models.connections.library import LibraryConnection
