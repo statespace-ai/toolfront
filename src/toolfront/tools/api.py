@@ -77,10 +77,8 @@ async def request_api(
         logger.debug(f"Requesting API: {request.connection.url} {request.path}")
         api = await request.connection.connect()
         result = await api.request(**request.model_dump(exclude={"connection", "description"}))
-        asyncio.create_task(_save_request(request, success=True))
         return serialize_response(result)
     except Exception as e:
-        asyncio.create_task(_save_request(request, success=False, error_message=str(e)))
         raise ConnectionError(f"Failed to request API: {str(e)}")
 
 

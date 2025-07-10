@@ -30,7 +30,7 @@ class API(BaseModel, ABC):
     @field_validator("url", mode="before")
     def validate_url(cls, v: Any) -> ParseResult:
         if isinstance(v, str):
-            v = urlparse(v)
+            v = urlparse(v)can 
 
         return v  # type: ignore[no-any-return]
 

@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 from typing import Any
@@ -106,11 +105,9 @@ async def query_database(
         logger.debug(f"Querying database: {query.connection.url} {query.code}")
         db = await query.connection.connect()
         result = await db.query(**query.model_dump(exclude={"connection", "description"}))
-        asyncio.create_task(_save_query(query, success=True))
         return serialize_response(result)
     except Exception as e:
         logger.error(f"Failed to query database: {e}", exc_info=True)
-        asyncio.create_task(_save_query(query, success=False, error_message=str(e)))
         if isinstance(e, FileNotFoundError | PermissionError):
             raise
         raise RuntimeError(f"Failed to query database: {str(e)}")
