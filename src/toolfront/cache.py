@@ -51,7 +51,7 @@ def save_to_env(key: str, value: str) -> bool:
 
 def load_from_env(key: str) -> str | None:
     """Load a value from the environment."""
-    return os.getenv(key)
+    return os.getenv(key, key)
 
 
 def save_to_cache(key: str, value: Any, expire: int = None) -> bool:
