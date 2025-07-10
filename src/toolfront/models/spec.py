@@ -13,9 +13,10 @@ from toolfront.config import SPEC_DOWNLOAD_TTL
 class Spec(BaseModel):
     """OpenAPI/Swagger specification with URL and spec content."""
 
-    spec: dict = Field(..., description="The OpenAPI/Swagger specification content")
+    spec_config: dict = Field(..., description="The OpenAPI/Swagger specification content")
+    spec_url: str = Field(..., description="The URL of the OpenAPI/Swagger specification")
 
-    @field_validator("spec")
+    @field_validator("spec_config")
     def validate_spec(cls, v: dict) -> dict:
         """Validate the spec."""
         return jsonref.replace_refs(v)
@@ -34,15 +35,7 @@ class Spec(BaseModel):
         return server_url
 
     @classmethod
-    def from_api_url(cls, api_url: str) -> "Spec":
-        """Load OpenAPI/Swagger spec from URL or filesystem."""
-        from toolfront.cache import load_from_env
-
-        spec_url = load_from_env(api_url)
-        return cls.from_spec_url(api_url, spec_url)
-
-    @classmethod
-    def from_spec_url(cls, api_url: str, spec_url: str) -> "Spec":
+    def from_spec_url(cls, spec_url: str) -> "Spec":
         """Load OpenAPI/Swagger spec from URL or filesystem."""
         from toolfront.cache import load_from_cache, save_to_cache
 
@@ -56,9 +49,10 @@ class Spec(BaseModel):
                     raise ConnectionError(f"OpenAPI spec file not found: {file_path}")
 
                 with file_path.open() as f:
-                    spec = yaml.safe_load(f) if file_path.suffix.lower() in [".yaml", ".yml"] else json.load(f)
+                    config_spec = yaml.safe_load(f) if file_path.suffix.lower() in [".yaml", ".yml"] else json.load(f)
 
-                spec = cls(url=api_url, spec=spec)
+                spec = cls(spec_config=config_spec, spec_url=spec_url)
+                save_to_cache(spec_url, spec.model_dump(), expire=SPEC_DOWNLOAD_TTL)
                 return spec
 
             except Exception as e:
@@ -68,48 +62,58 @@ class Spec(BaseModel):
             # Check if we have a cached download
             cached_spec = load_from_cache(spec_url)
             if cached_spec:
-                return cls(url=api_url, spec=cached_spec)
+                return cls(**cached_spec)
 
             # Download and cache the spec
             try:
                 with httpx.Client() as client:
                     response = client.get(spec_url)
                     response.raise_for_status()
-                    spec = response.json()
+                    spec_config = response.json()
 
-                # Cache the downloaded content
-                save_to_cache(spec_url, spec, expire=SPEC_DOWNLOAD_TTL)
-
-                return cls(url=api_url, spec=spec)
+                spec = cls(spec_config=spec_config, spec_url=spec_url)
+                save_to_cache(spec_url, spec.model_dump(), expire=SPEC_DOWNLOAD_TTL)
+                return spec
 
             except Exception as e:
                 raise ConnectionError(f"Failed to load OpenAPI/Swagger spec from {spec_url}: {e}")
 
+    def get_endpoint_spec(self, method: str, path: str) -> dict:
+        """Get the endpoint spec from the spec."""
+        endpoint_spec = self.spec_config.get("paths", {}).get(path, {}).get(method.lower(), {})
+        if not endpoint_spec:
+            raise RuntimeError(f"Endpoint not found: {method} {path}")
+        return endpoint_spec
+
+    def get_paths(self) -> dict:
+        """Get the paths from the spec."""
+        return self.spec_config.get("paths", {})
+
     def is_openapi(self) -> bool:
         """Check if this is an OpenAPI 3.x spec."""
-        return "openapi" in self.spec
+        return "openapi" in self.spec_config
 
     def is_swagger(self) -> bool:
         """Check if this is a Swagger 2.x spec."""
-        return "swagger" in self.spec
+        return "swagger" in self.spec_config
 
     def get_version(self) -> str:
         """Get the specification version."""
         if self.is_openapi():
-            return self.spec.get("openapi", "3.0.0")
+            return self.spec_config.get("openapi", "3.0.0")
         elif self.is_swagger():
-            return self.spec.get("swagger", "2.0")
+            return self.spec_config.get("swagger", "2.0")
         return "unknown"
 
     def get_servers(self) -> list[dict]:
         """Get servers from the spec (OpenAPI 3.x) or construct from host/basePath (Swagger 2.x)."""
         if self.is_openapi():
-            return self.spec.get("servers", [])
+            return self.spec_config.get("servers", [])
 
         elif self.is_swagger():
-            host = self.spec.get("host", "")
-            base_path = self.spec.get("basePath", "")
-            schemes = self.spec.get("schemes", ["https"])
+            host = self.spec_config.get("host", "")
+            base_path = self.spec_config.get("basePath", "")
+            schemes = self.spec_config.get("schemes", ["https"])
 
             if host:
                 return [{"url": f"{scheme}://{host}{base_path}"} for scheme in schemes]
@@ -119,14 +123,14 @@ class Spec(BaseModel):
     def get_security_schemes(self) -> dict:
         """Get security schemes from the spec."""
         if self.is_openapi():
-            return self.spec.get("components", {}).get("securitySchemes", {})
+            return self.spec_config.get("components", {}).get("securitySchemes", {})
         elif self.is_swagger():
-            return self.spec.get("securityDefinitions", {})
+            return self.spec_config.get("securityDefinitions", {})
         return {}
 
-    def extract_auth_parameters(self, original_spec_url: str) -> tuple[dict[str, str], dict[str, str]]:
+    def get_auth_headers_and_query_params(self) -> tuple[dict[str, str], dict[str, str]]:
         """Extract auth headers and query parameters from the original spec URL."""
-        parsed_url = urlparse(original_spec_url)
+        parsed_url = urlparse(self.spec_url)
         query_params = parse_qs(parsed_url.query)
 
         # Convert from lists to single values

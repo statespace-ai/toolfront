@@ -10,6 +10,7 @@ import diskcache
 from platformdirs import user_cache_dir
 from sqlalchemy.engine.url import make_url
 
+from toolfront.config import SPEC_DOWNLOAD_TTL
 from toolfront.models.connections.api import APIConnection
 from toolfront.models.connections.database import DatabaseConnection
 from toolfront.models.connections.library import LibraryConnection
@@ -88,8 +89,6 @@ async def save_connections(urls: list[str] | str) -> list[str] | str:
 
         spec = Spec.from_spec_url(spec_url)
         api_url = spec.url
-
-        save_to_env(api_url, spec_url)
 
         result = await APIConnection.test_connection(api_url)
         if result.connected:

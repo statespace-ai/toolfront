@@ -4,7 +4,6 @@ from pydantic import Field
 
 from toolfront.models.api import API
 from toolfront.models.connection import Connection
-from toolfront.models.spec import Spec
 
 logger = logging.getLogger("toolfront")
 
@@ -15,9 +14,11 @@ class APIConnection(Connection):
     url: str = Field(..., description="Clean API URL.")
 
     async def connect(self) -> API:
-        from toolfront.cache import load_from_env
+        from toolfront.cache import load_from_cache
 
         # The spec should always be cached since save_connections already processed it
-        spec_url = load_from_env(self.url)
-        spec = Spec.from_spec_url(spec_url)
+        spec = load_from_cache(self.url)
+        if not spec:
+            raise ConnectionError(f"Spec not found in cache: {self.url}")
+        
         return API(spec=spec)
