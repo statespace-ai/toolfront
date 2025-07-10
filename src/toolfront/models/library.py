@@ -311,26 +311,28 @@ class Library(BaseModel, ABC):
             pagination: Page/section number (1-indexed int) or percentile (0.0-1.0 float) to read.
         """
 
+        full_path = Path(self.url.path) / document_path
+
         match document_type:
             case DocumentType.DOCX:
-                return self._read_docx(document_path, pagination)
+                return self._read_docx(full_path, pagination)
             case DocumentType.XLSX | DocumentType.XLS:
-                return self._read_excel(document_path, pagination)
+                return self._read_excel(full_path, pagination)
             case DocumentType.JSON:
-                return self._read_json(document_path)
+                return self._read_json(full_path)
             case DocumentType.MD:
-                return self._read_markdown(document_path)
+                return self._read_markdown(full_path)
             case DocumentType.PDF:
-                return self._read_pdf(document_path, pagination)
+                return self._read_pdf(full_path, pagination)
             case DocumentType.PPTX:
-                return self._read_powerpoint(document_path, pagination)
+                return self._read_powerpoint(full_path, pagination)
             case DocumentType.RTF:
-                return self._read_rtf(document_path)
+                return self._read_rtf(full_path)
             case DocumentType.TXT:
-                return self._read_txt(document_path)
+                return self._read_txt(full_path)
             case DocumentType.XML:
-                return self._read_xml(document_path)
+                return self._read_xml(full_path)
             case DocumentType.YAML | DocumentType.YML:
-                return self._read_yaml(document_path)
+                return self._read_yaml(full_path)
             case _:
                 return f"Unsupported document type: {document_type}"
