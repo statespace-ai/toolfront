@@ -21,11 +21,9 @@ __all__ = [
 
 
 async def search_documents(
-    connection: LibraryConnection = Field(...,
-                                          description="Library connection to search."),
+    connection: LibraryConnection = Field(..., description="Library connection to search."),
     pattern: str = Field(..., description="Pattern to search for."),
-    mode: SearchMode = Field(default=SearchMode.REGEX,
-                             description="Search mode to use."),
+    mode: SearchMode = Field(default=SearchMode.REGEX, description="Search mode to use."),
 ) -> dict[str, Any]:
     """
     Find and return documents that match the given pattern.
@@ -56,8 +54,7 @@ async def search_documents(
         return {"documents": result}
     except Exception as e:
         logger.error(f"Failed to search documents: {e}", exc_info=True)
-        raise ConnectionError(
-            f"Failed to search documents in {connection.url} - {str(e)}")
+        raise ConnectionError(f"Failed to search documents in {connection.url} - {str(e)}")
 
 
 async def read_document(
@@ -80,15 +77,15 @@ async def read_document(
     6. Avoid over-paginating: don't read every page sequentially unless absolutely necessary for comprehensive understanding.
     """
     try:
-        logger.debug(
-            f"Reading document: {document.connection.url} {document.document_path}")
+        logger.debug(f"Reading document: {document.connection.url} {document.document_path}")
         library = await document.connection.connect()
         return serialize_response(
             await library.read_document(
-                **document.model_dump(exclude={"connection"}), pagination=pagination
+                document_path=document.document_path,
+                document_type=document.document_type,
+                pagination=pagination,
             )
         )
     except Exception as e:
         logger.error(f"Failed to read library: {e}", exc_info=True)
-        raise ConnectionError(
-            f"Failed to read library in {document.connection.url} - {str(e)}")
+        raise ConnectionError(f"Failed to read library in {document.connection.url} - {str(e)}")

@@ -20,13 +20,23 @@ class DocumentType(str, Enum):
     PDF = "pdf"
     DOCX = "docx"
     PPTX = "pptx"
-    EXCEL = "excel"
+    XLSX = "xlsx"
+    XLS = "xls"
     JSON = "json"
     TXT = "txt"
     XML = "xml"
     YAML = "yaml"
+    YML = "yml"
     RTF = "rtf"
     MD = "md"
+
+    @classmethod
+    def from_file_extension(cls, file_path: str) -> "DocumentType":
+        try:
+            return cls(file_path.split(".")[-1].lower())
+        except (ValueError, IndexError) as e:
+            raise ValueError(f"Invalid file extension in path: {file_path}") from e
+
 
 class SearchMode(str, Enum):
     """Search mode."""

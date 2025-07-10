@@ -49,8 +49,7 @@ class Library(BaseModel, ABC):
     def _validate_pagination_params(self, page_percentile: float | None, page_number: int | None) -> None:
         """Validate that page_percentile and page_number are mutually exclusive."""
         if page_percentile is not None and page_number is not None:
-            raise ValueError(
-                "page_percentile and page_number are mutually exclusive")
+            raise ValueError("page_percentile and page_number are mutually exclusive")
 
         if page_percentile is not None and (page_percentile < 0 or page_percentile > 1):
             raise ValueError("page_percentile must be between 0 and 1")
@@ -78,7 +77,7 @@ class Library(BaseModel, ABC):
             return []
 
         try:
-            return [str(p) for p in path.rglob("*.*") if p.suffix.lower() in DOCUMENT_EXTENSIONS]
+            return [str(p.relative_to(path)) for p in path.rglob("*.*") if p.suffix.lower() in DOCUMENT_EXTENSIONS]
         except (PermissionError, OSError) as e:
             logger.warning(f"Error accessing {path}: {e}")
             return []
@@ -108,16 +107,13 @@ class Library(BaseModel, ABC):
             # For DOCX, estimate pages based on paragraphs (~10 paragraphs per page)
             paragraphs_per_page = 10
             total_paragraphs = len(doc.paragraphs)
-            estimated_pages = max(
-                1, (total_paragraphs + paragraphs_per_page - 1) // paragraphs_per_page)
+            estimated_pages = max(1, (total_paragraphs + paragraphs_per_page - 1) // paragraphs_per_page)
 
-            target_page = self._get_target_page(
-                page_percentile, page_number, estimated_pages)
+            target_page = self._get_target_page(page_percentile, page_number, estimated_pages)
 
             # Calculate paragraph range for the target page
             start_paragraph = (target_page - 1) * paragraphs_per_page
-            end_paragraph = min(
-                total_paragraphs, start_paragraph + paragraphs_per_page)
+            end_paragraph = min(total_paragraphs, start_paragraph + paragraphs_per_page)
 
             text = f"Page {target_page} of {estimated_pages} (estimated based on paragraphs):\n\n"
             for i in range(start_paragraph, end_paragraph):
@@ -149,8 +145,7 @@ class Library(BaseModel, ABC):
             sheet_names = list(excel_data.keys())
             total_sheets = len(sheet_names)
 
-            target_sheet_idx = self._get_target_page(
-                page_percentile, page_number, total_sheets) - 1
+            target_sheet_idx = self._get_target_page(page_percentile, page_number, total_sheets) - 1
             target_sheet_name = sheet_names[target_sheet_idx]
             df = excel_data[target_sheet_name]
 
@@ -202,8 +197,7 @@ class Library(BaseModel, ABC):
             reader = PdfReader(path)
             total_pages = len(reader.pages)
 
-            target_page_idx = self._get_target_page(
-                page_percentile, page_number, total_pages) - 1
+            target_page_idx = self._get_target_page(page_percentile, page_number, total_pages) - 1
 
             text = f"Page {target_page_idx + 1} of {total_pages}:\n\n"
             text += reader.pages[target_page_idx].extract_text()
@@ -232,8 +226,7 @@ class Library(BaseModel, ABC):
             prs = Presentation(path)
             total_slides = len(prs.slides)
 
-            target_slide_idx = self._get_target_page(
-                page_percentile, page_number, total_slides) - 1
+            target_slide_idx = self._get_target_page(page_percentile, page_number, total_slides) - 1
 
             slide = prs.slides[target_slide_idx]
             text = f"Slide {target_slide_idx + 1} of {total_slides}:\n\n"
@@ -309,9 +302,7 @@ class Library(BaseModel, ABC):
         except Exception as e:
             return f"Error parsing YAML: {str(e)}"
 
-    async def read_document(
-        self, document_type: DocumentType, document_path: str, pagination: int | float = 0
-    ) -> str:
+    async def read_document(self, document_path: str, document_type: DocumentType, pagination: int | float = 0) -> str:
         """Read the file using appropriate method based on file extension.
 
         Args:
@@ -319,26 +310,27 @@ class Library(BaseModel, ABC):
             document_path: Path to the document.
             pagination: Page/section number (1-indexed int) or percentile (0.0-1.0 float) to read.
         """
-        # Switch based on file extension
-        if document_type == DocumentType.DOCX:
-            return self._read_docx(document_path, pagination)
-        elif document_type == DocumentType.EXCEL:
-            return self._read_excel(document_path, pagination)
-        elif document_type == DocumentType.JSON:
-            return self._read_json(document_path)
-        elif document_type == DocumentType.MD:
-            return self._read_markdown(document_path)
-        elif document_type == DocumentType.PDF:
-            return self._read_pdf(document_path, pagination)
-        elif document_type == DocumentType.PPTX:
-            return self._read_powerpoint(document_path, pagination)
-        elif document_type == DocumentType.RTF:
-            return self._read_rtf(document_path)
-        elif document_type == DocumentType.TXT:
-            return self._read_txt(document_path)
-        elif document_type == DocumentType.XML:
-            return self._read_xml(document_path)
-        elif document_type == DocumentType.YAML:
-            return self._read_yaml(document_path)
-        else:
-            return f"Unsupported document type: {document_type}"
+
+        match document_type:
+            case DocumentType.DOCX:
+                return self._read_docx(document_path, pagination)
+            case DocumentType.XLSX | DocumentType.XLS:
+                return self._read_excel(document_path, pagination)
+            case DocumentType.JSON:
+                return self._read_json(document_path)
+            case DocumentType.MD:
+                return self._read_markdown(document_path)
+            case DocumentType.PDF:
+                return self._read_pdf(document_path, pagination)
+            case DocumentType.PPTX:
+                return self._read_powerpoint(document_path, pagination)
+            case DocumentType.RTF:
+                return self._read_rtf(document_path)
+            case DocumentType.TXT:
+                return self._read_txt(document_path)
+            case DocumentType.XML:
+                return self._read_xml(document_path)
+            case DocumentType.YAML | DocumentType.YML:
+                return self._read_yaml(document_path)
+            case _:
+                return f"Unsupported document type: {document_type}"

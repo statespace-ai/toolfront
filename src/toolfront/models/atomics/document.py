@@ -1,7 +1,7 @@
 import logging
 from abc import ABC
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 from toolfront.models.connections.library import LibraryConnection
 from toolfront.types import DocumentType
@@ -20,9 +20,12 @@ class Document(BaseModel, ABC):
 
     connection: LibraryConnection = Field(..., description="Library connection.")
 
-    document_type: DocumentType = Field(..., description="Document type.")
-
     document_path: str = Field(
         ...,
-        description="Absolute document path in slash notation e.g. '/Users/path/to/dir/file.pdf''",
+        description="Document path in relative to the library url e.g. 'path/to/file.pdf''",
     )
+
+    @computed_field
+    @property
+    def document_type(self) -> str:
+        return DocumentType.from_file_extension(self.document_path).value
