@@ -37,6 +37,11 @@ class DocumentType(str, Enum):
         except (ValueError, IndexError) as e:
             raise ValueError(f"Invalid file extension in path: {file_path}") from e
 
+    @classmethod
+    def get_supported_extensions(cls) -> set[str]:
+        """Get all supported document extensions."""
+        return {f".{doc_type.value}" for doc_type in cls}
+
 
 class SearchMode(str, Enum):
     """Search mode."""

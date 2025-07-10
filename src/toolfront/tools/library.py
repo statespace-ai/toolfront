@@ -26,17 +26,17 @@ async def search_documents(
     mode: SearchMode = Field(default=SearchMode.REGEX, description="Search mode to use."),
 ) -> dict[str, Any]:
     """
-    Find and return documents that match the given pattern.
+    Find and return documents names that match the given pattern.
 
     NEVER CALL THIS TOOL MORE THAN NECESSARY. DO NOT ADJUST THE LIMIT PARAMETER UNLESS REQUIRED.
 
     Library Search Instructions:
-    1. This tool searches for document names in "file://path" format (e.g., "file:///Users/path/to/dir").
+    1. This tool searches for document names in a library, not their contents.
     2. Determine the best search mode to use:
         - regex:
             * Returns documents matching a regular expression pattern
             * Pattern must be a valid regex expression
-            * Use when you need precise document matching
+            * Use when you need precise document name matching
         - bm25:
             * Returns documents using case-insensitive BM25 (Best Match 25) ranking algorithm
             * Pattern must be a sentence, phrase, or space-separated words
@@ -67,7 +67,7 @@ async def read_document(
     Library Read Instructions:
     1. For non-paginated documents (JSON, MD, TXT, XML, YAML, RTF), this tool reads the entire document contents.
     2. For paginated documents (PDF, DOCX, PPTX, Excel), this tool reads only specific pages/sections. Use pagination parameter strategically to target relevant content.
-    3. Use pagination parameter as float (0.0-1.0) for percentile-based navigation or int (1+) for specific page numbers.
+    3. Use pagination parameter as between 0.0 (inclusive) and 1.0 (exclusive) for percentile-based navigation or int (1+) for specific page numbers.
     4. When searching for specific information in large paginated documents, use a "soft" binary search approach:
        - Start with an educated percentile guess based on document type and target content (e.g., 0.8 for conclusions in academic papers, 0.3 for methodology)
        - Use the context from your initial read to refine your search. If you find related but not target content, adjust percentile accordingly

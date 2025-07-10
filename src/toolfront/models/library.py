@@ -14,20 +14,6 @@ from toolfront.utils import search_items
 
 logger = logging.getLogger("toolfront")
 
-DOCUMENT_EXTENSIONS = {
-    ".docx",
-    ".xlsx",
-    ".json",
-    ".md",
-    ".pdf",
-    ".pptx",
-    ".rtf",
-    ".txt",
-    ".xml",
-    ".yaml",
-    ".yml",
-}
-
 
 class LibraryError(Exception):
     """Exception for library-related errors."""
@@ -46,16 +32,33 @@ class Library(BaseModel, ABC):
             v = urlparse(v)
         return v
 
-    def _validate_pagination_params(self, page_percentile: float | None, page_number: int | None) -> None:
-        """Validate that page_percentile and page_number are mutually exclusive."""
-        if page_percentile is not None and page_number is not None:
-            raise ValueError("page_percentile and page_number are mutually exclusive")
+    def _parse_pagination(self, pagination: int | float) -> tuple[float | None, int | None]:
+        """Parse and validate pagination parameter.
 
-        if page_percentile is not None and (page_percentile < 0 or page_percentile > 1):
-            raise ValueError("page_percentile must be between 0 and 1")
+        Args:
+            pagination: Page/section number (1+ int) or percentile (0-1 exclusive float)
 
-        if page_number is not None and page_number < 1:
-            raise ValueError("page_number must be >= 1")
+        Returns:
+            Tuple of (page_percentile, page_number) where exactly one is None
+
+        Rules:
+            - Float 0 < pagination < 1: percentile
+            - Int pagination >= 1: page number
+            - Invalid values default to page 1
+        """
+        if isinstance(pagination, float):
+            if 0 < pagination < 1:
+                return pagination, None
+            else:
+                # Invalid percentile or edge case, default to page 1
+                return None, 1
+        else:
+            # Integer case
+            if pagination >= 1:
+                return None, pagination
+            else:
+                # Invalid page number, default to page 1
+                return None, 1
 
     def _get_target_page(self, page_percentile: float | None, page_number: int | None, total_pages: int) -> int:
         """Get the target page number, defaulting to page 1 if no pagination specified."""
@@ -77,7 +80,8 @@ class Library(BaseModel, ABC):
             return []
 
         try:
-            return [str(p.relative_to(path)) for p in path.rglob("*.*") if p.suffix.lower() in DOCUMENT_EXTENSIONS]
+            supported_extensions = DocumentType.get_supported_extensions()
+            return [str(p.relative_to(path)) for p in path.rglob("*.*") if p.suffix.lower() in supported_extensions]
         except (PermissionError, OSError) as e:
             logger.warning(f"Error accessing {path}: {e}")
             return []
@@ -87,38 +91,17 @@ class Library(BaseModel, ABC):
         files = await self.get_documents()
         return search_items(files, pattern, mode, limit)
 
-    def _read_docx(self, path: str, pagination: int | float = 0) -> str:
-        """Read a single page from DOCX document."""
+    def _read_docx(self, path: str) -> str:
+        """Read DOCX document."""
         try:
             from docx import Document as DocxDocument
 
-            # Convert pagination parameter
-            if isinstance(pagination, float):
-                page_percentile = pagination if pagination > 0 else None
-                page_number = None
-            else:
-                page_percentile = None
-                page_number = pagination if pagination > 0 else None
-
-            self._validate_pagination_params(page_percentile, page_number)
-
             doc = DocxDocument(path)
 
-            # For DOCX, estimate pages based on paragraphs (~10 paragraphs per page)
-            paragraphs_per_page = 10
-            total_paragraphs = len(doc.paragraphs)
-            estimated_pages = max(1, (total_paragraphs + paragraphs_per_page - 1) // paragraphs_per_page)
-
-            target_page = self._get_target_page(page_percentile, page_number, estimated_pages)
-
-            # Calculate paragraph range for the target page
-            start_paragraph = (target_page - 1) * paragraphs_per_page
-            end_paragraph = min(total_paragraphs, start_paragraph + paragraphs_per_page)
-
-            text = f"Page {target_page} of {estimated_pages} (estimated based on paragraphs):\n\n"
-            for i in range(start_paragraph, end_paragraph):
-                if i < len(doc.paragraphs):
-                    text += doc.paragraphs[i].text + "\n"
+            # Read all paragraphs
+            text = ""
+            for paragraph in doc.paragraphs:
+                text += paragraph.text + "\n"
 
             return text
         except ImportError:
@@ -131,15 +114,8 @@ class Library(BaseModel, ABC):
         try:
             import pandas as pd
 
-            # Convert pagination parameter
-            if isinstance(pagination, float):
-                page_percentile = pagination if pagination > 0 else None
-                page_number = None
-            else:
-                page_percentile = None
-                page_number = pagination if pagination > 0 else None
-
-            self._validate_pagination_params(page_percentile, page_number)
+            # Parse pagination parameter
+            page_percentile, page_number = self._parse_pagination(pagination)
 
             excel_data = pd.read_excel(path, sheet_name=None)
             sheet_names = list(excel_data.keys())
@@ -184,15 +160,8 @@ class Library(BaseModel, ABC):
         try:
             from pypdf import PdfReader
 
-            # Convert pagination parameter
-            if isinstance(pagination, float):
-                page_percentile = pagination if pagination > 0 else None
-                page_number = None
-            else:
-                page_percentile = None
-                page_number = pagination if pagination > 0 else None
-
-            self._validate_pagination_params(page_percentile, page_number)
+            # Parse pagination parameter
+            page_percentile, page_number = self._parse_pagination(pagination)
 
             reader = PdfReader(path)
             total_pages = len(reader.pages)
@@ -213,15 +182,8 @@ class Library(BaseModel, ABC):
         try:
             from pptx import Presentation
 
-            # Convert pagination parameter
-            if isinstance(pagination, float):
-                page_percentile = pagination if pagination > 0 else None
-                page_number = None
-            else:
-                page_percentile = None
-                page_number = pagination if pagination > 0 else None
-
-            self._validate_pagination_params(page_percentile, page_number)
+            # Parse pagination parameter
+            page_percentile, page_number = self._parse_pagination(pagination)
 
             prs = Presentation(path)
             total_slides = len(prs.slides)
@@ -308,14 +270,15 @@ class Library(BaseModel, ABC):
         Args:
             document_type: Type of the document to read.
             document_path: Path to the document.
-            pagination: Page/section number (1-indexed int) or percentile (0.0-1.0 float) to read.
+            pagination: Page/section number (1+ int) or percentile (0-1 exclusive float) to read.
+                        Only used for paginated documents (PDF, PPTX, XLSX). Ignored for others.
         """
 
         full_path = Path(self.url.path) / document_path
 
         match document_type:
             case DocumentType.DOCX:
-                return self._read_docx(full_path, pagination)
+                return self._read_docx(full_path)
             case DocumentType.XLSX | DocumentType.XLS:
                 return self._read_excel(full_path, pagination)
             case DocumentType.JSON:
