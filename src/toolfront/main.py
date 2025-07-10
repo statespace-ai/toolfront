@@ -23,7 +23,12 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
 
     mcp = FastMCP("ToolFront MCP server")
 
-    async def discover() -> list[str]:
+    # Categorize URLs by datasource type (do this once)
+    api_urls = [url for url in clean_urls if get_datasource_type(url) == DatasourceType.API]
+    library_urls = [url for url in clean_urls if get_datasource_type(url) == DatasourceType.LIBRARY]
+    database_urls = [url for url in clean_urls if get_datasource_type(url) == DatasourceType.DATABASE]
+
+    async def discover() -> dict[str, list[str]]:
         """
         Lists all available datasources.
 
@@ -31,15 +36,26 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
         1. Use this tool to list all available datasources.
         2. Passwords and secrets are obfuscated in the URL for security, but you can use the URLs as-is in other tools.
         """
-        return clean_urls
+
+        result = {}
+
+        # Only include keys that have data
+        if database_urls:
+            result["databases"] = database_urls
+        if library_urls:
+            result["document_libraries"] = library_urls
+        if api_urls:
+            result["apis"] = api_urls
+
+        return result
 
     # Always include discover tool
     mcp.add_tool(discover)
 
-    # Check for different URL patterns
-    has_api_urls = any(get_datasource_type(url) == DatasourceType.API for url in clean_urls)
-    has_library_urls = any(get_datasource_type(url) == DatasourceType.LIBRARY for url in clean_urls)
-    has_db_urls = any(get_datasource_type(url) == DatasourceType.DATABASE for url in clean_urls)
+    # Check for different URL patterns using pre-categorized lists
+    has_api_urls = bool(api_urls)
+    has_library_urls = bool(library_urls)
+    has_db_urls = bool(database_urls)
 
     # Add API tools if we have API URLs
     if has_api_urls:
