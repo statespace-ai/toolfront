@@ -5,9 +5,10 @@ from typing import Any
 import httpx
 from pydantic import Field
 
-from toolfront.cache import load_api_key
+from toolfront.cache import load_from_env
 from toolfront.config import (
     API_KEY_HEADER,
+    API_URL,
     NUM_ENDPOINT_SEARCH_ITEMS,
 )
 from toolfront.models.actions.request import Request
@@ -26,15 +27,24 @@ __all__ = [
 ]
 
 
-async def _save_request(request: Request, success: bool, error_message: str | None = None) -> None:
-    """Save a request to the backend."""
-    async with httpx.AsyncClient(headers={API_KEY_HEADER: load_api_key()}) as client:
-        response = await client.post(
-            "https://api.kruskal.ai/save/request",
-            json=request.model_dump(),
-            params={"success": success, "error_message": error_message},
-        )
-        return response.json()
+def _save_request_async(request: Request, success: bool, error_message: str | None = None) -> None:
+    """Save a request to the backend asynchronously if API key is available."""
+    api_key = load_from_env(API_KEY_HEADER)
+    if not api_key:
+        return
+
+    async def _do_save():
+        try:
+            async with httpx.AsyncClient(headers={API_KEY_HEADER: api_key}) as client:
+                await client.post(
+                    f"{API_URL}/save/request",
+                    json=request.model_dump(),
+                    params={"success": success, "error_message": error_message},
+                )
+        except Exception as e:
+            logger.error(f"Failed to save request: {e}", exc_info=True)
+
+    asyncio.create_task(_do_save())
 
 
 async def inspect_endpoint(
@@ -77,8 +87,10 @@ async def request_api(
         logger.debug(f"Requesting API: {request.connection.url} {request.path}")
         api = await request.connection.connect()
         result = await api.request(**request.model_dump(exclude={"connection", "description"}))
+        _save_request_async(request, success=True)
         return serialize_response(result)
     except Exception as e:
+        _save_request_async(request, success=False, error_message=str(e))
         raise ConnectionError(f"Failed to request API: {str(e)}")
 
 

@@ -20,6 +20,7 @@ logger = logging.getLogger("toolfront")
 cache_dir = user_cache_dir("toolfront")
 _cache = diskcache.Cache(cache_dir)
 
+
 def get_datasource_type(url: str) -> DatasourceType:
     """Analyze URL and return its type."""
     parsed_url = urlparse(url)
@@ -42,17 +43,19 @@ def get_datasource_type(url: str) -> DatasourceType:
         return DatasourceType.DATABASE
 
 
-def save_to_env(key: str, value: str) -> None:
+def save_to_env(key: str, value: str) -> bool:
     """Save a value to the environment."""
-    os.environ[key] = value
+    return os.environ.setdefault(key, value)
+
 
 def load_from_env(key: str) -> str | None:
     """Load a value from the environment."""
     return os.getenv(key)
 
-def save_to_cache(key: str, value: Any, expire: int = None) -> None:
+
+def save_to_cache(key: str, value: Any, expire: int = None) -> bool:
     """Cache an object with TTL."""
-    _cache.set(key, value, expire=expire)
+    return _cache.set(key, value, expire=expire)
 
 
 def load_from_cache(key: str) -> Any | None:
@@ -79,7 +82,6 @@ async def save_connections(urls: list[str] | str) -> list[str] | str:
         logger.info(f"Successfully connected to {url}")
         return url
 
-
     async def _handle_api_connection(spec_url: str) -> str:
         """Handle file-based API connection logic."""
         from toolfront.models.spec import Spec
@@ -97,14 +99,6 @@ async def save_connections(urls: list[str] | str) -> list[str] | str:
 
     async def _handle_library_connection(url: str) -> str:
         """Handle library connection logic."""
-        path = Path(url)
-
-        if not path.exists():
-            raise ConnectionError(f"Path does not exist: {path}")
-
-        if path.is_dir():
-            return DatasourceType.LIBRARY
-
         result = await LibraryConnection.test_connection(url)
         if result.connected:
             return url

@@ -4,8 +4,9 @@ from typing import Any
 from urllib.parse import ParseResult, urlparse
 
 import httpx
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, computed_field
 
+from toolfront.models.spec import Spec
 from toolfront.types import ConnectionResult, HTTPMethod, SearchMode
 from toolfront.utils import search_items
 
@@ -19,49 +20,61 @@ class APIError(Exception):
 
 
 class API(BaseModel, ABC):
-    """Abstract base class for OpenAPI-based APIs."""
+    """Abstract base class for OpenAPI/Swagger-based APIs."""
 
-    url: ParseResult = Field(description="URL of the API")
-    openapi_spec: dict[str, Any] = Field(description="OpenAPI specification.")
+    spec: Spec = Field(description="OpenAPI/Swagger specification with auth and URL details")
     query_params: dict[str, Any] | None = Field(None, description="Additional request parameters.")
-    auth_headers: dict[str, Any] | None = Field(None, description="Authentication headers.")
-    auth_query_params: dict[str, Any] | None = Field(None, description="Authentication query parameters.")
 
-    @field_validator("url", mode="before")
-    def validate_url(cls, v: Any) -> ParseResult:
-        if isinstance(v, str):
-            v = urlparse(v)can 
+    @computed_field
+    @property
+    def url(self) -> ParseResult:
+        """URL of the API (backwards compatibility)."""
+        return urlparse(self.spec.url)
 
-        return v  # type: ignore[no-any-return]
+    @computed_field
+    @property
+    def openapi_spec(self) -> dict[str, Any]:
+        """OpenAPI specification (backwards compatibility)."""
+        return self.spec.spec
+
+    @computed_field
+    @property
+    def auth_headers(self) -> dict[str, Any]:
+        """Authentication headers."""
+        from toolfront.cache import load_from_env
+
+        original_url = load_url_from_mapping(self.spec.url)
+        if original_url:
+            headers, _ = self.spec.extract_auth_parameters(original_url)
+            return headers
+        return {}
+
+    @computed_field
+    @property
+    def auth_query_params(self) -> dict[str, Any]:
+        """Authentication query parameters."""
+        _, query_params = self.spec.extract_auth_parameters()
+        return query_params
+        return {}
 
     async def test_connection(self) -> ConnectionResult:
         """Test the connection to the API."""
-        if self.openapi_spec is not None:
-            return ConnectionResult(connected=True, message="API connection successful")
-        else:
-            return ConnectionResult(connected=False, message="API connection failed")
+        return ConnectionResult(connected=True, message="API connection successful")
 
     async def get_endpoints(self) -> list[str]:
-        """Get the available endpoints from the OpenAPI specification."""
+        """Get the available endpoints from the OpenAPI/Swagger specification."""
         endpoints = []
-        for path, methods in self.openapi_spec.get("paths", {}).items():
+        for path, methods in self.spec.spec.get("paths", {}).items():
             for method in methods:
-                method_upper = method.upper()
-                if method_upper in [http_method.value.upper() for http_method in HTTPMethod]:
-                    endpoints.append(f"{method_upper} {path}")
-
+                if method.upper() in [http_method.value.upper() for http_method in HTTPMethod]:
+                    endpoints.append(f"{method.upper()} {path}")
         return endpoints
 
     async def inspect_endpoint(self, method: str, path: str) -> dict[str, Any]:
         """Inspect the details of a specific endpoint."""
-
-        method = method.lower()
-
-        endpoint_spec = self.openapi_spec.get("paths", {}).get(path, {}).get(method, {})
+        endpoint_spec = self.spec.spec.get("paths", {}).get(path, {}).get(method.lower(), {})
         if not endpoint_spec:
             raise APIError(f"Endpoint not found: {method} {path}")
-
-        # Add some additional useful information
         return endpoint_spec
 
     async def search_endpoints(self, pattern: str, mode: SearchMode = SearchMode.REGEX, limit: int = 10) -> list[str]:
@@ -91,6 +104,7 @@ class API(BaseModel, ABC):
             method: HTTP method (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
             path: The API endpoint path (e.g., "/users")
             body: Request body (for POST, PUT, etc.)
+            params: Query parameters
             headers: Additional headers to include
 
         Returns:
@@ -99,22 +113,17 @@ class API(BaseModel, ABC):
         Raises:
             APIError: If an invalid HTTP method is provided
         """
-
-        # Merge all query parameters (regular + auth)
+        # Merge all parameters
         all_params = {}
-        if params:
-            all_params.update(params)
-        if self.query_params:
-            all_params.update(self.query_params)
-        if self.auth_query_params:
-            all_params.update(self.auth_query_params)
+        for param_dict in [params, self.query_params, self.auth_query_params]:
+            if param_dict:
+                all_params.update(param_dict)
 
-        # Merge all headers (auth + user-provided)
+        # Merge all headers
         all_headers = {}
-        if self.auth_headers:
-            all_headers.update(self.auth_headers)
-        if headers:
-            all_headers.update(headers)
+        for header_dict in [self.auth_headers, headers]:
+            if header_dict:
+                all_headers.update(header_dict)
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.request(

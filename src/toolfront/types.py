@@ -28,3 +28,11 @@ class ConnectionResult:
 
     connected: bool
     message: str
+
+
+class DatasourceType(str, Enum):
+    """Datasource type."""
+
+    LIBRARY = "library"
+    DATABASE = "database"
+    API = "api"

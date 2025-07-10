@@ -5,8 +5,9 @@ from typing import Literal
 import click
 from mcp.server.fastmcp import FastMCP
 
-from toolfront.cache import save_api_key, save_connections
-from toolfront.models.databases import db_map
+from toolfront.cache import get_datasource_type, save_connections, save_to_env
+from toolfront.config import API_KEY_HEADER
+from toolfront.types import DatasourceType
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
@@ -17,10 +18,10 @@ logging.info("Starting ToolFront MCP server")
 async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     clean_urls = await save_connections(urls)
 
-    mcp = FastMCP("ToolFront MCP server")
+    if api_key:
+        save_to_env(API_KEY_HEADER, api_key)
 
-    # Save API key if provided
-    save_api_key(api_key)
+    mcp = FastMCP("ToolFront MCP server")
 
     async def discover() -> list[str]:
         """
@@ -36,9 +37,9 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
     mcp.add_tool(discover)
 
     # Check for different URL patterns
-    has_api_urls = any(url.startswith("https://") for url in clean_urls)
-    has_library_urls = any(url.startswith("file://") for url in clean_urls)
-    has_db_urls = any(url.split("://")[0] in db_map for url in clean_urls if "://" in url)
+    has_api_urls = any(get_datasource_type(url) == DatasourceType.API for url in clean_urls)
+    has_library_urls = any(get_datasource_type(url) == DatasourceType.LIBRARY for url in clean_urls)
+    has_db_urls = any(get_datasource_type(url) == DatasourceType.DATABASE for url in clean_urls)
 
     # Add API tools if we have API URLs
     if has_api_urls:
@@ -47,9 +48,8 @@ async def get_mcp(urls: tuple[str, ...], api_key: str | None = None) -> FastMCP:
         mcp.add_tool(inspect_endpoint)
         mcp.add_tool(request_api)
 
-        # Only add search_endpoints if we have both API URLs and API key
-        if api_key:
-            mcp.add_tool(search_endpoints)
+        # Add search_endpoints if we have API URLs
+        mcp.add_tool(search_endpoints)
 
     # Add library tools if we have library URLs
     if has_library_urls:

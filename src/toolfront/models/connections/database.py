@@ -16,10 +16,10 @@ class DatabaseConnection(Connection):
     url: str = Field(..., description="Full database URL.")
 
     async def connect(self) -> Database:
-        from toolfront.cache import load_connection
+        from toolfront.cache import load_from_env
 
         # Load the actual connection URL and validate it
-        url: URL = make_url(load_connection(self.url))
+        url: URL = make_url(load_from_env(self.url))
 
         drivername = url.drivername
         if drivername not in db_map:

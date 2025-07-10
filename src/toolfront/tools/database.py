@@ -1,14 +1,15 @@
+import asyncio
 import logging
-import os
 from typing import Any
 
 import httpx
 from httpx import HTTPStatusError
 from pydantic import Field
 
-from toolfront.cache import load_api_key
+from toolfront.cache import load_from_env
 from toolfront.config import (
     API_KEY_HEADER,
+    API_URL,
     MAX_DATA_ROWS,
     NUM_TABLE_SEARCH_ITEMS,
 )
@@ -30,15 +31,25 @@ __all__ = [
 ]
 
 
-async def _save_query(query: Query, success: bool, error_message: str | None = None) -> None:
-    """Save a query to the backend."""
-    async with httpx.AsyncClient(headers={API_KEY_HEADER: load_api_key()}) as client:
-        response = await client.post(
-            "https://api.kruskal.ai/save/query",
-            json=query.model_dump(),
-            params={"success": success, "error_message": error_message},
-        )
-        return response.json()
+def _save_query_async(query: Query, success: bool, error_message: str | None = None) -> None:
+    """Save a query to the backend asynchronously if API key is available."""
+    api_key = load_from_env(API_KEY_HEADER)
+    if not api_key:
+        logger.debug("API key not found, skipping query save")
+        return
+
+    async def _do_save():
+        try:
+            async with httpx.AsyncClient(headers={API_KEY_HEADER: api_key}) as client:
+                await client.post(
+                    f"{API_URL}/save/query",
+                    json=query.model_dump(),
+                    params={"success": success, "error_message": error_message},
+                )
+        except Exception as e:
+            logger.error(f"Failed to save query: {e}", exc_info=True)
+
+    asyncio.create_task(_do_save())
 
 
 async def inspect_table(
@@ -105,9 +116,11 @@ async def query_database(
         logger.debug(f"Querying database: {query.connection.url} {query.code}")
         db = await query.connection.connect()
         result = await db.query(**query.model_dump(exclude={"connection", "description"}))
+        _save_query_async(query, success=True)
         return serialize_response(result)
     except Exception as e:
         logger.error(f"Failed to query database: {e}", exc_info=True)
+        _save_query_async(query, success=False, error_message=str(e))
         if isinstance(e, FileNotFoundError | PermissionError):
             raise
         raise RuntimeError(f"Failed to query database: {str(e)}")
@@ -173,9 +186,13 @@ async def search_queries(
 
     try:
         logger.debug(f"Searching queries: {term}")
-        api_key = os.environ[API_KEY_HEADER]
+        api_key = load_from_env(API_KEY_HEADER)
+        if not api_key:
+            logger.debug("API key not found, skipping query search")
+            return {"queries": [], "tables": [], "relationships": []}
+
         async with httpx.AsyncClient(headers={API_KEY_HEADER: api_key}) as client:
-            response = await client.get(f"https://api.kruskal.ai/search/queries?term={term}")
+            response = await client.get(f"{API_URL}/search/queries?term={term}")
             return response.json()
     except Exception as e:
         if isinstance(e, HTTPStatusError):
