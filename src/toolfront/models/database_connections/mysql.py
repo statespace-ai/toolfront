@@ -2,15 +2,15 @@ from typing import Any
 
 import pandas as pd
 
-from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
-from toolfront.models.database import Database, SQLAlchemyMixin
+from toolfront.models.database_connections.base import AsyncSQLAlchemyMixin, DatabaseConnection
+from toolfront.utils import cache
 
 
-class MySQL(SQLAlchemyMixin, Database):
+class MySQLConnection(AsyncSQLAlchemyMixin, DatabaseConnection):
     """MySQL connection manager with utility functions."""
 
-    def initialize_session(self) -> str:
+    async def initialize_session(self) -> str:
         return "SET SESSION TRANSACTION READ ONLY"
 
     @cache(expire=CACHE_TTL)

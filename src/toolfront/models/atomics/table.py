@@ -1,12 +1,10 @@
 from pydantic import BaseModel, Field
 
-from toolfront.models.connections.database import DatabaseConnection
-
 
 class Table(BaseModel):
     """Unified table identifier for both database tables and file tables."""
 
-    connection: DatabaseConnection = Field(..., description="Database connection.")
+    database_url: str = Field(..., description="Database URL.")
 
     path: str = Field(
         ...,

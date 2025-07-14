@@ -1,11 +1,11 @@
 import pandas as pd
 
-from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
-from toolfront.models.database import Database, SQLAlchemyMixin
+from toolfront.models.database_connections.base import AsyncSQLAlchemyMixin, DatabaseConnection
+from toolfront.utils import cache
 
 
-class SQLServer(SQLAlchemyMixin, Database):
+class SQLServerConnection(AsyncSQLAlchemyMixin, DatabaseConnection):
     """SQL Server connection manager with utility functions."""
 
     def initialize_session(self) -> str:

@@ -1,14 +1,14 @@
 import pandas as pd
 
-from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
-from toolfront.models.database import Database, SQLAlchemyMixin
+from toolfront.models.database_connections.base import AsyncSQLAlchemyMixin, DatabaseConnection
+from toolfront.utils import cache
 
 
-class PostgreSQL(SQLAlchemyMixin, Database):
+class PostgreSQLConnection(AsyncSQLAlchemyMixin, DatabaseConnection):
     """PostgreSQL connection manager with utility functions."""
 
-    def initialize_session(self) -> str:
+    async def initialize_session(self) -> str:
         return "SET TRANSACTION READ ONLY"
 
     @cache(expire=CACHE_TTL)

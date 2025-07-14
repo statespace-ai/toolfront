@@ -7,9 +7,10 @@ import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
-from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
-from toolfront.models.database import ConnectionResult, Database, DatabaseError
+from toolfront.models.database_connections.base import DatabaseConnection
+from toolfront.types import ConnectionResult
+from toolfront.utils import cache
 
 # BigQuery-specific concurrency limits
 # BigQuery API can handle ~100 concurrent requests per project, but we want to be conservative
@@ -21,7 +22,7 @@ MAX_CONCURRENT_DATASETS = min(
 )
 
 
-class BigQuery(Database):
+class BigQueryConnection(DatabaseConnection):
     @property
     def credentials(self) -> Any:
         credentials_path = self.url.query.get("credentials_path", None)
@@ -82,7 +83,7 @@ class BigQuery(Database):
                     tables = await loop.run_in_executor(executor, lambda: list(client.list_tables(dataset.dataset_id)))
                     return [f"{self.project}.{dataset.dataset_id}.{table.table_id}" for table in tables]
                 except Exception as e:
-                    raise DatabaseError(f"Error processing dataset {dataset.dataset_id}: {e}")
+                    raise RuntimeError(f"Error processing dataset {dataset.dataset_id}: {e}")
 
         try:
             # Process all datasets with controlled concurrency
@@ -94,7 +95,7 @@ class BigQuery(Database):
             all_tables: list[str] = []
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
-                    raise DatabaseError(f"Error processing dataset {datasets[i].dataset_id}: {result}")
+                    raise RuntimeError(f"Error processing dataset {datasets[i].dataset_id}: {result}")
                 elif isinstance(result, list):
                     all_tables.extend(result)
                 else:

@@ -6,8 +6,8 @@ from pydantic import Field
 from toolfront.config import (
     NUM_DOCUMENT_SEARCH_ITEMS,
 )
-from toolfront.models.atomics.document import Document
-from toolfront.models.connections.library import LibraryConnection
+from toolfront.models.actions.read import Read
+from toolfront.models.datasources.library import Library
 from toolfront.types import SearchMode
 from toolfront.utils import serialize_response
 
@@ -15,13 +15,13 @@ logger = logging.getLogger("toolfront")
 
 
 __all__ = [
-    "search_documents",
-    "read_document",
+    "library_search_documents",
+    "library_read",
 ]
 
 
-async def search_documents(
-    connection: LibraryConnection = Field(..., description="Library connection to search."),
+async def library_search_documents(
+    library_url: str = Field(..., description="Library URL to search."),
     pattern: str = Field(..., description="Pattern to search for."),
     mode: SearchMode = Field(default=SearchMode.REGEX, description="Search mode to use."),
 ) -> dict[str, Any]:
@@ -48,18 +48,17 @@ async def search_documents(
     3. Begin with approximate search modes like BM25 and Jaro-Winkler, and only use regex to precisely search for a specific document name.
     """
     try:
-        logger.debug(f"Searching documents: {connection.url} {pattern} {mode}")
-        library = await connection.connect()
+        logger.debug(f"Searching documents: {library_url} {pattern} {mode}")
+        library = Library.load_from_sanitized_url(library_url)
         result = await library.search_documents(pattern=pattern, mode=mode, limit=NUM_DOCUMENT_SEARCH_ITEMS)
-        return {"documents": result}
+        return serialize_response(result)
     except Exception as e:
         logger.error(f"Failed to search documents: {e}", exc_info=True)
-        raise ConnectionError(f"Failed to search documents in {connection.url} - {str(e)}")
+        raise ConnectionError(f"Failed to search documents in {library_url} - {str(e)}")
 
 
-async def read_document(
-    document: Document = Field(..., description="Document to read."),
-    pagination: float = Field(description="Page/section number (1-indexed int) or percentile (0.0-1.0 float) to read."),
+async def library_read(
+    read: Read = Field(..., description="Document to read."),
 ) -> dict[str, Any]:
     """
     Read the contents of a library's document.
@@ -77,15 +76,10 @@ async def read_document(
     6. Avoid over-paginating: don't read every page sequentially unless absolutely necessary for comprehensive understanding.
     """
     try:
-        logger.debug(f"Reading document: {document.connection.url} {document.document_path}")
-        library = await document.connection.connect()
-        return serialize_response(
-            await library.read_document(
-                document_path=document.document_path,
-                document_type=document.document_type,
-                pagination=pagination,
-            )
-        )
+        logger.debug(f"Reading document: {read.library_url} {read.document_path}")
+        library = Library.load_from_sanitized_url(read.library_url)
+        result = await library.read_document(**read.model_dump(exclude={"library_url"}))
+        return serialize_response(result)
     except Exception as e:
         logger.error(f"Failed to read library: {e}", exc_info=True)
-        raise ConnectionError(f"Failed to read library in {document.connection.url} - {str(e)}")
+        raise ConnectionError(f"Failed to read library in {read.library_url} - {str(e)}")

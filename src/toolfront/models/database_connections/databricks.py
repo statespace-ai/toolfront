@@ -4,14 +4,15 @@ import logging
 
 import pandas as pd
 
-from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
-from toolfront.models.database import ConnectionResult, Database, DatabaseError
+from toolfront.models.database_connections.base import DatabaseConnection
+from toolfront.types import ConnectionResult
+from toolfront.utils import cache
 
 logger = logging.getLogger("toolfront")
 
 
-class Databricks(Database):
+class DatabricksConnection(DatabaseConnection):
     """Databricks connection manager."""
 
     async def test_connection(self) -> ConnectionResult:
@@ -41,7 +42,7 @@ class Databricks(Database):
         try:
             from databricks import sql
         except ImportError:
-            raise DatabaseError("databricks-sql-connector package is required for Databricks integration")
+            raise ImportError("databricks-sql-connector package is required for Databricks integration")
 
         hostname = self.url.host
         http_path = self.url.query.get("http_path", "")
@@ -66,7 +67,7 @@ class Databricks(Database):
                     return pd.DataFrame(data, columns=columns)
                 return pd.DataFrame()
         except Exception as e:
-            raise DatabaseError(f"Query execution failed: {e}")
+            raise (f"Query execution failed: {e}")
 
     def _format_table_names(self, data: pd.DataFrame) -> list[str]:
         """Format table names from query results."""
@@ -111,7 +112,7 @@ class Databricks(Database):
 
             except Exception as second_error:
                 logger.error(f"Both table listing methods failed: {first_error}, {second_error}")
-                raise DatabaseError(f"Failed to get tables from Databricks: {second_error}") from second_error
+                raise RuntimeError(f"Failed to get tables from Databricks: {second_error}") from second_error
 
     def _get_detailed_table_info(self, catalog: str, schema: str, table: str) -> str:
         """Build information_schema query for table inspection."""
@@ -145,7 +146,7 @@ class Databricks(Database):
 
         except Exception as e:
             logger.error(f"Failed to inspect table {table_path}: {e}")
-            raise DatabaseError(f"Failed to inspect table {table_path}: {e}") from e
+            raise RuntimeError(f"Failed to inspect table {table_path}: {e}") from e
 
     async def sample_table(self, table_path: str, n: int = 5) -> pd.DataFrame:
         """Get sample rows from the specified table."""
@@ -168,4 +169,4 @@ class Databricks(Database):
                     return await self.query(code=f"SELECT * FROM {table_path} LIMIT {n}")
                 except Exception as e:
                     logger.error(f"Failed to sample table {table_path}: {e}")
-                    raise DatabaseError(f"Failed to sample table {table_path}: {e}") from e
+                    raise RuntimeError(f"Failed to sample table {table_path}: {e}") from e

@@ -2,11 +2,11 @@ from typing import Any
 
 import pandas as pd
 
-from toolfront.models.database import Database, FileMixin, SQLAlchemyMixin
+from toolfront.models.database_connections.base import AsyncSQLAlchemyMixin, DatabaseConnection, FileMixin
 
 
-class SQLite(SQLAlchemyMixin, FileMixin, Database):
-    def initialize_session(self) -> str:
+class SQLiteConnection(AsyncSQLAlchemyMixin, FileMixin, DatabaseConnection):
+    async def initialize_session(self) -> str:
         return "PRAGMA query_only = ON"
 
     async def get_tables(self) -> list[str]:

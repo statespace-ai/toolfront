@@ -1,10 +1,13 @@
 import json
 import logging
 import re
+from functools import wraps
 from typing import Any
 
+import diskcache
 import pandas as pd
 from jellyfish import jaro_winkler_similarity
+from platformdirs import user_cache_dir
 from pydantic import TypeAdapter
 from rank_bm25 import BM25Okapi
 
@@ -13,6 +16,9 @@ from toolfront.types import SearchMode
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
+
+cache_dir = user_cache_dir("toolfront")
+_cache = diskcache.Cache(cache_dir)
 
 
 def tokenize(text: str) -> list[str]:
@@ -121,3 +127,24 @@ def serialize_response(response: Any) -> dict[str, Any]:
         }
 
     return {"data": serialized}
+
+
+def cache(expire: int = None):
+    """Async caching decorator using diskcache."""
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            cache_key = (func.__qualname__, args, tuple(sorted(kwargs.items())))
+
+            result = _cache.get(cache_key)
+            if result is not None:
+                return result
+
+            result = await func(*args, **kwargs)
+            _cache.set(cache_key, result, expire=expire)
+            return result
+
+        return wrapper
+
+    return decorator

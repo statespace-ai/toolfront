@@ -1,9 +1,19 @@
-from toolfront.tools.api import inspect_endpoint, request_api, search_endpoints
-from toolfront.tools.database import inspect_table, query_database, sample_table, search_tables
-from toolfront.tools.library import read_document, search_documents
+from toolfront.tools.api import api_get_endpoints, api_inspect_endpoint, api_request
+from toolfront.tools.database import (
+    db_inspect_table,
+    db_query,
+    db_sample_table,
+    db_search_tables,
+)
+from toolfront.tools.library import library_read, library_search_documents
 
-database_tools = [inspect_table, query_database, sample_table, search_tables]
+database_tools = [
+    db_inspect_table,
+    db_query,
+    db_sample_table,
+    db_search_tables,
+]
 
-api_tools = [inspect_endpoint, request_api, search_endpoints]
+api_tools = [api_get_endpoints, api_inspect_endpoint, api_request]
 
-library_tools = [search_documents, read_document]
+library_tools = [library_search_documents, library_read]

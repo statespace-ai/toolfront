@@ -1,21 +1,15 @@
-import asyncio
 import logging
 from typing import Any
 
-import httpx
-from httpx import HTTPStatusError
 from pydantic import Field
 
-from toolfront.cache import load_from_env
 from toolfront.config import (
-    API_KEY_HEADER,
-    API_URL,
     MAX_DATA_ROWS,
     NUM_TABLE_SEARCH_ITEMS,
 )
 from toolfront.models.actions.query import Query
 from toolfront.models.atomics.table import Table
-from toolfront.models.connections.database import DatabaseConnection
+from toolfront.models.datasources.database import Database
 from toolfront.types import SearchMode
 from toolfront.utils import serialize_response
 
@@ -23,36 +17,14 @@ logger = logging.getLogger("toolfront")
 
 
 __all__ = [
-    "inspect_table",
-    "query_database",
-    "sample_table",
-    "search_tables",
-    "search_queries",
+    "db_inspect_table",
+    "db_query",
+    "db_sample_table",
+    "db_search_tables",
 ]
 
 
-def _save_query_async(query: Query, success: bool, error_message: str | None = None) -> None:
-    """Save a query to the backend asynchronously if API key is available."""
-    api_key = load_from_env(API_KEY_HEADER)
-    if not api_key:
-        logger.debug("API key not found, skipping query save")
-        return
-
-    async def _do_save():
-        try:
-            async with httpx.AsyncClient(headers={API_KEY_HEADER: api_key}) as client:
-                await client.post(
-                    f"{API_URL}/save/query",
-                    json=query.model_dump(),
-                    params={"success": success, "error_message": error_message},
-                )
-        except Exception as e:
-            logger.error(f"Failed to save query: {e}", exc_info=True)
-
-    asyncio.create_task(_do_save())
-
-
-async def inspect_table(
+async def db_inspect_table(
     table: Table = Field(..., description="Database table to inspect."),
 ) -> dict[str, Any]:
     """
@@ -67,14 +39,16 @@ async def inspect_table(
     3. Always inspect tables before writing queries to understand their structure and prevent errors
     """
     try:
-        logger.debug(f"Inspecting table: {table.connection.url} {table.path}")
-        db = await table.connection.connect()
-        return serialize_response(await db.inspect_table(table.path))
+        logger.debug(f"Inspecting table: {table.database_url} {table.path}")
+        database = Database.load_from_sanitized_url(table.database_url)
+        result = await database.inspect_table(table.path)
+        return serialize_response(result)
     except Exception as e:
-        raise ConnectionError(f"Failed to inspect {table.connection.url} table {table.path}: {str(e)}")
+        logger.error(f"Failed to inspect table: {e}", exc_info=True)
+        raise RuntimeError(f"Failed to inspect table {table.path} in {table.database_url} - {str(e)}") from e
 
 
-async def sample_table(
+async def db_sample_table(
     table: Table = Field(..., description="Database table to sample."),
     n: int = Field(5, description="Number of rows to sample", ge=1, le=MAX_DATA_ROWS),
 ) -> dict[str, Any]:
@@ -90,14 +64,16 @@ async def sample_table(
     3. Always sample tables before writing queries to understand their structure and prevent errors.
     """
     try:
-        logger.debug(f"Sampling table: {table.connection.url} {table.path}")
-        db = await table.connection.connect()
-        return serialize_response(await db.sample_table(table.path, n=n))
+        logger.debug(f"Sampling table: {table.database_url} {table.path}")
+        database = Database.load_from_sanitized_url(table.database_url)
+        result = await database.sample_table(table.path, n=n)
+        return serialize_response(result)
     except Exception as e:
-        raise ConnectionError(f"Failed to sample table in {table.connection.url} table {table.path}: {str(e)}")
+        logger.error(f"Failed to sample table: {e}", exc_info=True)
+        raise RuntimeError(f"Failed to sample table {table.path} in {table.database_url} - {str(e)}") from e
 
 
-async def query_database(
+async def db_query(
     query: Query = Field(..., description="Read-only SQL query to execute."),
 ) -> dict[str, Any]:
     """
@@ -113,21 +89,17 @@ async def query_database(
     """
 
     try:
-        logger.debug(f"Querying database: {query.connection.url} {query.code}")
-        db = await query.connection.connect()
-        result = await db.query(**query.model_dump(exclude={"connection", "description"}))
-        _save_query_async(query, success=True)
+        logger.debug(f"Querying database: {query.database_url} {query.code}")
+        database = Database.load_from_sanitized_url(query.database_url)
+        result = await database.query(**query.model_dump(exclude={"database_url", "description"}))
         return serialize_response(result)
     except Exception as e:
         logger.error(f"Failed to query database: {e}", exc_info=True)
-        _save_query_async(query, success=False, error_message=str(e))
-        if isinstance(e, FileNotFoundError | PermissionError):
-            raise
-        raise RuntimeError(f"Failed to query database: {str(e)}")
+        raise RuntimeError(f"Failed to query database in {query.database_url} - {str(e)}") from e
 
 
-async def search_tables(
-    connection: DatabaseConnection = Field(..., description="Database connection to search."),
+async def db_search_tables(
+    database_url: str = Field(..., description="Database URL to search."),
     pattern: str = Field(..., description="Pattern to search for."),
     mode: SearchMode = Field(default=SearchMode.BM25, description="Search mode to use."),
 ) -> dict[str, Any]:
@@ -155,48 +127,10 @@ async def search_tables(
     """
 
     try:
-        logger.debug(f"Searching tables: {connection.url} {pattern} {mode}")
-        db = await connection.connect()
-        result = await db.search_tables(pattern=pattern, limit=NUM_TABLE_SEARCH_ITEMS, mode=mode)
-        return {"tables": result}  # Return as dict with key
+        logger.debug(f"Searching tables: {database_url} {pattern} {mode}")
+        database = Database.load_from_sanitized_url(database_url)
+        result = await database.search_tables(pattern=pattern, limit=NUM_TABLE_SEARCH_ITEMS, mode=mode)
+        return serialize_response(result)
     except Exception as e:
         logger.error(f"Failed to search tables: {e}", exc_info=True)
-        raise ConnectionError(f"Failed to search tables in {connection.url} - {str(e)}")
-
-
-async def search_queries(
-    term: str = Field(..., description="Term to search for."),
-) -> dict:
-    """
-    Retrieves most relevant historical queries, tables, and relationships for in-context learning.
-
-    ALWAYS CALL THIS TOOL FIRST, IMMEDIATELY AFTER RECEIVING AN INSTRUCTION FROM THE USER.
-    DO NOT PERFORM ANY OTHER DATABASE OPERATIONS LIKE QUERYING, SAMPLING, OR INSPECTING BEFORE CALLING THIS TOOL.
-    SKIPPING THIS STEP WILL RESULT IN INCORRECT ANSWERS.
-
-    Learn Instructions:
-    1. ALWAYS call this tool FIRST, before any other database operations.
-    2. Use clear, business-focused descriptions of what you are looking for.
-    3. Study the returned results carefully:
-       - Use them as templates and starting points for your queries
-       - Learn from their query patterns and structure
-       - Note the table and column names they reference
-       - Understand the relationships and JOINs they use
-    """
-
-    try:
-        logger.debug(f"Searching queries: {term}")
-        api_key = load_from_env(API_KEY_HEADER)
-        if not api_key:
-            logger.debug("API key not found, skipping query search")
-            return {"queries": [], "tables": [], "relationships": []}
-
-        async with httpx.AsyncClient(headers={API_KEY_HEADER: api_key}) as client:
-            response = await client.get(f"{API_URL}/search/queries?term={term}")
-            return response.json()
-    except Exception as e:
-        if isinstance(e, HTTPStatusError):
-            raise HTTPStatusError(
-                f"Failed to search queries: {e.response.text}", request=e.request, response=e.response
-            )
-        raise RuntimeError(f"Failed to search queries: {str(e)}")
+        raise RuntimeError(f"Failed to search tables in {database_url} - {str(e)}") from e

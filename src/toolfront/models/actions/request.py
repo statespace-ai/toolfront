@@ -2,14 +2,13 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from toolfront.models.connections.api import APIConnection
 from toolfront.types import HTTPMethod
 
 
 class Request(BaseModel):
     """API endpoint."""
 
-    connection: APIConnection = Field(..., description="API connection.")
+    api_url: str = Field(..., description="API URL.")
 
     method: HTTPMethod = Field(
         ...,
@@ -34,9 +33,4 @@ class Request(BaseModel):
     params: dict[str, Any] | None = Field(
         None,
         description="Optional request parameters in JSON format.",
-    )
-
-    description: str = Field(
-        ...,
-        description="A clear business-focused description of what the request does.",
     )

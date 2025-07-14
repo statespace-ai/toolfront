@@ -4,12 +4,13 @@ from typing import Any
 import duckdb
 import pandas as pd
 
-from toolfront.models.database import ConnectionResult, Database, FileMixin
+from toolfront.models.database_connections.base import DatabaseConnection, FileMixin
+from toolfront.types import ConnectionResult
 
 EXTENSIONS = ["csv", "json", "xlsx", "parquet"]
 
 
-class DuckDB(FileMixin, Database):
+class DuckDBConnection(FileMixin, DatabaseConnection):
     """DuckDB connection manager with utility functions."""
 
     async def test_connection(self) -> ConnectionResult:

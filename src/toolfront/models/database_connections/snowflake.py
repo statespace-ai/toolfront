@@ -1,11 +1,11 @@
 import pandas as pd
 
-from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
-from toolfront.models.database import Database, DatabaseError, SQLAlchemyMixin
+from toolfront.models.database_connections.base import DatabaseConnection, SyncSQLAlchemyMixin
+from toolfront.utils import cache
 
 
-class Snowflake(SQLAlchemyMixin, Database):
+class SnowflakeConnection(SyncSQLAlchemyMixin, DatabaseConnection):
     @cache(expire=CACHE_TTL)
     async def get_tables(self) -> list[str]:
         """For Snowflake, this method returns both tables and views combined"""
@@ -14,8 +14,8 @@ class Snowflake(SQLAlchemyMixin, Database):
             tables_code = "SHOW TABLES IN ACCOUNT;"
             views_code = "SHOW VIEWS IN ACCOUNT;"
 
-            tables_data = await self.query(tables_code)
-            views_data = await self.query(views_code)
+            tables_data = self.query(tables_code)
+            views_data = self.query(views_code)
 
             # Comb?ine the results
             combined_data = pd.DataFrame()
@@ -33,10 +33,10 @@ class Snowflake(SQLAlchemyMixin, Database):
                 lambda x: f"{x['database_name']}.{x['schema_name']}.{x['name']}", axis=1
             ).tolist()
         except Exception as e:
-            raise DatabaseError(f"Failed to get tables and views from Snowflake: {e}") from e
+            raise ConnectionError(f"Failed to get tables and views from Snowflake: {e}") from e
 
     async def inspect_table(self, table_path: str) -> pd.DataFrame:
-        return await self.query(f"DESCRIBE TABLE {table_path}")
+        return self.query(f"DESCRIBE TABLE {table_path}")
 
     async def sample_table(self, table_path: str, n: int = 5) -> pd.DataFrame:
-        return await self.query(f"SELECT * FROM {table_path} TABLESAMPLE BERNOULLI ({n} ROWS);")
+        return self.query(f"SELECT * FROM {table_path} TABLESAMPLE BERNOULLI ({n} ROWS);")

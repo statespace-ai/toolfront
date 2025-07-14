@@ -1,13 +1,12 @@
 from pydantic import BaseModel, Field
 
-from toolfront.models.connections.api import APIConnection
 from toolfront.types import HTTPMethod
 
 
 class Endpoint(BaseModel):
     """API endpoint."""
 
-    connection: APIConnection = Field(..., description="API connection.")
+    api_url: str = Field(..., description="API URL.")
 
     method: HTTPMethod = Field(
         ...,
