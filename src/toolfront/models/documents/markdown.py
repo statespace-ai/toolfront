@@ -21,5 +21,5 @@ class MarkdownDocument(Document):
             with self.path.open("r", encoding="utf-8") as file:
                 return file.read()
         except Exception as e:
-            logger.error(f"Error reading Markdown file {self.uri}: {e}")
+            logger.error(f"Error reading Markdown file {self.url}: {e}")
             raise DocumentError(f"Error reading Markdown file: {str(e)}")

@@ -34,5 +34,5 @@ class PDFDocument(Document):
             logger.error(f"Missing dependency for PDF reading: {error_msg}")
             raise DocumentError(error_msg)
         except Exception as e:
-            logger.error(f"Error reading PDF file {self.uri}: {e}")
+            logger.error(f"Error reading PDF file {self.url}: {e}")
             raise DocumentError(f"Error reading PDF file: {str(e)}")

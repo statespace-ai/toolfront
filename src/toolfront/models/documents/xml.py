@@ -40,5 +40,5 @@ class XMLDocument(Document):
                 with self.path.open("r", encoding="utf-8") as file:
                     return file.read()
             except Exception as e:
-                logger.error(f"Error reading XML file {self.uri}: {e}")
+                logger.error(f"Error reading XML file {self.url}: {e}")
                 raise DocumentError(f"Error reading XML file: {str(e)}")

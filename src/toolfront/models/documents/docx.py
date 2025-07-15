@@ -33,5 +33,5 @@ class DOCXDocument(Document):
             logger.error(f"Missing dependency for DOCX reading: {error_msg}")
             raise DocumentError(error_msg)
         except Exception as e:
-            logger.error(f"Error reading DOCX file {self.uri}: {e}")
+            logger.error(f"Error reading DOCX file {self.url}: {e}")
             raise DocumentError(f"Error reading DOCX file: {str(e)}")

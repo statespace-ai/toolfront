@@ -16,17 +16,17 @@ class DocumentError(Exception):
 class Document(BaseModel, ABC):
     """Abstract base class for documents."""
 
-    uri: str = Field(..., description="Document URI.")
+    url: str = Field(..., description="Document URL.")
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}(uri={self.uri})"
+        return f"{self.__class__.__name__}(url={self.url})"
 
     __repr__ = __str__
 
     @property
     def path(self) -> Path:
         """Get the Path object from the URI."""
-        return Path(self.uri)
+        return Path(self.url)
 
     def _get_target_page(self, pagination: int | float, total_pages: int) -> int:
         """Get the target page number, defaulting to page 1 if no pagination specified."""

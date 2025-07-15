@@ -66,7 +66,7 @@ class Library(DataSource, ABC):
         files = await self.get_documents()
         return search_items(files, pattern, mode, limit)
 
-    async def read_document(self, document_path: str, document_type: DocumentType, pagination: int | float = 0) -> str:
+    async def read_document(self, document_path: str, pagination: int | float = 0) -> str:
         """Read the file using appropriate method based on file extension.
 
         Args:
@@ -76,50 +76,52 @@ class Library(DataSource, ABC):
                         Only used for paginated documents (PDF, PPTX, XLSX). Ignored for others.
         """
 
-        document_uri = Path(self.uri) / document_path
+        document_url = str(Path(self.path) / document_path)
+
+        document_type = DocumentType.from_file(document_url)
 
         try:
             match document_type:
                 case DocumentType.DOCX:
                     from toolfront.models.documents.docx import DOCXDocument
 
-                    document = DOCXDocument(uri=document_uri)
+                    document = DOCXDocument(url=document_url)
                 case DocumentType.XLSX | DocumentType.XLS:
                     from toolfront.models.documents.excel import ExcelDocument
 
-                    document = ExcelDocument(uri=document_uri)
+                    document = ExcelDocument(url=document_url)
                 case DocumentType.JSON:
                     from toolfront.models.documents.json import JSONDocument
 
-                    document = JSONDocument(uri=document_uri)
+                    document = JSONDocument(url=document_url)
                 case DocumentType.MD:
                     from toolfront.models.documents.markdown import MarkdownDocument
 
-                    document = MarkdownDocument(uri=document_uri)
+                    document = MarkdownDocument(url=document_url)
                 case DocumentType.PDF:
                     from toolfront.models.documents.pdf import PDFDocument
 
-                    document = PDFDocument(uri=document_uri)
+                    document = PDFDocument(url=document_url)
                 case DocumentType.PPTX:
                     from toolfront.models.documents.powerpoint import PowerPointDocument
 
-                    document = PowerPointDocument(uri=document_uri)
+                    document = PowerPointDocument(url=document_url)
                 case DocumentType.RTF:
                     from toolfront.models.documents.rtf import RTFDocument
 
-                    document = RTFDocument(uri=document_uri)
+                    document = RTFDocument(url=document_url)
                 case DocumentType.TXT:
                     from toolfront.models.documents.txt import TXTDocument
 
-                    document = TXTDocument(uri=document_uri)
+                    document = TXTDocument(url=document_url)
                 case DocumentType.XML:
                     from toolfront.models.documents.xml import XMLDocument
 
-                    document = XMLDocument(uri=document_uri)
+                    document = XMLDocument(url=document_url)
                 case DocumentType.YAML | DocumentType.YML:
                     from toolfront.models.documents.yaml import YAMLDocument
 
-                    document = YAMLDocument(uri=document_uri)
+                    document = YAMLDocument(url=document_url)
                 case _:
                     raise ValueError(f"Unsupported document type: {document_type}")
 

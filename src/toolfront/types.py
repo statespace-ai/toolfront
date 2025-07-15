@@ -36,7 +36,7 @@ class DocumentType(str, Enum):
     MD = "md"
 
     @classmethod
-    def from_file_extension(cls, file_path: str) -> "DocumentType":
+    def from_file(cls, file_path: str) -> "DocumentType":
         try:
             return cls(file_path.split(".")[-1].lower())
         except (ValueError, IndexError) as e:

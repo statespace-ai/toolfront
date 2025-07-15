@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from toolfront.models.documents.base import Document, DocumentError
 
@@ -22,5 +21,5 @@ class TXTDocument(Document):
             with self.path.open("r", encoding="utf-8") as file:
                 return file.read()
         except Exception as e:
-            logger.error(f"Error reading TXT file {self.uri}: {e}")
+            logger.error(f"Error reading TXT file {self.url}: {e}")
             raise DocumentError(f"Error reading TXT file: {str(e)}")

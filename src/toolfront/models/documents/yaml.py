@@ -29,8 +29,8 @@ class YAMLDocument(Document):
                 with self.path.open("r", encoding="utf-8") as file:
                     return file.read()
             except Exception as e:
-                logger.error(f"Error reading YAML file {self.uri}: {e}")
+                logger.error(f"Error reading YAML file {self.url}: {e}")
                 raise DocumentError(f"Error reading YAML file: {str(e)}")
         except Exception as e:
-            logger.error(f"Error parsing YAML file {self.uri}: {e}")
+            logger.error(f"Error parsing YAML file {self.url}: {e}")
             raise DocumentError(f"Error parsing YAML: {str(e)}")

@@ -3,6 +3,7 @@ from abc import ABC
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from pathlib import Path
+from typing import Self
 from urllib.parse import urlparse
 
 import yaml
@@ -13,7 +14,8 @@ from toolfront.types import DatasourceType
 logger = logging.getLogger("toolfront")
 
 # Context variable to store datasources for the current context
-_context_datasources: ContextVar[dict[str, "DataSource"]] = ContextVar("context_datasources", default={})
+_context_datasources: ContextVar[dict[str, "DataSource"]] = ContextVar(
+    "context_datasources", default={})
 
 
 def _get_type(url: str) -> DatasourceType:
@@ -101,14 +103,15 @@ class DataSource(BaseModel, ABC):
         raise NotImplementedError("Subclasses must implement create_from_url")
 
     @classmethod
-    def load_from_sanitized_url(cls, sanitized_url: str) -> "DataSource":
+    def load_from_sanitized_url(cls, sanitized_url: str) -> Self:
         context_cache = _context_datasources.get({})
         if sanitized_url not in context_cache:
             raise ValueError(f"Datasource {sanitized_url} not found")
 
         obj = context_cache[sanitized_url]
         if not isinstance(obj, cls):
-            raise ValueError(f"Datasource {sanitized_url} is not a {cls.__name__}")
+            raise ValueError(
+                f"Datasource {sanitized_url} is not a {cls.__name__}")
         return obj
 
 

@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from toolfront.models.documents.base import Document, DocumentError
 
@@ -31,8 +30,8 @@ class RTFDocument(Document):
                 with self.path.open("r", encoding="utf-8") as file:
                     return f"RTF content (requires striprtf library for text extraction):\n{file.read()}"
             except Exception as e:
-                logger.error(f"Error reading RTF file {self.uri}: {e}")
+                logger.error(f"Error reading RTF file {self.url}: {e}")
                 raise DocumentError(f"Error reading RTF file: {str(e)}")
         except Exception as e:
-            logger.error(f"Error reading RTF file {self.uri}: {e}")
+            logger.error(f"Error reading RTF file {self.url}: {e}")
             raise DocumentError(f"Error reading RTF file: {str(e)}")

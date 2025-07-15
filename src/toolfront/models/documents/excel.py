@@ -39,5 +39,5 @@ class ExcelDocument(Document):
             logger.error(f"Missing dependency for Excel reading: {error_msg}")
             raise DocumentError(error_msg)
         except Exception as e:
-            logger.error(f"Error reading Excel file {self.uri}: {e}")
+            logger.error(f"Error reading Excel file {self.url}: {e}")
             raise DocumentError(f"Error reading Excel file: {str(e)}")

@@ -6,7 +6,7 @@ class Read(BaseModel):
 
     library_url: str = Field(..., description="Library URL.")
 
-    document_path: str = Field(..., description="Document path.")
+    document_path: str = Field(..., description="Full document path.")
 
     pagination: int | float = Field(
         ...,

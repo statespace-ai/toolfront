@@ -37,5 +37,5 @@ class PowerPointDocument(Document):
             logger.error(f"Missing dependency for PowerPoint reading: {error_msg}")
             raise DocumentError(error_msg)
         except Exception as e:
-            logger.error(f"Error reading PowerPoint file {self.uri}: {e}")
+            logger.error(f"Error reading PowerPoint file {self.url}: {e}")
             raise DocumentError(f"Error reading PowerPoint file: {str(e)}")

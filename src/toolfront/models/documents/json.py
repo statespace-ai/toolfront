@@ -23,8 +23,8 @@ class JSONDocument(Document):
                 data = json.load(file)
                 return json.dumps(data, indent=2, ensure_ascii=False)
         except json.JSONDecodeError as e:
-            logger.error(f"Error parsing JSON file {self.uri}: {e}")
+            logger.error(f"Error parsing JSON file {self.url}: {e}")
             raise DocumentError(f"Error parsing JSON: {str(e)}")
         except Exception as e:
-            logger.error(f"Error reading JSON file {self.uri}: {e}")
+            logger.error(f"Error reading JSON file {self.url}: {e}")
             raise DocumentError(f"Error reading JSON file: {str(e)}")
