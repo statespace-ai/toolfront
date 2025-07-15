@@ -2,7 +2,11 @@
 NUM_ENDPOINT_SEARCH_ITEMS = 100
 NUM_TABLE_SEARCH_ITEMS = 100
 NUM_DOCUMENT_SEARCH_ITEMS = 100
+NUM_DOCUMENT_SEARCH_ITEMS = 100
 NUM_QUERY_SEARCH_ITEMS = 25
+
+# TTL for spec downloads (24 hours)
+SPEC_DOWNLOAD_TTL = 24 * 60 * 60  # 24 hours in seconds
 
 # TTL for spec downloads (24 hours)
 SPEC_DOWNLOAD_TTL = 24 * 60 * 60  # 24 hours in seconds

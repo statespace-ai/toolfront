@@ -1,5 +1,6 @@
 import pandas as pd
 
+from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
 from toolfront.models.database_connections.base import AsyncSQLAlchemyMixin, DatabaseConnection
 from toolfront.utils import cache
@@ -30,7 +31,8 @@ class PostgreSQLConnection(AsyncSQLAlchemyMixin, DatabaseConnection):
         splits = table_path.split(".")
 
         if not len(splits) == 2:
-            raise ValueError(f"Invalid table path: {table_path}. Expected format: schema.table")
+            raise ValueError(
+                f"Invalid table path: {table_path}. Expected format: schema.table")
 
         table_schema, table_name = splits
 

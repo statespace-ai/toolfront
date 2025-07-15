@@ -7,6 +7,7 @@ import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
+from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
 from toolfront.models.database_connections.base import DatabaseConnection
 from toolfront.types import ConnectionResult

@@ -4,6 +4,7 @@ import logging
 
 import pandas as pd
 
+from toolfront.cache import cache
 from toolfront.config import CACHE_TTL
 from toolfront.models.database_connections.base import DatabaseConnection
 from toolfront.types import ConnectionResult
