@@ -36,14 +36,14 @@ class API(DataSource, ABC):
                         self.spec_config = (
                             yaml.safe_load(f) if path.suffix.lower() in [".yaml", ".yml"] else json.load(f)
                         )
-                case "http":
+                case "http" | "https":
                     with httpx.Client(timeout=TIMEOUT_SECONDS) as client:
                         response = client.get(self.spec_url)
                         response.raise_for_status()
                         self.spec_config = response.json()
                 case _:
                     raise ValueError("Invalid url")
-
+                
         return self
 
     def sanitized_url(self) -> str:
