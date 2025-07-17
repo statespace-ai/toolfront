@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/kruskal-labs-toolfront-badge.png)](https://mseep.ai/app/kruskal-labs-toolfront)
+
 <p align="center">
   <a>
     <img src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/logo.png" width="150" alt="ToolFront Logo">
