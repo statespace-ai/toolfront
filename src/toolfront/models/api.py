@@ -1,17 +1,72 @@
 import json
 from abc import ABC
+from enum import Enum
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 import yaml
-from pydantic import Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from toolfront.config import TIMEOUT_SECONDS
-from toolfront.models.actions.request import Request
-from toolfront.models.datasources.base import DataSource
-from toolfront.types import HTTPMethod
+from toolfront.models.base import DataSource
+
+
+class HTTPMethod(str, Enum):
+    """Valid HTTP methods."""
+
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+
+    @classmethod
+    def get_supported_methods(cls) -> set[str]:
+        """Get all supported HTTP methods."""
+        return {method.value for method in cls}
+
+
+class Endpoint(BaseModel):
+    method: HTTPMethod = Field(
+        ...,
+        description="HTTP method.",
+    )
+
+    path: str = Field(
+        ...,
+        description="Full endpoint path in slash notation with path parameter names between curly braces e.g. '/path/to/endpoint/{{param}}'.",
+    )
+
+
+class Request(BaseModel):
+    endpoint: Endpoint = Field(
+        ...,
+        description="API endpoint.",
+    )
+
+    path_params: dict[str, Any] | None = Field(
+        None,
+        description="Optional path parameters in JSON format e.g. {'param': 'value'}.",
+    )
+
+    body: dict[str, Any] | None = Field(
+        None,
+        description="Optional request body in JSON format. Only required for POST, PUT, PATCH methods e.g. {'name': 'John', 'age': 30}.",
+    )
+
+    headers: dict[str, Any] | None = Field(
+        None,
+        description="Optional request headers in JSON format.",
+    )
+
+    params: dict[str, Any] | None = Field(
+        None,
+        description="Optional request parameters in JSON format.",
+    )
 
 
 class API(DataSource, ABC):
@@ -80,7 +135,7 @@ class API(DataSource, ABC):
     def tools(self) -> list[callable]:
         return [self.inspect_endpoint, self.request]
 
-    async def inspect_endpoint(self, method: HTTPMethod, path: str) -> dict[str, Any]:
+    async def inspect_endpoint(self, endpoint: Endpoint) -> dict[str, Any]:
         """
         Inspect the structure of an API endpoint.
 
@@ -91,9 +146,9 @@ class API(DataSource, ABC):
         2. Inspecting endpoints helps understand the structure of the data
         3. Always inspect endpoints before writing queries to understand their structure and prevent errors
         """
-        inspect = self.spec.get("paths", {}).get(path, {}).get(method.lower(), {})
+        inspect = self.spec.get("paths", {}).get(endpoint.path, {}).get(endpoint.method.lower(), {})
         if not inspect:
-            raise RuntimeError(f"Endpoint not found: {method} {path}")
+            raise RuntimeError(f"Endpoint not found: {endpoint.method} {endpoint.path}")
         return inspect
 
     async def request(
@@ -114,8 +169,8 @@ class API(DataSource, ABC):
 
         async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
             response = await client.request(
-                method=request.method.upper(),
-                url=f"{self.url}{request.path}",
+                method=request.endpoint.method.upper(),
+                url=f"{self.url}{request.endpoint.path.format(**(request.path_params or {}))}",
                 json=request.body,
                 params={**(request.params or {}), **(self.params or {})},
                 headers={**(request.headers or {}), **(self.headers or {})},

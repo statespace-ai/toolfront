@@ -8,15 +8,36 @@ from typing import Any
 
 import ibis
 import pandas as pd
+import sqlparse
 from ibis import BaseBackend
-from pydantic import Field, PrivateAttr, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from toolfront.models.actions.query import Query
-from toolfront.models.atomics.table import Table
-from toolfront.models.datasources.base import DataSource
+from toolfront.models.base import DataSource
 from toolfront.utils import serialize_response
 
 logger = logging.getLogger("toolfront")
+
+
+class Table(BaseModel):
+    path: str = Field(
+        ...,
+        description="Full table path in dot notation e.g. 'schema.table' or 'database.schema.table'.",
+    )
+
+
+class Query(BaseModel):
+    code: str = Field(..., description="SQL query string to execute. Must match the SQL dialect of the database.")
+
+    def is_read_only_query(self) -> bool:
+        """Check if SQL contains only read operations"""
+        parsed = sqlparse.parse(self.code)
+
+        for statement in parsed:
+            stmt_type = statement.get_type()
+            if stmt_type not in ["SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN"]:
+                return False
+
+        return True
 
 
 class Database(DataSource, ABC):

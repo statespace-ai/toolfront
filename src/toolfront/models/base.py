@@ -6,7 +6,7 @@ import linecache
 import logging
 from abc import ABC, abstractmethod
 from contextvars import ContextVar
-from pathlib import Path
+from importlib.resources import files
 from typing import Any, Self
 
 import pandas as pd
@@ -84,6 +84,7 @@ class DataSource(BaseModel, ABC):
         self,
         prompt: str,
         model: models.Model | models.KnownModelName | str | None = DEFAULT_MODEL,
+        context: str | None = None,
     ) -> AskReturnType:
         """
         Ask the datasource a question and display the response beautifully in the terminal.
@@ -95,7 +96,18 @@ class DataSource(BaseModel, ABC):
         if caller_context.var_type:
             output_type = self._retrieve_class() if caller_context.var_type == pd.DataFrame else caller_context.var_type
 
-        result = asyncio.run(self._ask_async(prompt, model, output_type))
+        context = self.context(additional_context=context)
+        tools = [Tool(prepare_tool_for_pydantic_ai(tool), max_retries=MAX_RETRIES) for tool in self.tools()]
+
+        agent = Agent(
+            model=model,
+            tools=tools,
+            system_prompt=context,
+            output_retries=MAX_RETRIES,
+            output_type=output_type | None,
+        )
+
+        result = asyncio.run(self._ask_async(prompt, agent))
 
         if result is None and not type_allows_none(output_type):
             raise RuntimeError(
@@ -108,18 +120,21 @@ class DataSource(BaseModel, ABC):
         else:
             return result
 
-    def context(self) -> str:
+    def context(self, additional_context: str | None = None) -> str:
         """
         Get the context for the datasource.
         """
-        instruction_path = Path(__file__).parent.parent.parent / "instructions/ask.txt"
+        instruction_file = files("toolfront") / "instructions" / "ask.txt"
 
-        with instruction_path.open() as f:
+        with instruction_file.open() as f:
             agent_instruction = f.read()
+
+        if additional_context:
+            agent_instruction += f"\n\nThe user has provided the following information:\n\n{additional_context}"
 
         context = (
             f"{agent_instruction}\n\n"
-            f"Use the following context about the user's data to guide your response:\n\n"
+            f"Use the following information about the user's data to guide your response:\n\n"
             f"{yaml.dump(self.model_dump())}"
         )
 
@@ -128,20 +143,12 @@ class DataSource(BaseModel, ABC):
     async def _ask_async(
         self,
         prompt: str,
-        model: models.Model | models.KnownModelName | str | None = DEFAULT_MODEL,
-        output_type: Any = str,
+        agent: Agent,
     ) -> AskReturnType:
         """
         Stream the agent response with live updating display.
         Returns the final result from the agent.
         """
-
-        context = self.context()
-        tools = [Tool(prepare_tool_for_pydantic_ai(tool), max_retries=MAX_RETRIES) for tool in self.tools()]
-
-        agent = Agent(
-            model, tools=tools, system_prompt=context, output_retries=MAX_RETRIES, output_type=output_type | None
-        )
 
         panel_title = f"[bold green]{sanitize_url(self.url)}[/bold green]"
 

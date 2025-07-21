@@ -4,12 +4,20 @@ from typing import Any
 from urllib.parse import urlparse
 
 from markitdown import MarkItDown
-from pydantic import Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
-from toolfront.models.actions.read import Read
-from toolfront.models.datasources.base import DataSource
+from toolfront.config import CHUNK_SIZE
+from toolfront.models.base import DataSource
 
-CHUNK_SIZE = 10000
+
+class Read(BaseModel):
+    """Storage library."""
+
+    document_path: str = Field(..., description="Relative document path to read.")
+
+    pagination: int | float = Field(
+        ..., description="Section navigation: 0.0-0.99 for percentile, >=1 for section number."
+    )
 
 
 class Library(DataSource, ABC):
@@ -61,11 +69,7 @@ class Library(DataSource, ABC):
 
     async def read_document(
         self,
-        document_path: str = Field(..., description="Document path to read."),
-        pagination: int | float = Field(
-            0.0,
-            description="Section navigation: 0.0-0.99 for percentile, >=1 for section number.",
-        ),
+        read: Read,
     ) -> str:
         """
         Read the contents of a library's document with automatic chunking.
@@ -85,14 +89,14 @@ class Library(DataSource, ABC):
         5. Each returned section includes metadata showing "Section X of Y" for context.
         """
 
-        document_type = document_path.split(".")[-1]
+        document_type = read.document_path.split(".")[-1]
 
         if document_type in {"pptx", "docx", "xlsx", "xls", "pdf"}:
             md = MarkItDown()
-            result = md.convert(self.path / document_path)
+            result = md.convert(self.path / read.document_path)
             document = result.markdown
         elif document_type in {"md", "txt", "json", "xml", "yaml", "yml", "rtf", "html"}:
-            with (self.path / document_path).open("r", encoding="utf-8") as f:
+            with (self.path / read.document_path).open("r", encoding="utf-8") as f:
                 document = f.read()
         else:
             raise ValueError(f"Unsupported document type: {document_type}")
@@ -104,11 +108,11 @@ class Library(DataSource, ABC):
             return document
 
         # Determine section index and label based on pagination type
-        if pagination < 1:
+        if read.pagination < 1:
             # Percentile-based: convert to section index
-            section_index = min(int(pagination * total_sections), total_sections - 1)
+            section_index = min(int(read.pagination * total_sections), total_sections - 1)
         else:
-            section_index = min(int(pagination), total_sections - 1)
+            section_index = min(int(read.pagination), total_sections - 1)
 
         start_idx = section_index * CHUNK_SIZE
         end_idx = min(start_idx + CHUNK_SIZE, len(document))

@@ -6,7 +6,6 @@ from collections.abc import Callable
 from typing import Any, get_args, get_origin
 
 import pandas as pd
-from platformdirs import user_cache_dir
 from pydantic import TypeAdapter
 from pydantic_ai import ModelRetry
 from yarl import URL
@@ -15,8 +14,6 @@ from toolfront.config import MAX_DATA_CHARS, MAX_DATA_ROWS
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
-
-cache_dir = user_cache_dir("toolfront")
 
 
 def prepare_tool_for_pydantic_ai(func: Callable[..., Any]) -> Callable[..., Any]:
