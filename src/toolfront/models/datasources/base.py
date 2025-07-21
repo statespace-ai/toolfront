@@ -171,9 +171,8 @@ class DataSource(BaseModel, ABC):
                     title=panel_title,
                     border_style="green",
                 ),
-                # console=console,
                 refresh_per_second=10,
-                # vertical_overflow="crop",
+                vertical_overflow="crop",
             ) as live:
                 accumulated_content = ""
                 # live.stop()

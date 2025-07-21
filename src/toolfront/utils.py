@@ -252,7 +252,7 @@ def deserialize_response(tool_result: Any) -> str:
     # Handle lists
     elif isinstance(tool_result, list):
         if len(tool_result) > 10:
-            truncated_list = tool_result[:10] + ['...']
+            truncated_list = tool_result[:10] + ["..."]
             result = json.dumps(truncated_list, indent=2)
             return f"```json\n{result}\n```\n\n(showing first 10 of {len(tool_result)} items)"
         else:

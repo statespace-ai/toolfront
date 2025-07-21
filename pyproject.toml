@@ -40,6 +40,7 @@ dependencies = [
     "sqlparse>=0.5.3",
     "tabulate>=0.9.0",
     "ibis-framework>=10.6.0",
+    "markitdown>=0.1.2",
 ]
 
 [project.scripts]
@@ -105,14 +106,8 @@ sqlserver = [
 trino = [
     "ibis-framework[trino]>=10.6.0",
 ]
-
 document = [
-    "pypdf>=5.2.1",           # PDF documents
-    "python-docx>=1.2.0",     # Word documents
-    "python-pptx>=0.6.23",    # PowerPoint presentations
-    "PyYAML>=6.0.1",          # YAML files
-    "striprtf>=0.0.26",       # RTF files
-    "openpyxl>=3.1.5",        # Excel files (pandas backend)
+    "markitdown[all]>=0.1.2",
 ]
 
 all = [
@@ -123,7 +118,6 @@ all = [
     "toolfront[druid]",
     "toolfront[duckdb]",
     "toolfront[mssql]",
-    "toolfront[mysql]",
     "toolfront[oracle]",
     "toolfront[postgres]",
     "toolfront[pyspark]",
@@ -131,7 +125,6 @@ all = [
     "toolfront[sqlite]",
     "toolfront[sqlserver]",
     "toolfront[trino]",
-    "toolfront[document]",
 ]
 
 [build-system]
