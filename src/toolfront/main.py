@@ -9,7 +9,7 @@ import click
 # from fake_database import Database  # Replace with your actual DB type
 from mcp.server.fastmcp import FastMCP
 
-from toolfront.models.datasources.base import connect_async
+from toolfront.models.datasources.base import connect
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
@@ -21,7 +21,7 @@ async def get_mcp(urls: tuple[str, ...]) -> FastMCP:
     @asynccontextmanager
     async def app_lifespan(server: FastMCP) -> AsyncIterator[None]:
         """Manage application lifecycle with type-safe context"""
-        async with connect_async(list(urls)) as (context, tools):
+        with connect(list(urls)) as (context, tools):
             # import pdb; pdb.set_trace()
 
             async def discover() -> dict:

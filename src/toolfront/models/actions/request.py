@@ -6,10 +6,6 @@ from toolfront.types import HTTPMethod
 
 
 class Request(BaseModel):
-    """API endpoint."""
-
-    api_url: str = Field(..., description="API URL.")
-
     method: HTTPMethod = Field(
         ...,
         description="HTTP method.",
@@ -17,7 +13,7 @@ class Request(BaseModel):
 
     path: str = Field(
         ...,
-        description="Full endpoint path with path parameters between curly braces e.g. '/users/org_123/user_123'.",
+        description="Full endpoint path with path parameters e.g. '/users/org_123/user_123'.",
     )
 
     body: dict[str, Any] | None = Field(

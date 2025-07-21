@@ -6,7 +6,7 @@ from toolfront.types import HTTPMethod
 class Endpoint(BaseModel):
     """API endpoint."""
 
-    api_url: str = Field(..., description="API URL.")
+    # api_url: str = Field(..., description="API URL.")
 
     method: HTTPMethod = Field(
         ...,

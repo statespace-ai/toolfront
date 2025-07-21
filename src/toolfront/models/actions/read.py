@@ -4,8 +4,6 @@ from pydantic import BaseModel, Field
 class Read(BaseModel):
     """Storage library."""
 
-    library_url: str = Field(..., description="Library URL.")
-
     document_path: str = Field(..., description="Full document path.")
 
     pagination: int | float = Field(

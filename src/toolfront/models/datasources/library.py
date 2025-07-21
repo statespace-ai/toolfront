@@ -1,82 +1,80 @@
+
 from abc import ABC
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 from pydantic import Field, model_validator
 
+from toolfront.models.actions.read import Read
 from toolfront.models.datasources.base import DataSource
-from toolfront.models.datasources.database import SearchMode
 from toolfront.types import DocumentType
-from toolfront.utils import search_items
 
 
 class Library(DataSource, ABC):
-    """Abstract base class for library."""
+    """Abstract base class for document libraries."""
 
     url: str = Field(..., description="Library URL.")
+    # documents: list[str] = Field(..., description="List of documents in the library.")
 
-    @model_validator(mode="after")
-    def validate_model(self) -> "Library":
-        if not self.scheme == "file":
+    @model_validator(mode="before")
+    def validate_model(cls, v: Any) -> Any:
+        parsed_url = urlparse(v.get("url"))
+        if parsed_url.scheme != "file":
             raise ValueError("Only file:// URLs are supported for libraries.")
 
-        path = self.path
+        path = Path(parsed_url.path)
         if not path.exists():
             raise ValueError(f"Library path does not exist: {path}")
 
-        return self
+        return v
 
-    def sanitized_url(self) -> str:
-        return str(self.url)
-
-    @classmethod
-    def create_from_url(cls, url: str) -> "Library":
-        return cls(url=url)
-
-    def __str__(self) -> str:
-        return f"Library(url={self.url})"
-
-    __repr__ = __str__
-
-    @property
-    def scheme(self) -> str:
-        parsed_url = urlparse(self.url)
-        return parsed_url.scheme
+    def tools(self) -> list[callable]:
+        return [self.glob_search_documents, self.read_document]
 
     @property
     def path(self) -> Path:
         parsed_url = urlparse(self.url)
-        return Path(parsed_url.path)
+        return Path(parsed_url.path) if parsed_url.scheme == "file" else Path(self.url)
 
-    async def get_documents(self) -> list[str]:
-        """Get all documents in the library recursively."""
-
-        path = self.path
-        if not path.exists():
-            return []
-
-        try:
-            supported_extensions = DocumentType.get_supported_extensions()
-            return [str(p.relative_to(path)) for p in path.rglob("*.*") if p.suffix.lower() in supported_extensions]
-        except (PermissionError, OSError) as e:
-            raise RuntimeError(f"Error accessing {path}: {e}") from e
-
-    async def search_documents(self, pattern: str, mode: SearchMode = SearchMode.REGEX, limit: int = 10) -> list[str]:
-        """Search for documents in the library."""
-        files = await self.get_documents()
-        return search_items(files, pattern, mode, limit)
-
-    async def read_document(self, document_path: str, pagination: int | float = 0) -> str:
-        """Read the file using appropriate method based on file extension.
-
-        Args:
-            document_type: Type of the document to read.
-            document_path: Path to the document.
-            pagination: Page/section number (1+ int) or percentile (0-1 exclusive float) to read.
-                        Only used for paginated documents (PDF, PPTX, XLSX). Ignored for others.
+    async def glob_search_documents(self, pattern: str = Field(..., description="Glob pattern to search for.")) -> list[str]:
         """
+        Return document paths in the library matching the glob pattern (e.g. "*.pdf", "docs/*.txt").
 
-        document_url = str(Path(self.path) / document_path)
+        1. Use educated guesses for initial glob patterns based on document type and target content.
+        2. If your search fails, retry with a different glob pattern.
+        3. Returns up to 100 results.
+        """
+        parsed_url = urlparse(self.url)
+        root_path = Path(parsed_url.path) if parsed_url.scheme == "file" else Path(self.url)
+
+        documents = []
+        for file_path in root_path.rglob(pattern):
+            if file_path.is_file():
+                documents.append(str(file_path.relative_to(root_path)))
+                if len(documents) >= 100:
+                    break
+
+        return documents
+
+    async def read_document(self, document_path: str = Field(..., description="Document path to read."),
+                            pagination: int | float = Field(0.0, description="Pagination parameter.")) -> str:
+        """
+        Read the contents of a library's document.
+
+        Library Read Instructions:
+        1. For non-paginated documents (JSON, MD, TXT, XML, YAML, RTF), this tool reads the entire document contents.
+        2. For paginated documents (PDF, DOCX, PPTX, Excel), this tool reads only specific pages/sections. Use pagination parameter strategically to target relevant content.
+        3. Use pagination parameter as between 0.0 (inclusive) and 1.0 (exclusive) for percentile-based navigation or int (1+) for specific page numbers.
+        4. When searching for specific information in large paginated documents, use a "soft" binary search approach:
+        - Start with an educated percentile guess based on document type and target content (e.g., 0.8 for conclusions in academic papers, 0.3 for methodology)
+        - Use the context from your initial read to refine your search. If you find related but not target content, adjust percentile accordingly
+        - Iterate between percentile and page number paginations to pinpoint information as you narrow down the location
+        - If initial pages show the document is irrelevant, abandon it quickly rather than exhaustively searching it.
+        5. Use educated guesses for initial page positions based on document structure (e.g., table of contents near start, conclusions near end, etc.).
+        6. Avoid over-paginating: don't read every page sequentially unless absolutely necessary for comprehensive understanding.
+        """
+        document_url = str(self.path / document_path)
 
         document_type = DocumentType.from_file(document_url)
 
@@ -123,7 +121,9 @@ class Library(DataSource, ABC):
 
                     document = YAMLDocument(url=document_url)
                 case _:
-                    raise ValueError(f"Unsupported document type: {document_type}")
+                    from toolfront.models.documents.generic import GenericDocument
+
+                    document = GenericDocument(url=document_url)
 
         except ImportError as e:
             raise ImportError(f"Import error: {e}. Please install 'toolfront[all]' or toolfront[doc]") from e
@@ -131,3 +131,9 @@ class Library(DataSource, ABC):
             raise RuntimeError(f"Error reading document {document_path}: {e}") from e
 
         return await document.read(pagination)
+
+    def _retrieve_class(self) -> type:
+        return Read
+
+    def _retrieve_function(self) -> Any:
+        return self.read_document

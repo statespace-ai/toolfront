@@ -20,3 +20,7 @@ CACHE_TTL = 3600
 
 # Timeout
 TIMEOUT_SECONDS = 30.0
+
+DEFAULT_MODEL = "openai:gpt-4o"
+
+MAX_RETRIES = 3
