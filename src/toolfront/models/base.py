@@ -60,10 +60,24 @@ class DataSource(BaseModel, ABC):
     @field_serializer("url")
     def serialize_url(self, value: str) -> str:
         return sanitize_url(self.url)
-
+    
     @classmethod
-    def from_url(cls, url: str) -> "DataSource":
-        raise NotImplementedError("Subclasses must implement create_from_url")
+    def from_url(cls, url: str) -> Self:
+        if url.startswith("http"):
+            from toolfront.models.api import API
+
+            return API(spec=url)
+        elif url.startswith("file"):
+            if url.endswith(".json") or url.endswith(".yaml") or url.endswith(".yml"):
+                from toolfront.models.api import API
+                return API(spec=url)
+            else:
+                from toolfront.models.library import Library
+                return Library(url=url)
+        else:
+            from toolfront.models.database import Database
+            return Database(url=url)
+
 
     @classmethod
     def load_from_sanitized_url(cls, sanitized_url: str) -> Self:
@@ -139,6 +153,7 @@ class DataSource(BaseModel, ABC):
         )
 
         return context
+
 
     async def _ask_async(
         self,

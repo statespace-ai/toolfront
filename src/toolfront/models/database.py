@@ -1,9 +1,7 @@
-import asyncio
 import logging
 import warnings
 from abc import ABC
 from contextlib import closing
-from itertools import chain
 from typing import Any
 
 import ibis
@@ -70,14 +68,23 @@ class Database(DataSource, ABC):
         if isinstance(self.tables, str):
             like = self.tables
 
-        available_tables = asyncio.run(self._get_tables(like=like))
+
+        catalog = self._connection.current_catalog
+        databases = self._connection.list_databases(catalog=catalog)
+
+        all_tables = []
+        for db in databases:
+            tables = self._connection.list_tables(
+                like=like, database=(catalog, db))
+            prefix = f"{catalog}." if catalog else ""
+            all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
 
         if isinstance(self.tables, list):
-            self.tables = [t for t in available_tables if t in self.tables]
+            self.tables = [t for t in all_tables if t in self.tables]
             if not self.tables:
                 raise ValueError(f"None of the specified tables found: {self.tables}")
         else:
-            self.tables = available_tables
+            self.tables = all_tables
 
         return self
 
@@ -132,19 +139,6 @@ class Database(DataSource, ABC):
             columns = [col[0] for col in cursor.description]
             return pd.DataFrame(cursor.fetchall(), columns=columns)
 
-    async def _get_tables(self, like: str | None = None) -> list[str]:
-        """List all tables in the database asynchronously."""
-
-        catalog = self._connection.current_catalog
-        databases = self._connection.list_databases(catalog=catalog)
-
-        async def get_filtered_tables(db: str) -> list[str]:
-            tables = await asyncio.to_thread(self._connection.list_tables, like=like, database=(catalog, db))
-            prefix = f"{catalog}." if catalog else ""
-            return [f"{prefix}{db}.{table}" for table in tables]
-
-        results = await asyncio.gather(*[get_filtered_tables(db) for db in databases])
-        return list(chain.from_iterable(results))
 
     def _retrieve_class(self):
         return Query
