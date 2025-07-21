@@ -68,14 +68,12 @@ class Database(DataSource, ABC):
         if isinstance(self.tables, str):
             like = self.tables
 
-
         catalog = self._connection.current_catalog
         databases = self._connection.list_databases(catalog=catalog)
 
         all_tables = []
         for db in databases:
-            tables = self._connection.list_tables(
-                like=like, database=(catalog, db))
+            tables = self._connection.list_tables(like=like, database=(catalog, db))
             prefix = f"{catalog}." if catalog else ""
             all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
 
@@ -138,7 +136,6 @@ class Database(DataSource, ABC):
         with closing(self._connection.raw_sql(query.code)) as cursor:
             columns = [col[0] for col in cursor.description]
             return pd.DataFrame(cursor.fetchall(), columns=columns)
-
 
     def _retrieve_class(self):
         return Query

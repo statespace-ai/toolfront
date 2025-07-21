@@ -38,7 +38,7 @@ dependencies = [
 ]
 
 [project.scripts]
-toolfront = "toolfront.main:main"
+toolfront = "toolfront.mcp:main"
 
 
 [tool.setuptools.packages.find]

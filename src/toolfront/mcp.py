@@ -12,26 +12,20 @@ logger.setLevel(logging.INFO)
 
 
 async def get_mcp(url: str) -> FastMCP:
-    import pdb; pdb.set_trace()
     datasource = DataSource.from_url(url)
 
     async def discover() -> dict:
         """
-        ALWAYS CALL THIS FIRST TO DISCOVER THE AVAILABLE DATASOURCES
+        ALWAYS CALL THIS FIRST TO UNDERSTAND THE AVAILABLE DATASOURCES
         """
         return datasource.context()
 
     mcp = FastMCP("ToolFront MCP server")
 
-
     mcp.add_tool(discover)
 
     for tool in datasource.tools():
-        import pdb; pdb.set_trace()
-        docs = tool.__doc__
-        mcp.add_tool(tool)
-
-
+        mcp.add_tool(tool, description=tool.__doc__)
 
     logger.info("Started ToolFront MCP server")
 
