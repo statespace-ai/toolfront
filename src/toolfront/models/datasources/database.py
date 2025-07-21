@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import re
 import warnings
 from abc import ABC
 from contextlib import closing
@@ -11,7 +10,6 @@ import ibis
 import pandas as pd
 from ibis import BaseBackend
 from pydantic import Field, PrivateAttr, model_validator
-from pydantic_ai import ModelRetry
 
 from toolfront.models.actions.query import Query
 from toolfront.models.atomics.table import Table
@@ -47,17 +45,18 @@ class Database(DataSource, ABC):
             warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
             self._connection = ibis.connect(self.url)
 
+        like = None
         if isinstance(self.tables, str):
-            tables = self._get_tables(like=self.tables)
-            if not tables:
-                raise ValueError(f"No tables found matching the regex pattern: {tables}")
-        elif isinstance(self.tables, list):
-            tables = [table for table in self.tables if table in set(self._get_tables())]
-            if not tables:
-                raise ValueError(f"No tables found matching the list: {tables}")
+            like = self.tables
 
-        if not self.tables:
-            self.tables = self._get_tables()
+        available_tables = asyncio.run(self._get_tables(like=like))
+
+        if isinstance(self.tables, list):
+            self.tables = [t for t in available_tables if t in self.tables]
+            if not self.tables:
+                raise ValueError(f"None of the specified tables found: {self.tables}")
+        else:
+            self.tables = available_tables
 
         return self
 
@@ -73,7 +72,7 @@ class Database(DataSource, ABC):
 
         1. Use this tool to understand table structure like column names, data types, and constraints
         2. Inspecting tables helps understand the structure of the data
-        3. Always inspect tables before writing queries to understand their structure and prevent errors
+        3. ALWAYS inspect unfamiliar tables first to learn their columns and data types before querying
         """
         try:
             logger.debug(f"Inspecting table: {self.url} {table.path}")
@@ -86,9 +85,20 @@ class Database(DataSource, ABC):
             logger.error(f"Failed to inspect table: {e}", exc_info=True)
             raise RuntimeError(f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
 
-    def _query(self, query: Query) -> dict[str, Any]:
+    async def query(
+        self,
+        query: Query = Field(..., description="Read-only SQL query to execute."),
+    ) -> dict[str, Any]:
         """
-        Query the database.
+        This tool allows you to run read-only SQL queries against a database.
+
+        ALWAYS ENCLOSE IDENTIFIERS (TABLE NAMES, COLUMN NAMES) IN QUOTES TO PRESERVE CASE SENSITIVITY AND AVOID RESERVED WORD CONFLICTS AND SYNTAX ERRORS.
+
+        1. ONLY write read-only queries for tables that have been explicitly discovered or referenced.
+        2. Before writing queries, make sure you understand the schema of the tables you are querying.
+        3. ALWAYS use the correct dialect for the database.
+        4. NEVER use aliases in queries unless strictly necessary.
+        5. When a query fails or returns unexpected results, try to diagnose the issue and then retry.
         """
         logger.debug(f"Querying database: {self.url} {query.code}")
         if not query.is_read_only_query():
@@ -101,32 +111,7 @@ class Database(DataSource, ABC):
             columns = [col[0] for col in cursor.description]
             return pd.DataFrame(cursor.fetchall(), columns=columns)
 
-    async def query(
-        self,
-        query: Query = Field(..., description="Read-only SQL query to execute."),
-    ) -> dict[str, Any]:
-        """
-        This tool allows you to run read-only SQL queries against a database.
-
-        ALWAYS ENCLOSE IDENTIFIERS (TABLE NAMES, COLUMN NAMES) IN QUOTES TO PRESERVE CASE SENSITIVITY AND AVOID RESERVED WORD CONFLICTS AND SYNTAX ERRORS.
-
-        1. Only write read-only queries for against tables that have been explicitly discovered or referenced.
-        2. Before writing queries, make sure you understand the schema of the tables you are querying.
-        3. Always use the correct dialect for the database.
-        4. Do not use aliases in queries unless strictly necessary.
-        5. When a query fails or returns unexpected results, try to diagnose the issue and then retry.
-        """
-        try:
-            return serialize_response(self._query(query))
-        except Exception as e:
-            logger.error(f"Failed to query database: {e}", exc_info=True)
-            raise ModelRetry(f"Failed to query database in {self.url} - {str(e)}") from e
-
-    def _get_tables(self, like: str | None = None) -> list[str]:
-        """List all tables in the database."""
-        return asyncio.run(self._get_tables_async(like))
-
-    async def _get_tables_async(self, like: str | None = None) -> list[str]:
+    async def _get_tables(self, like: str | None = None) -> list[str]:
         """List all tables in the database asynchronously."""
 
         catalog = self._connection.current_catalog
@@ -135,7 +120,7 @@ class Database(DataSource, ABC):
         async def get_filtered_tables(db: str) -> list[str]:
             tables = await asyncio.to_thread(self._connection.list_tables, like=like, database=(catalog, db))
             prefix = f"{catalog}." if catalog else ""
-            return [f"{prefix}{db}.{table}" for table in tables if not like or re.match(like, table)]
+            return [f"{prefix}{db}.{table}" for table in tables]
 
         results = await asyncio.gather(*[get_filtered_tables(db) for db in databases])
         return list(chain.from_iterable(results))
@@ -144,4 +129,4 @@ class Database(DataSource, ABC):
         return Query
 
     def _retrieve_function(self) -> Any:
-        return self._query
+        return self.query

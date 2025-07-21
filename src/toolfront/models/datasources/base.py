@@ -1,6 +1,5 @@
 import ast
 import asyncio
-import functools
 import inspect
 import json
 import linecache
@@ -13,7 +12,7 @@ from typing import Any, Self
 import pandas as pd
 import yaml
 from pydantic import BaseModel, Field, field_serializer
-from pydantic_ai import Agent, ModelRetry, Tool, UnexpectedModelBehavior, models
+from pydantic_ai import Agent, Tool, UnexpectedModelBehavior, models
 from pydantic_ai.messages import (
     FunctionToolCallEvent,
     FunctionToolResultEvent,
@@ -31,7 +30,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from toolfront.config import DEFAULT_MODEL, MAX_RETRIES
-from toolfront.utils import deserialize_response, sanitize_url, type_allows_none
+from toolfront.utils import deserialize_response, prepare_tool_for_pydantic_ai, sanitize_url, type_allows_none
 
 logger = logging.getLogger("toolfront")
 console = Console()
@@ -80,24 +79,6 @@ class DataSource(BaseModel, ABC):
     @abstractmethod
     def tools(self) -> list[callable]:
         raise NotImplementedError("Subclasses must implement tools")
-
-    def _wrap_tool_with_retry(self, tool: callable) -> callable:
-        """
-        Wrap a tool function with ModelRetry error handling while preserving its signature.
-        """
-
-        @functools.wraps(tool)
-        async def wrapper(*args, **kwargs):
-            try:
-                return await tool(*args, **kwargs)
-            except Exception as e:
-                logger.error(f"Tool {tool.__name__} failed: {e}", exc_info=True)
-                raise ModelRetry(f"Tool {tool.__name__} failed: {str(e)}") from e
-
-        # Preserve the original function's signature for perfect introspection
-        wrapper.__signature__ = inspect.signature(tool)
-
-        return wrapper
 
     def ask(
         self,
@@ -156,7 +137,7 @@ class DataSource(BaseModel, ABC):
         """
 
         context = self.context()
-        tools = [Tool(self._wrap_tool_with_retry(tool), max_retries=MAX_RETRIES) for tool in self.tools()]
+        tools = [Tool(prepare_tool_for_pydantic_ai(tool), max_retries=MAX_RETRIES) for tool in self.tools()]
 
         agent = Agent(
             model, tools=tools, system_prompt=context, output_retries=MAX_RETRIES, output_type=output_type | None
