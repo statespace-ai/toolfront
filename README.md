@@ -123,7 +123,6 @@ class Customer(BaseModel):
     revenue: int
 
 customers: list[Customer] = data.ask("Top 3 customers")
-
 # Output:
 # [Customer(name='TechCorp Inc.', revenue=50000), Customer(name='DataFlow', revenue=35000)]
 ```
@@ -132,7 +131,6 @@ customers: list[Customer] = data.ask("Top 3 customers")
 
 ```python
 sales: pd.DataFrame = data.ask("Daily sales last week")
-
 # Output:
 #         date  amount
 # 0 2024-01-15   12500
@@ -144,7 +142,6 @@ sales: pd.DataFrame = data.ask("Daily sales last week")
 
 ```python
 price: int | float | None = data.ask("What's the price of our best-seller??")
-
 # Output: 29.99
 ```
 
@@ -159,8 +156,6 @@ class Car(BaseModel):
     year: int
 
 inventory: list[Car] = data.ask("Show me our car inventory")
-print(inventory)
-
 # Output:
 # [Car(make='Toyota', model='Camry', year=2023), Car(make='Honda', model='Civic', year=2024)]
 ```
@@ -572,37 +567,8 @@ answer: str = data.ask("What does my 2023 contract say about payment terms?")
 **Parameters**:
   - `url`: File system path in file:// format pointing to document directory (required)
 
-
 > [!TIP]
 > **Installation Options:** Use `toolfront[all]` for all database support, or install specific extras using comma-separated values e.g. `toolfront[postgres,mysql,document]`.
-
-## ❓ FAQ
-
-<details>
-<summary><strong>How is ToolFront different from other MCPs?</strong></summary>
-<br>
-
-ToolFront stands out with *multi-database* support, *self-improving* AI, and a *local-first* architecture.
-
-**Multi-database**: Instead of being limited to a single database, ToolFront connects all your databases and APIs in one place.
-
-**Self-improving**: ToolFront's CE/CL API monitors your AI agents and improves their performance over time
-
-**Local-first**: Cloud solutions compromise your data and rack up egress fees. ToolFront keeps everything local.
-
-</details>
-
-<details>
-<summary><strong>How does ToolFront keep my data safe?</strong></summary>
-<br>
-
-- **Local execution**: All database connections and queries run on machine.
-- **No secrets exposure**: Database secrets are never shared with LLMs.
-- **Read-only operations**: Only safe, read-only database queries are allowed.
-- **No data transmission**: Your database content never leaves your environment.
-- **Secure MCP protocol**: Direct communication between agents and databases without third-party storage.
-
-</details>
 
 
 ## 🔌 Integrations
@@ -666,6 +632,34 @@ ToolFront includes a built-in **[Model Context Protocol (MCP)](https://modelcont
 
 </details>
 
+
+## ❓ FAQ
+
+<details>
+<summary><strong>How is ToolFront different from other MCPs?</strong></summary>
+<br>
+
+ToolFront stands out with *multi-database* support, *self-improving* AI, and a *local-first* architecture.
+
+**Multi-database**: Instead of being limited to a single database, ToolFront connects all your databases and APIs in one place.
+
+**Self-improving**: ToolFront's CE/CL API monitors your AI agents and improves their performance over time
+
+**Local-first**: Cloud solutions compromise your data and rack up egress fees. ToolFront keeps everything local.
+
+</details>
+
+<details>
+<summary><strong>How does ToolFront keep my data safe?</strong></summary>
+<br>
+
+- **Local execution**: All database connections and queries run on machine.
+- **No secrets exposure**: Database secrets are never shared with LLMs.
+- **Read-only operations**: Only safe, read-only database queries are allowed.
+- **No data transmission**: Your database content never leaves your environment.
+- **Secure MCP protocol**: Direct communication between agents and databases without third-party storage.
+
+</details>
 
 
 ## 🤝 Support & Community
