@@ -1,5 +1,5 @@
 <p align="center">
-  <a>
+  <a href="https://github.com/kruskal-labs/toolfront">
     <img src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/logo.png" width="150" alt="ToolFront Logo">
   </a>
 </p>
@@ -28,7 +28,6 @@
 </div>
 <br>
 
-
 ## 🚀 Quickstart
 
 ### 1. Install ToolFront
@@ -38,7 +37,6 @@ pip install -U toolfront[all]
 ```
 
 ### 2. Setup your LLM API key
-
 
 ```bash
 export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
@@ -51,7 +49,7 @@ from toolfront import Database
 
 data = Database("postgresql://user:pass@localhost:5432/mydb")
 
-# get structured responses 
+# Get structured responses 
 response: list[int] = data.ask("What's the profit on our 5 best-sellers?")
 
 print(response)  # [1250, 980, 875, 720, 650]
@@ -59,11 +57,14 @@ print(response)  # [1250, 980, 875, 720, 650]
 
 That's it! ToolFront returns results in the format you need.
 
-## 🤖 Agent Configuration
+> [!TIP]
+> ToolFront works with databases, APIs, and document libraries. See the [Data Sources](#data-sources) section for details on connecting to each type.
 
-### LLM Model Selection
 
-ToolFront is model-agnostic and supports all major model providers.
+## 🤖 AI Model Configuration
+
+
+ToolFront is model-agnostic and supports all major LLM providers.
 
 <details>
 <summary><strong>OpenAI</strong></summary>
@@ -89,25 +90,13 @@ data.ask(..., model='anthropic:claude-3-5-sonnet-latest')
 </details>
 
 <details>
-<summary><strong>Google</strong></summary>
+<summary><strong>Google Gemini</strong></summary>
 <br>
 
 Set `export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>`, then run:
 
 ```python
 data.ask(..., model='google:gemini-1.5-pro')
-```
-
-</details>
-
-<details>
-<summary><strong>Gemini</strong></summary>
-<br>
-
-Set `export GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>`, then run:
-
-```python
-data.ask(..., model='gemini:gemini-1.5-pro')
 ```
 
 </details>
@@ -172,18 +161,18 @@ data.ask(..., model='deepseek:deepseek-chat')
 
 </details>
 
-> [!TIP]
-> ToolFront's AI module is built on top of Pydantic-AI. Check out [Pydantic-ai](https://ai.pydantic.dev/models/) for the full list of supported models and providers.
+<br>
 
-### Extra Context
-
-You can provide additional business context to help AI understand your data:
+You can also provide additional business context to help AI understand your data:
 
 ```python
 context = "Our company sells electronics. Revenue is tracked in the 'sales' table."
 
-answer = data.ask("What's our best performing product category?", context=context)
+data.ask("What's our best performing product category?", context=context)
 ```
+
+> [!TIP]
+> ToolFront's is built atop Pydantic-AI. Check out [Pydantic-AI](https://ai.pydantic.dev/models/) for the full list of supported models and providers.
 
 ## 🧩 Structured Outputs
 
@@ -227,7 +216,7 @@ sales: pd.DataFrame = data.ask("Daily sales last week")
 **Union types** for flexible responses:
 
 ```python
-price: int | float | None = data.ask("What's the price of our best-seller??")
+price: int | float | None = data.ask("What's the price of our best-seller?")
 # Output: 29.99
 ```
 
@@ -246,10 +235,8 @@ inventory: list[Car] = data.ask("Show me our car inventory")
 # [Car(make='Toyota', model='Camry', year=2023), Car(make='Honda', model='Civic', year=2024)]
 ```
 
-
-> **Note**: If `ask()` fails to answer a question, it will return `None` when the return type annotation includes `None` (e.g. `str | None`), or raise an exception otherwise.
-
-
+> [!NOTE]
+> If `ask()` fails to answer a question, it will return `None` when the return type annotation includes `None` (e.g. `str | None`), or raise an exception otherwise.
 
 ## 💾 Data Sources
 
@@ -259,12 +246,11 @@ ToolFront supports databases, APIs, and document libraries.
 
 The list below includes package extras, connection URLs, and parameters for all databases.
 
-
 <details>
 <summary><strong>Amazon Athena</strong></summary>
 <br>
 
-Install with `pip install toolfront[athena]`, then run
+Install with `pip install toolfront[athena]`, then run:
 
 ```python
 from toolfront import Database
@@ -290,7 +276,7 @@ data = Database(url="s3://my-bucket/", **extra_params)
 <summary><strong>BigQuery</strong></summary>
 <br>
 
-Install with `pip install toolfront[bigquery]`, then run
+Install with `pip install toolfront[bigquery]`, then run:
 
 ```python
 from toolfront import Database
@@ -321,7 +307,7 @@ data = Database(url="bigquery://{project_id}/{dataset_id}", **extra_params)
 <summary><strong>ClickHouse</strong></summary>
 <br>
 
-Install with `pip install toolfront[clickhouse]`, then run
+Install with `pip install toolfront[clickhouse]`, then run:
 
 ```python
 from toolfront import Database
@@ -349,7 +335,7 @@ data = Database(url="clickhouse://{user}:{password}@{host}:{port}?secure={secure
 <summary><strong>Databricks</strong></summary>
 <br>
 
-Install with `pip install toolfront[databricks]`, then run
+Install with `pip install toolfront[databricks]`, then run:
 
 ```python
 from toolfront import Database
@@ -378,7 +364,7 @@ data = Database(url="databricks://", **extra_params)
 <summary><strong>Druid</strong></summary>
 <br>
 
-Install with `pip install toolfront[druid]`, then run
+Install with `pip install toolfront[druid]`, then run:
 
 ```python
 from toolfront import Database
@@ -400,7 +386,7 @@ data = Database(url="druid://localhost:8082/druid/v2/sql", **extra_params)
 <summary><strong>DuckDB</strong></summary>
 <br>
 
-Install with `pip install toolfront[duckdb]`, then run
+Install with `pip install toolfront[duckdb]`, then run:
 
 ```python
 from toolfront import Database
@@ -421,7 +407,7 @@ data = Database(url="duckdb://database.duckdb", **extra_params)
 <summary><strong>MSSQL</strong></summary>
 <br>
 
-Install with `pip install toolfront[mssql]`, then run
+Install with `pip install toolfront[mssql]`, then run:
 
 ```python
 from toolfront import Database
@@ -443,12 +429,11 @@ data = Database(url="mssql://{user}:{password}@{host}:{port}/{database}", **extr
 
 </details>
 
-
 <details>
 <summary><strong>MySQL</strong></summary>
 <br>
 
-Install with `pip install toolfront[mysql]`, then run
+Install with `pip install toolfront[mysql]`, then run:
 
 ```python
 from toolfront import Database
@@ -473,7 +458,7 @@ data = Database(url="mysql://{user}:{password}@{host}:{port}/{database}", **extr
 <summary><strong>Oracle</strong></summary>
 <br>
 
-Install with `pip install toolfront[oracle]`, then run
+Install with `pip install toolfront[oracle]`, then run:
 
 ```python
 from toolfront import Database
@@ -500,7 +485,7 @@ data = Database(url="oracle://{user}:{password}@{host}:{port}/{database}", **ext
 <summary><strong>PostgreSQL</strong></summary>
 <br>
 
-Install with `pip install toolfront[postgres]`, then run
+Install with `pip install toolfront[postgres]`, then run:
 
 ```python
 from toolfront import Database
@@ -534,7 +519,7 @@ data = Database(url="postgres://{user}:{password}@{host}:{port}/{database}/{sche
 <summary><strong>Snowflake</strong></summary>
 <br>
 
-Install with `pip install toolfront[snowflake]`, then run
+Install with `pip install toolfront[snowflake]`, then run:
 
 ```python
 from toolfront import Database
@@ -560,13 +545,13 @@ data = Database(url="snowflake://{user}:{password}@{account}/{database}", **extr
 <summary><strong>SQLite</strong></summary>
 <br>
 
-Install with `pip install toolfront[sqlite]`, then run
+Install with `pip install toolfront[sqlite]`, then run:
 
 ```python
 from toolfront import Database
 
 # connect to an existing sqlite database
-data = Database(url="sqlite://path/to/loca/file", **extra_params)
+data = Database(url="sqlite://path/to/local/file", **extra_params)
 
 # connect to an ephemeral in-memory database
 data = Database(url="sqlite://", **extra_params)
@@ -585,7 +570,7 @@ data = Database(url="sqlite://", **extra_params)
 <summary><strong>Trino (formerly Presto)</strong></summary>
 <br>
 
-Install with `pip install toolfront[trino]`, then run
+Install with `pip install toolfront[trino]`, then run:
 
 ```python
 from toolfront import Database
@@ -635,12 +620,11 @@ answer: float = data.ask("What's AAPL's current stock price?")
   - `headers`: Dictionary of HTTP headers to include in all requests (optional)
   - `params`: Dictionary of query parameters to include in all requests (optional)
 
-
 ### Libraries
 
 ToolFront supports document libraries for searching and reading various file formats including PDF, DOCX, PPTX, Excel, JSON, Markdown, TXT, XML, YAML, RTF, and HTML.
 
-Install with `pip install toolfront[document]`, then run
+Install with `pip install toolfront[document]`, then run:
 
 ```python
 from toolfront import Library
@@ -655,7 +639,6 @@ answer: str = data.ask("What does my 2023 contract say about payment terms?")
 
 > [!TIP]
 > **Installation Options:** Use `toolfront[all]` for all database support, or install specific extras using comma-separated values e.g. `toolfront[postgres,mysql,document]`.
-
 
 ## 🔌 Integrations
 
@@ -718,19 +701,17 @@ ToolFront includes a built-in **[Model Context Protocol (MCP)](https://modelcont
 
 </details>
 
-
 ## ❓ FAQ
 
 <details>
 <summary><strong>How does ToolFront keep my data safe?</strong></summary>
 <br>
 
-- **Local execution**: All database connections and queries run on machine.
+- **Local execution**: All database connections and queries run on your machine.
 - **No secrets exposure**: Database secrets are never shared with LLMs.
 - **Read-only operations**: Only safe, read-only database queries are allowed.
 
 </details>
-
 
 ## 🤝 Support & Community
 
