@@ -18,8 +18,6 @@
 
 <br>
 
-## The missing link between AI and big data
-
 </div>
 
 > It's hard to ask AI about your data. Out-of-the-box models struggle to understand large databases, APIs, and documents, while fine-tuned models are expensive and brittle. ToolFront solves this by helping AI models discover and learn about your data on the fly, so they can quickly answer your questions.
@@ -53,7 +51,7 @@ from toolfront import Database
 
 data = Database("postgresql://user:pass@localhost:5432/mydb")
 
-# get structured responses to your questions
+# get structured responses 
 response: list[int] = data.ask("What's the profit on our 5 best-sellers?")
 
 print(response)  # [1250, 980, 875, 720, 650]
@@ -65,23 +63,114 @@ That's it! ToolFront returns results in the format you need.
 
 ### LLM Model Selection
 
-ToolFront is model-agnostic and supports all major model providers including OpenAI, Anthropic, Google, and many others.
+ToolFront is model-agnostic and supports all major model providers.
 
-**First, export your API key:**
+<details>
+<summary><strong>OpenAI</strong></summary>
 
-```bash
-export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
-export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
-export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
-```
-
-**Second, specify the model with your request:**
+Set `export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`, then run:
 
 ```python
-data.ask("Your question here", model='openai:gpt-4o')
-data.ask("Your question here", model='anthropic:claude-3-5-sonnet-latest')
-data.ask("Your question here", model='google:gemini-1.5-pro')
+data.ask(..., model='openai:gpt-4o')
 ```
+
+</details>
+
+<details>
+<summary><strong>Anthropic</strong></summary>
+<br>
+
+Set `export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>`, then run:
+
+```python
+data.ask(..., model='anthropic:claude-3-5-sonnet-latest')
+```
+
+</details>
+
+<details>
+<summary><strong>Google</strong></summary>
+<br>
+
+Set `export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>`, then run:
+
+```python
+data.ask(..., model='google:gemini-1.5-pro')
+```
+
+</details>
+
+<details>
+<summary><strong>Gemini</strong></summary>
+<br>
+
+Set `export GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>`, then run:
+
+```python
+data.ask(..., model='gemini:gemini-1.5-pro')
+```
+
+</details>
+
+<details>
+<summary><strong>Groq</strong></summary>
+<br>
+
+Set `export GROQ_API_KEY=<YOUR_GROQ_API_KEY>`, then run:
+
+```python
+data.ask(..., model='groq:llama-3.1-70b-versatile')
+```
+
+</details>
+
+<details>
+<summary><strong>Cohere</strong></summary>
+<br>
+
+Set `export COHERE_API_KEY=<YOUR_COHERE_API_KEY>`, then run:
+
+```python
+data.ask(..., model='cohere:command-r-plus')
+```
+
+</details>
+
+<details>
+<summary><strong>Mistral</strong></summary>
+<br>
+
+Set `export MISTRAL_API_KEY=<YOUR_MISTRAL_API_KEY>`, then run:
+
+```python
+data.ask(..., model='mistral:mistral-large-latest')
+```
+
+</details>
+
+<details>
+<summary><strong>GROK (xAI)</strong></summary>
+<br>
+
+Set `export XAI_API_KEY=<YOUR_XAI_API_KEY>`, then run:
+
+```python
+data.ask(..., model='xai:grok-beta')
+```
+
+</details>
+
+<details>
+<summary><strong>DeepSeek</strong></summary>
+<br>
+
+Set `export DEEPSEEK_API_KEY=<YOUR_DEEPSEEK_API_KEY>`, then run:
+
+```python
+data.ask(..., model='deepseek:deepseek-chat')
+```
+
+</details>
 
 > [!TIP]
 > ToolFront's AI module is built on top of Pydantic-AI. Check out [Pydantic-ai](https://ai.pydantic.dev/models/) for the full list of supported models and providers.
@@ -105,9 +194,6 @@ Type annotations automatically structure ToolFront's responses. Add annotations 
 ```python
 total_revenue: int = data.ask("What's our total revenue this month?")
 # Output: 125000
-
-conversion_rate: float = data.ask("What's our conversion rate?")
-# Output: 0.234
 
 has_pending_orders: bool = data.ask("Do we have any pending orders?")
 # Output: True
@@ -559,7 +645,7 @@ Install with `pip install toolfront[document]`, then run
 ```python
 from toolfront import Library
 
-data = Library(url="file:///path/to/document/dir", **extra_params)
+data = Library(url="file:///path/to/document/directory", **extra_params)
 
 answer: str = data.ask("What does my 2023 contract say about payment terms?")
 ```
@@ -636,28 +722,12 @@ ToolFront includes a built-in **[Model Context Protocol (MCP)](https://modelcont
 ## ❓ FAQ
 
 <details>
-<summary><strong>How is ToolFront different from other MCPs?</strong></summary>
-<br>
-
-ToolFront stands out with *multi-database* support, *self-improving* AI, and a *local-first* architecture.
-
-**Multi-database**: Instead of being limited to a single database, ToolFront connects all your databases and APIs in one place.
-
-**Self-improving**: ToolFront's CE/CL API monitors your AI agents and improves their performance over time
-
-**Local-first**: Cloud solutions compromise your data and rack up egress fees. ToolFront keeps everything local.
-
-</details>
-
-<details>
 <summary><strong>How does ToolFront keep my data safe?</strong></summary>
 <br>
 
 - **Local execution**: All database connections and queries run on machine.
 - **No secrets exposure**: Database secrets are never shared with LLMs.
 - **Read-only operations**: Only safe, read-only database queries are allowed.
-- **No data transmission**: Your database content never leaves your environment.
-- **Secure MCP protocol**: Direct communication between agents and databases without third-party storage.
 
 </details>
 
