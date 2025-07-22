@@ -44,6 +44,9 @@ export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
 ### 3. Ask about your data
 
+<details open>
+<summary><strong>Databases</strong></summary>
+
 ```python
 from toolfront import Database
 
@@ -54,6 +57,43 @@ response: list[int] = data.ask("What's the profit on our 5 best-sellers?")
 
 print(response)  # [1250, 980, 875, 720, 650]
 ```
+
+</details>
+
+<details>
+<summary><strong>APIs</strong></summary>
+
+```python
+from toolfront import API
+
+data = API("https://api.example.com/openapi.json")
+
+# Ask questions about API data
+answer: float = data.ask("What's AAPL's current stock price?")
+
+print(answer)  # 150.25
+```
+
+</details>
+
+<details>
+<summary><strong>Documents</strong></summary>
+
+```python
+from toolfront import Document
+
+# Read from file path
+data = Document("/path/to/document.pdf")
+
+# Ask questions about document content
+answer: set[str] = data.ask("Who are the authors of this paper?")
+
+print(answer)  # [1250.0, 875.50, 2100.0]
+```
+
+</details>
+
+<br>
 
 That's it! ToolFront returns results in the format you need.
 
@@ -620,22 +660,27 @@ answer: float = data.ask("What's AAPL's current stock price?")
   - `headers`: Dictionary of HTTP headers to include in all requests (optional)
   - `params`: Dictionary of query parameters to include in all requests (optional)
 
-### Libraries
+### Documents
 
-ToolFront supports document libraries for searching and reading various file formats including PDF, DOCX, PPTX, Excel, JSON, Markdown, TXT, XML, YAML, RTF, and HTML.
+ToolFront supports documents for reading various file formats including PDF, DOCX, PPTX, Excel, HTML, Markdown, TXT, JSON, XML, YAML, and RTF.
 
 Install with `pip install toolfront[document]`, then run:
 
 ```python
-from toolfront import Library
+from toolfront import Document
 
-data = Library(url="file:///path/to/document/directory", **extra_params)
+# Read from file path
+data = Document(filepath="/path/to/document.pdf")
 
-answer: str = data.ask("What does my 2023 contract say about payment terms?")
+# Or provide text content directly
+data = Document(text="Your document content here")
+
+answer: list[float] = data.ask("What are the payment amounts in this documetn?")
 ```
 
 **Parameters**:
-  - `url`: File system path in file:// format pointing to document directory (required)
+  - `filepath`: Path to the document file (mutually exclusive with text)
+  - `text`: Document content as text (mutually exclusive with filepath)
 
 > [!TIP]
 > **Installation Options:** Use `toolfront[all]` for all database support, or install specific extras using comma-separated values e.g. `toolfront[postgres,mysql,document]`.

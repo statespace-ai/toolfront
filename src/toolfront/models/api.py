@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import httpx
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, computed_field, model_validator
 
 from toolfront.config import TIMEOUT_SECONDS
 from toolfront.models.base import DataSource
@@ -72,21 +72,27 @@ class Request(BaseModel):
 class API(DataSource, ABC):
     """Abstract base class for OpenAPI/Swagger-based APIs."""
 
-    url: str = Field(..., description="API URL.")
-    endpoints: list[str] = Field(..., description="List of available endpoints.")
     spec: dict | str = Field(..., description="API specification config.", exclude=True)
+    endpoints: list[str] = Field(..., description="List of available endpoints.")
     headers: dict[str, str] | None = Field(None, description="Additional headers to include in requests.", exclude=True)
     params: dict[str, str] | None = Field(None, description="Query parameters to include in requests.", exclude=True)
+
+    @computed_field
+    @property
+    def url(self) -> str:
+        """Base URL for the API."""
+        if isinstance(self.spec, dict):
+            return self.spec.get("servers", [{}])[0].get("url", "")
+        return ""
 
     def __init__(
         self,
         spec: dict | str | None = None,
-        url: str | None = None,
         headers: dict[str, str] | None = None,
         params: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(url=url, spec=spec, headers=headers, params=params, **kwargs)
+        super().__init__(spec=spec, headers=headers, params=params, **kwargs)
 
     @model_validator(mode="before")
     def validate_model(cls, v: Any) -> Any:
@@ -112,9 +118,6 @@ class API(DataSource, ABC):
             v["params"] = dict(pair.split("=") for pair in parsed_url.query.split("&") if pair) or None
         elif not isinstance(spec, dict):
             raise ValueError("Invalid API spec. Must be a URL string or a dictionary.")
-
-        # Get the API URL from the spec
-        v["url"] = v["spec"].get("servers", [{}])[0].get("url")
 
         # Get the endpoints from the spec
         paths = v["spec"].get("paths", {})
@@ -177,9 +180,3 @@ class API(DataSource, ABC):
             )
             response.raise_for_status()
             return response.json()
-
-    def _retrieve_class(self) -> type:
-        return Request
-
-    def _retrieve_function(self) -> Any:
-        return self.request

@@ -8,10 +8,10 @@ import ibis
 import pandas as pd
 import sqlparse
 from ibis import BaseBackend
-from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, field_serializer, model_validator
 
 from toolfront.models.base import DataSource
-from toolfront.utils import serialize_response
+from toolfront.utils import sanitize_url, serialize_response
 
 logger = logging.getLogger("toolfront")
 
@@ -99,6 +99,10 @@ class Database(DataSource, ABC):
 
         return self
 
+    @field_serializer("url")
+    def serialize_url(self, value: str) -> str:
+        return sanitize_url(self.url)
+
     def tools(self) -> list[callable]:
         return [self.inspect_table, self.query]
 
@@ -150,8 +154,8 @@ class Database(DataSource, ABC):
             columns = [col[0] for col in cursor.description]
             return pd.DataFrame(cursor.fetchall(), columns=columns)
 
-    def _retrieve_class(self):
-        return Query
+    def _preprocess(self, var_type: Any) -> Any:
+        return Query if isinstance(var_type, pd.DataFrame) else var_type
 
-    def _retrieve_function(self) -> Any:
-        return self.query
+    def _postprocess(self, result: Any) -> Any:
+        return self.query(result) if isinstance(result, Query) else result

@@ -11,7 +11,7 @@ from typing import Any, Self
 
 import pandas as pd
 import yaml
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent, Tool, UnexpectedModelBehavior, models
 from pydantic_ai.messages import (
     FunctionToolCallEvent,
@@ -34,7 +34,6 @@ from toolfront.utils import (
     deserialize_response,
     get_default_model,
     prepare_tool_for_pydantic_ai,
-    sanitize_url,
     type_allows_none,
 )
 
@@ -61,11 +60,13 @@ class CallerContext(BaseModel):
 class DataSource(BaseModel, ABC):
     """Abstract base class for all datasources."""
 
-    url: str
+    def __repr__(self) -> str:
+        dump = self.model_dump()
+        args = ", ".join(f"{k}={repr(v)}" for k, v in dump.items())
+        return f"{self.__class__.__name__}({args})"
 
-    @field_serializer("url")
-    def serialize_url(self, value: str) -> str:
-        return sanitize_url(self.url)
+    def __str__(self) -> str:
+        return self.__repr__()
 
     @classmethod
     def from_url(cls, url: str) -> Self:
@@ -79,7 +80,7 @@ class DataSource(BaseModel, ABC):
 
                 return API(spec=url)
             else:
-                from toolfront.models.library import Library
+                from toolfront.models.document import Library
 
                 return Library(url=url)
         else:
@@ -119,15 +120,15 @@ class DataSource(BaseModel, ABC):
         output_type = str
         caller_context = self._get_caller_context()
         if caller_context.var_type:
-            output_type = self._retrieve_class() if caller_context.var_type == pd.DataFrame else caller_context.var_type
+            output_type = self._preprocess(caller_context.var_type)
 
-        prompt = self.prompt(context=context)
+        system_prompt = self.instructions(context=context)
         tools = [Tool(prepare_tool_for_pydantic_ai(tool), max_retries=MAX_RETRIES) for tool in self.tools()]
 
         agent = Agent(
             model=model,
             tools=tools,
-            system_prompt=prompt,
+            system_prompt=system_prompt,
             output_retries=MAX_RETRIES,
             output_type=output_type | None,
         )
@@ -140,12 +141,15 @@ class DataSource(BaseModel, ABC):
                 f"To fix this, update the type annotation to allow None e.g. answer: {output_type.__name__} | None = ask(...)"
             )
 
-        if isinstance(result, self._retrieve_class()):
-            return self._retrieve_function()(result)
-        else:
-            return result
+        return self._postprocess(result)
 
-    def prompt(self, context: str | None = None) -> str:
+    def _preprocess(self, var_type: Any) -> Any:
+        return var_type
+
+    def _postprocess(self, result: Any) -> Any:
+        return result
+
+    def instructions(self, context: str | None = None) -> str:
         """
         Get the context for the datasource.
         """
@@ -157,13 +161,11 @@ class DataSource(BaseModel, ABC):
         if context:
             agent_instruction += f"\n\nThe user has provided the following information:\n\n{context}"
 
-        prompt = (
+        return (
             f"{agent_instruction}\n\n"
             f"Use the following information about the user's data to guide your response:\n\n"
             f"{yaml.dump(self.model_dump())}"
         )
-
-        return prompt
 
     async def _ask_async(
         self,
@@ -175,7 +177,7 @@ class DataSource(BaseModel, ABC):
         Returns the final result from the agent.
         """
 
-        panel_title = f"[bold green]{sanitize_url(self.url)}[/bold green]"
+        panel_title = f"[bold green]{str(self)}[/bold green]"
 
         try:
             with Live(
@@ -229,8 +231,8 @@ class DataSource(BaseModel, ABC):
                         elif Agent.is_end_node(node):
                             return node.data.output
         except UnexpectedModelBehavior as e:
-            logger.error(f"Unexpected model behavior with datasource {self.url}: {e}", exc_info=True)
-            raise RuntimeError(f"Unexpected model behavior with datasource {self.url}: {e}")
+            logger.error(f"Unexpected model behavior: {e}", exc_info=True)
+            raise RuntimeError(f"Unexpected model behavior: {e}")
 
     def _get_caller_context(self) -> CallerContext:
         """
