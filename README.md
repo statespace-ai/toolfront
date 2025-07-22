@@ -28,216 +28,519 @@
 <div align="center">
 <img alt="ToolFront diagram" src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/diagram.png" width="500">
 </div>
+<br>
 
 
-## Features
+## 🚀 Quickstart
 
-- **🌊 Seamless**: Connect AI to all your databases, warehouses, APIs, and documents.
-- **⚡ Instant**: Get up and running in seconds with a single command.
-- **🧩 Pluggable**: Works with any LLM, agent framework, and IDE that supports MCP.
-- **🧠 Scalable**: ToolFront automatically evaluates your AI agents and helps them improve.
-- **🔒 Secure**: Your data stays local, private, and under your control.
+### 1. Install ToolFront
 
+```bash
+pip install -U toolfront[all]
+```
 
->AI needs to be accurate and stay relevant. ToolFront’s continuous evaluation & learning (CE/CL) API automatically monitors your AI agents and improves their performance over time. This feature is in beta, and we’d love your feedback!
-
-
-## Quickstart
-
-ToolFront runs on your computer through an **[MCP server](https://modelcontextprotocol.io/)**, a secure protocol to connect apps to LLMs.
-
-### Prerequisites
-
-- **[uv](https://docs.astral.sh/uv/)** or **[Docker](https://www.docker.com/)** to run the MCP server (we recommend **uv**)
-- **URLs** of your databases and APIs - [see below](#data-sources)
-- **API key** (optional) to automatically improve your AI agents with the CE/CL API
+### 2. Setup your LLM API key
 
 
-### Run inside your AI Framework or IDE
+```bash
+export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+```
 
-First, create an MCP config by following the instructions for your chosen framework or IDE. 
+### 3. Ask about your data
 
-| IDE | Setup Instructions | Install with UV | Install with Docker |
-|-----|-------------------|-----------------|-------------------|
-| [**Cursor**](https://docs.cursor.com/context/model-context-protocol#manual-configuration) | Settings → Cursor Settings → MCP Tools (or create `.cursor/mcp.json` file) | [🔗 Quick Install](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoidXZ4IiwiYXJncyI6WyJ0b29sZnJvbnRbYWxsXSIsIkRBVEFCQVNFLVVSTCIsIkFQSS1VUkwiLCItLWFwaS1rZXkiLCJZT1VSLUFQSS1LRVkiXX0=) | [🔗 Quick Install](https://cursor.com/install-mcp?name=toolfront&config=eyJjb21tYW5kIjoiZG9ja2VyIiwiYXJncyI6WyJydW4iLCItaSIsImFudGlkbWcvdG9vbGZyb250IiwiREFUQUJBU0UtVVJMIiwiQVBJLVVSTCIsIi0tYXBpLWtleSIsIllPVVItQVBJLUtFWSJdfQ==) |
-| [**GitHub Copilot (VSCode)**](https://docs.github.com/en/copilot/customizing-copilot/using-model-context-protocol/extending-copilot-chat-with-mcp) | Copilot icon → Edit preferences → Copilot Chat → MCP | [🔗 Quick Install](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22toolfront%5Ball%5D%22%2C%22DATABASE-URL%22%2C%22API-URL%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D) | [🔗 Quick Install](https://insiders.vscode.dev/redirect/mcp/install?name=toolfront&config=%7B%22command%22%3A%22docker%22%2C%22args%22%3A%5B%22run%22%2C%22-i%22%2C%22antidmg/toolfront%22%2C%22DATABASE-URL%22%2C%22API-URL%22%2C%22--api-key%22%2C%22YOUR-API-KEY%22%5D%7D) |
+```python
+from toolfront import Database
 
-Then, add as many database and API URLs to the MCP configuration as you need:
+data = Database("postgresql://user:pass@localhost:5432/mydb")
 
-<details open>
-<summary><strong>Edit UV Config</strong></summary>
+# get structured responses to your questions
+response: list[int] = data.ask("What's the profit on our 5 best-sellers?")
+
+print(response)  # [1250, 980, 875, 720, 650]
+```
+
+That's it! ToolFront returns results in the format you need.
+
+## 🤖 Agent Configuration
+
+### LLM Model Selection
+
+ToolFront is model-agnostic supports all major model providers. Specify which model to use:
+
+```python
+data.ask(..., model='openai:gpt-4o')
+data.ask(..., model='anthropic:claude-3-5-sonnet-latest')
+data.ask(..., model='google:gemini-1.5-pro')
+```
+
+> [!NOTE]
+> **Multiple Providers**: ToolFront supports all major model providers (OpenAI, Anthropic, Google, etc.). You can switch between providers by setting the appropriate API key and specifying the model format shown above. Check out [Pydantic-ai](https://ai.pydantic.dev/models/) for the full list of supported model providers.
+
+### Extra Context
+
+Provide business context to help AI understand your data:
+
+```python
+context = "Our company sells electronics. Revenue is tracked in the 'sales' table."
+answer = data.ask("What's our best performing product category?", context=context)
+```
+
+## 🧩 Structured Outputs
+
+Type annotations automatically structure ToolFront's responses. Add annotations for structured data, or leave untyped for strings:
+
+**Primitive types** for simple values:
+
+```python
+total_revenue: int = data.ask("What's our total revenue this month?")
+# Output: 125000
+
+conversion_rate: float = data.ask("What's our conversion rate?")
+# Output: 0.234
+
+has_pending_orders: bool = data.ask("Do we have any pending orders?")
+# Output: True
+```
+
+**Pydantic objects** for structured, validated data:
+
+```python
+from pydantic import BaseModel
+
+class Customer(BaseModel):
+    name: str
+    revenue: int
+
+customers: list[Customer] = data.ask("Top 3 customers")
+
+# Output:
+# [Customer(name='TechCorp Inc.', revenue=50000), Customer(name='DataFlow', revenue=35000)]
+```
+
+**DataFrames** for tabular data analysis:
+
+```python
+sales: pd.DataFrame = data.ask("Daily sales last week")
+
+# Output:
+#         date  amount
+# 0 2024-01-15   12500
+# 1 2024-01-16   15200
+# 2 2024-01-17   13800
+```
+
+**Union types** for flexible responses:
+
+```python
+# Union types for flexible returns
+price: int | float | None = data.ask("What's the price of our best-seller??")
+
+# Output: 29.99
+```
+
+**Collections** for lists, dicts, and other data structures:
+
+```python
+from pydantic import BaseModel
+
+class Car(BaseModel):
+    make: str
+    model: str
+    year: int
+
+inventory: list[Car] = data.ask("Show me our car inventory")
+print(inventory)
+
+# Output:
+# [Car(make='Toyota', model='Camry', year=2023), Car(make='Honda', model='Civic', year=2024)]
+```
+
+
+> **Note**: If `ask()` fails to answer a question, it will return `None` when the return type annotation includes `None` (e.g. `str | None`), or raise an exception otherwise.
+
+## 🔌 Integrations
+
+<details>
+<summary><strong>🦜️🔗 LangChain (& other AI frameworks)</strong></summary>
+
+```python
+data = Database("postgresql://user:pass@localhost:5432/mydb")
+
+context = data.tools # pass these as tools to your custom AI agent
+tools = data.tools  # pass these as tools to your custom AI agent
+```
+
+</summary>
+</details>
+
+<details>
+<summary><strong>🤝 Model Context Protocol (MCP)</strong></summary>
+
+<br>
+
+ToolFront includes a built-in **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** server that lets you connect your data sources to any MCP-compatible client. Simply create a config file that specifies the `toolfront` command with `uvx` and points to your data.
 
 ```json
 {
   "toolfront": {
     "command": "uvx",
-    "args": [
-      "toolfront[all]",
-      "postgresql://user:pass@host:port/db",
-      "https://api.com/openapi.json?api_key=key",
-      "...",
-      "--api-key", "YOUR-API-KEY" // Optional: CE/CL API
-    ]
+    "args": ["toolfront[all]", "postgresql://user:pass@host:port/db"]
   }
 }
 ```
+
+</summary>
+</details>
+
+## 💾 Data Sources
+
+ToolFront supports databases, APIs, and document libraries.
+
+### Databases
+
+The list below includes package extras, connection URLs, and parameters for all databases.
+
+
+<details>
+<summary><strong>Amazon Athena</strong></summary>
+<br>
+
+Install with `pip install toolfront[athena]`, then run
+
+```python
+db = Database("s3://my-bucket/", **additional_params)
+```
+
+**Additional Parameters**:
+  - `workgroup`: The Athena workgroup to use
+  - `region`: AWS region (e.g., us-east-1)
+  - `database`: The database name
+  - `s3_staging_dir`: S3 location for query results
+  - `aws_access_key_id`: AWS access key ID (optional)
+  - `aws_secret_access_key`: AWS secret access key (optional)
+  - `aws_session_token`: AWS session token (optional)
+
+📚 **Documentation**: [Ibis Athena Backend](https://ibis-project.org/backends/athena)
 
 </details>
 
 <details>
-<summary><strong>Edit Docker Config</strong></summary>
-
-```json
-{
-  "toolfront": {
-    "command": "docker",
-    "args": [
-      "run",
-      "-i",
-      "antidmg/toolfront",
-      "postgresql://user:pass@host:port/db",
-      "https://api.com/openapi.json?token=my_token",
-      "--api-key", "YOUR-API-KEY" // Optional: CE/CL API
-    ]
-  }
-}
-```
-
-**With local file access:**
-```json
-{
-  "toolfront-docker": {
-    "command": "docker",
-    "args": [
-      "run",
-      "-i",
-      "-v", "/Users/you/Documents:/app/docs",
-      "antidmg/toolfront",
-      "postgresql://user:pass@host:port/db",
-      "file:///app/docs",
-      "--api-key", "YOUR-API-KEY"
-    ]
-  }
-}
-```
-
-</details>
+<summary><strong>BigQuery</strong></summary>
 <br>
 
-You're all set! You can now ask your AI agents about your data.
+Install with `pip install toolfront[bigquery]`, then run
 
-> [!TIP]
-> **Installation Options:** By default, `uvx toolfront[all]` installs all package extras. For a lighter setup, you can directly install the extras you need e.g. `uvx toolfront[postgres,mysql,document]`. See [Databases](#databases) and [Document Libraries](#document-libraries) for the full list of extras.
-
-### Run directly
-
-Spin up the ToolFront MCP server with SSE or stdio using the `--transport` flag.
-
-```bash
-# Using uvx and SSE
-uvx "toolfront[postgres]" "postgres://user:pass@host:port/db" "https://api.com/spec.json?token=my_token" --transport sse
-
-# Using Docker and stdio
-docker run -i antidmg/toolfront "postgres://user:pass@host:port/db" "https://api.com/spec.json?token=my_token" --transport stdio
-
-# Using Docker with local file access (requires volume mount)
-docker run -i -v "/path/to/local/docs:/app/docs" antidmg/toolfront "file:///app/docs" --transport stdio
+```python
+db = Database("bigquery://{project_id}/{dataset_id}", **additional_params)
 ```
 
-To enable self-improving AI, you can provide your CE/CL API key with the `--api-key "YOUR-API-KEY"` flag.
+**Additional Parameters**:
+  - `project_id`: GCP project ID (optional)
+  - `dataset_id`: BigQuery dataset ID
+  - `credentials`: Google auth credentials (optional)
+  - `application_name`: Application name for tracking (optional)
+  - `auth_local_webserver`: Use local webserver for authentication (default: True)
+  - `auth_external_data`: Request additional scopes for external data sources (default: False)
+  - `auth_cache`: Credentials cache behavior - 'default', 'reauth', or 'none' (default: 'default')
+  - `partition_column`: Custom partition column identifier (default: 'PARTITIONTIME')
+  - `client`: Custom google.cloud.bigquery Client instance (optional)
+  - `storage_client`: Custom BigQueryReadClient instance (optional)
+  - `location`: Default location for BigQuery objects (optional)
+  - `generate_job_id_prefix`: Callable to generate job ID prefixes (optional)
 
-> [!NOTE]
-> **Docker & Local Files**: When using Docker with `file://` URLs, you must mount local directories as volumes. Use `-v "/local/path:/container/path"` and reference the container path in your file URL.
+📚 **Documentation**: [Ibis BigQuery Backend](https://ibis-project.org/backends/bigquery)
 
-> [!TIP]
-> **Version control**: To pin specific versions of ToolFront, use `"toolfront[all]==0.1.x"` for UV or `antidmg/toolfront:0.1.x` for Docker.
+</details>
 
-> [!TIP]
-> **Localhost databases**: When connecting to localhost databases with Docker (like `duckdb` or `postgresql://user:pass@localhost:5432/db)`, add `--network HOST` before the image name. Remote databases (cloud, external servers) work without this flag.
+<details>
+<summary><strong>ClickHouse</strong></summary>
+<br>
+
+Install with `pip install toolfront[clickhouse]`, then run
+
+```python
+db = Database("clickhouse://{user}:{password}@{host}:{port}?secure={secure}", **additional_params)
+```
+
+**Additional Parameters**:
+  - `host`: Host name of the clickhouse server (default: 'localhost')
+  - `port`: ClickHouse HTTP server's port. If not passed, the value depends on whether secure is True or False
+  - `database`: Default database when executing queries (default: 'default')
+  - `user`: User to authenticate with (default: 'default')
+  - `password`: Password to authenticate with (default: '')
+  - `client_name`: Name of client that will appear in clickhouse server logs (default: 'ibis')
+  - `secure`: Whether or not to use an authenticated endpoint
+  - `compression`: The kind of compression to use for requests. See https://clickhouse.com/docs/en/integrations/python#compression for more information (default: True)
+  - `kwargs`: Client specific keyword arguments
+
+📚 **Documentation**: [Ibis ClickHouse Backend](https://ibis-project.org/backends/clickhouse)
+
+</details>
+
+<details>
+<summary><strong>Databricks</strong></summary>
+<br>
+
+Install with `pip install toolfront[databricks]`, then run
+
+```python
+db = Database("databricks://", **additional_params)
+```
+
+**Additional Parameters**:
+  - `server_hostname`: Databricks workspace hostname
+  - `http_path`: HTTP path to the SQL warehouse
+  - `access_token`: Databricks personal access token
+  - `catalog`: Catalog name (optional)
+  - `schema`: Schema name (default: 'default')
+  - `session_configuration`: Additional session configuration parameters (optional)
+  - `http_headers`: Custom HTTP headers (optional)
+  - `use_cloud_fetch`: Enable cloud fetch optimization (default: False)
+  - `memtable_volume`: Volume for storing temporary tables (optional)
+  - `staging_allowed_local_path`: Local path allowed for staging (optional)
+
+📚 **Documentation**: [Ibis Databricks Backend](https://ibis-project.org/backends/databricks)
+
+</details>
+
+<details>
+<summary><strong>Druid</strong></summary>
+<br>
+
+Install with `pip install toolfront[druid]`, then run
+
+```python
+db = Database("druid://localhost:8082/druid/v2/sql", **additional_params)
+```
+
+**Additional Parameters**:
+  - `host`: Hostname of the Druid server (default: 'localhost')
+  - `port`: Port number of the Druid server (default: 8082)
+  - `path`: API path for Druid SQL queries (default: 'druid/v2/sql')
+
+📚 **Documentation**: [Ibis Druid Backend](https://ibis-project.org/backends/druid)
+
+</details>
+
+<details>
+<summary><strong>DuckDB</strong></summary>
+<br>
+
+Install with `pip install toolfront[duckdb]`, then run
+
+```python
+db = Database("duckdb://database.duckdb", **additional_params)
+```
+
+**Additional Parameters**:
+  - `database`: Path to the SQLite database file, or None for in-memory database (default: None)
+  - `type_map`: Optional mapping from SQLite type names to Ibis DataTypes to override schema inference
+
+📚 **Documentation**: [Ibis DuckDB Backend](https://ibis-project.org/backends/duckdb)
+
+</details>
+
+<details>
+<summary><strong>MSSQL</strong></summary>
+<br>
+
+Install with `pip install toolfront[mssql]`, then run
+
+```python
+db = Database("mssql://{user}:{password}@{host}:{port}/{database}", **additional_params)
+```
+
+**Additional Parameters**:
+  - `host`: Address of MSSQL server to connect to (default: 'localhost')
+  - `user`: Username. Leave blank to use Integrated Authentication (default: None)
+  - `password`: Password. Leave blank to use Integrated Authentication (default: None)
+  - `port`: Port of MSSQL server to connect to (default: 1433)
+  - `database`: The MSSQL database to connect to (default: None)
+  - `driver`: ODBC Driver to use. On Mac and Linux this is usually 'FreeTDS'. On Windows, it is usually one of: 'ODBC Driver 11 for SQL Server', 'ODBC Driver 13 for SQL Server', 'ODBC Driver 17 for SQL Server', or 'ODBC Driver 18 for SQL Server' (default: None)
+  - `kwargs`: Additional keyword arguments to pass to PyODBC (default: {})
+
+📚 **Documentation**: [Ibis MSSQL Backend](https://ibis-project.org/backends/mssql)
+
+</details>
 
 
-## Data Sources
+<details>
+<summary><strong>MySQL</strong></summary>
+<br>
 
-ToolFront supports databases, APIs, and document libraries:
+Install with `pip install toolfront[mysql]`, then run
 
-### Databases
+```python
+db = Database("mysql://{user}:{password}@{host}:{port}/{database}", **additional_params)
+```
 
-See the table below for the list of supported databases, extras (e.g., `uvx "toolfront[snowflake,databricks]"`) and connection URL formats.
+**Additional Parameters**:
+  - `host`: Hostname (default: 'localhost')
+  - `user`: Username (default: None)
+  - `password`: Password (default: None)
+  - `port`: Port (default: 3306)
+  - `autocommit`: Autocommit mode (default: True)
+  - `kwargs`: Additional keyword arguments passed to MySQLdb.connect
 
-| Database    | Extras                  | URL Format                                                                                         |
-|-------------|-------------------------|----------------------------------------------------------------------------------------------------|
-| BigQuery    | `bigquery`              | `bigquery://{project-id}?credentials_path={path-to-account-credentials.json}`                      |
-| Databricks  | `databricks`            | `databricks://token:{token}@{workspace}.cloud.databricks.com/{catalog}?http_path={warehouse-path}` |
-| DuckDB      | `duckdb`                | `duckdb://{path-to-database.duckdb}`                                                               |
-| MySQL       | `mysql`                 | `mysql://{user}:{password}@{host}:{port}/{database}`                                               |
-| PostgreSQL  | `postgresql`, `postgres`| `postgres://{user}:{password}@{hostname}:{port}/{database-name}`                                   |
-| Snowflake   | `snowflake`             | `snowflake://{user}:{password}@{account}/{database}`                                               |
-| SQL Server  | `mssql`, `sqlserver`    | `mssql://{user}:{password}@{server}:{port}/{database}`                                             |
-| SQLite      | `sqlite`                | `sqlite://{path-to-database.sqlite}`                                                               |
+📚 **Documentation**: [Ibis MySQL Backend](https://ibis-project.org/backends/mysql)
+
+</details>
+
+<details>
+<summary><strong>Oracle</strong></summary>
+<br>
+
+Install with `pip install toolfront[oracle]`, then run
+
+```python
+db = Database("oracle://{user}:{password}@{host}:{port}/{database}", **additional_params)
+```
+
+**Additional Parameters**:
+  - `user`: Username (required)
+  - `password`: Password (required)
+  - `host`: Hostname (default: 'localhost')
+  - `port`: Port (default: 1521)
+  - `database`: Used as an Oracle service name if provided (optional)
+  - `sid`: Unique name of an Oracle Instance, used to construct a DSN if provided (optional)
+  - `service_name`: Oracle service name, used to construct a DSN if provided. Only one of database and service_name should be provided (optional)
+  - `dsn`: An Oracle Data Source Name. If provided, overrides all other connection arguments except username and password (optional)
+
+📚 **Documentation**: [Ibis Oracle Backend](https://ibis-project.org/backends/oracle)
+
+</details>
+
+<details>
+<summary><strong>PostgreSQL</strong></summary>
+<br>
+
+Install with `pip install toolfront[postgres]`, then run
+
+```python
+# method 1
+db = Database("postgres://{user}:{password}@{host}:{port}/{database}", **additional_params)
+
+# method 2
+db = Database("postgres://{user}:{password}@{host}:{port}/{database}/{schema}", **additional_params)
+
+# method 3
+db = Database("postgres://{user}:{password}@{host}:{port}/{database}/{schema}?sslmode=require", **additional_params)
+```
+
+**Additional Parameters**:
+  - `host`: Hostname (default: None)
+  - `user`: Username (default: None) 
+  - `password`: Password (default: None)
+  - `port`: Port number (default: 5432)
+  - `database`: Database to connect to (default: None)
+  - `schema`: PostgreSQL schema to use. If None, use the default search_path (default: None)
+  - `autocommit`: Whether or not to autocommit (default: True)
+  - `kwargs`: Additional keyword arguments to pass to the backend client connection
+
+📚 **Documentation**: [Ibis PostgreSQL Backend](https://ibis-project.org/backends/postgres)
+
+</details>
+
+<details>
+<summary><strong>Snowflake</strong></summary>
+<br>
+
+Install with `pip install toolfront[snowflake]`, then run
+
+```python
+db = Database("snowflake://{user}:{password}@{account}/{database}", **additional_params)
+```
+
+**Additional Parameters**:
+  - `user`: Username (required)
+  - `account`: A Snowflake organization ID and user ID, separated by a hyphen (required)
+  - `database`: A Snowflake database and schema, separated by a / (required)
+  - `password`: Password (required if authenticator not provided)
+  - `authenticator`: Authentication method (required if password not provided)
+  - `create_object_udfs`: Enable object UDF extensions (default: True)
+  - `kwargs`: Additional arguments passed to DBAPI connection
+
+📚 **Documentation**: [Ibis Snowflake Backend](https://ibis-project.org/backends/snowflake)
+
+</details>
+
+<details>
+<summary><strong>SQLite</strong></summary>
+<br>
+
+Install with `pip install toolfront[sqlite]`, then run
+
+```python
+# connect to an existing sqlite database
+db = Database("sqlite://path/to/loca/file", **additional_params)
+
+# connect to an ephemeral in-memory database
+db = Database("sqlite://", **additional_params)
+```
+
+**Additional Parameters**:
+  - `database`: Path to SQLite database file, or None for in-memory database
+  - `type_map`: Optional mapping from SQLite type names to Ibis DataTypes to override schema inference
+
+📚 **Documentation**: [Ibis SQLite Backend](https://ibis-project.org/backends/sqlite)
+
+</details>
+
+<details>
+<summary><strong>Trino (formerly Presto)</strong></summary>
+<br>
+
+Install with `pip install toolfront[trino]`, then run
+
+```python
+# connect using default user, password, host and port
+db = Database(f"trino:///{catalog}/{schema}", **additional_params)
+
+# connect with explicit user, host and port
+db = Database(f"trino://user@localhost:8080/{catalog}/{schema}", **additional_params)
+```
+
+**Additional Parameters**:
+  - `user`: Username to connect with (default: 'user')
+  - `password`: Password to connect with, mutually exclusive with auth (default: None)
+  - `host`: Hostname of the Trino server (default: 'localhost')
+  - `port`: Port of the Trino server (default: 8080)
+  - `database`: Catalog to use on the Trino server (default: None)
+  - `schema`: Schema to use on the Trino server (default: None)
+  - `source`: Application name passed to Trino (default: None)
+  - `timezone`: Timezone to use for the connection (default: 'UTC')
+  - `auth`: Authentication method, mutually exclusive with password (default: None)
+  - `kwargs`: Additional keyword arguments passed to trino.dbapi.connect API
+
+📚 **Documentation**: [Ibis Trino Backend](https://ibis-project.org/backends/trino)
+
+</details>
+
+<br>
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
-> [!TIP]
-> **Working with local data files?** Add `duckdb://:memory:` to your config to analyze local Parquet, CSV, Excel, and JSON files.
 
+> [!TIP]
+> **Installation Options:** Use `toolfront[all]` for all database support, or install specific extras using comma-separated values e.g. `toolfront[postgres,mysql,document]`.
 
 ### APIs
 
-ToolFronts supports virtually **all** APIs that have an [OpenAPI](https://www.openapis.org/) or [Swagger](https://swagger.io/) specification. See the table below for a list of common APIs and their specification URLs.
+ToolFront supports virtually **all** APIs that have an [OpenAPI](https://www.openapis.org/) or [Swagger](https://swagger.io/) specification. Simply create an `API` object by passing the specification URL, JSON, or YAML file, as well as optional headers and parameters. For example:
 
-| API       | Specification URL                                                                                                     |
-|-----------|-----------------------------------------------------------------------------------------------------------------------|
-| Wikipedia | `https://en.wikipedia.org/api/rest_v1/?spec`                                                                          |
-| GitHub    | `https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json`  |
-| Stripe    | `https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json`                                          |
-| Slack     | `https://raw.githubusercontent.com/slackapi/slack-api-specs/master/web-api/slack_web_openapi_v2.json`                 |
-| Discord   | `https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json`                                  |
+```python
+from toolfront import API
 
-> [!NOTE]
-> **Authentication**: For APIs that require authentication, append your API key or token to the specification URL (e.g., `https://api.com/openapi.json?token=YOUR-API-TOKEN`). ToolFront will automatically detect and use the authentication parameters in the appropriate places.
+api = API(
+    spec="https://api.example.com/openapi.json",
+    headers={"Authorization": "Bearer YOUR-TOKEN"},
+    params={"version": "v1", "format": "json"}
+)
 
-### Document Libraries
-
-ToolFront can search and read documents from local file systems, enabling AI agents to work with unstructured data alongside databases and APIs.
-
-| Document Types | Extras | URL Format |
-|----------------|--------|------------|
-| PDF, Word, PowerPoint, Excel, JSON, Markdown, TXT, XML, YAML, RTF | `document` | `file:///path/to/your/documents` |
-
-**Usage:**
-```json
-{
-  "toolfront": {
-    "command": "uvx", 
-    "args": [
-      "toolfront[all]",
-      "file:///path/to/your/documents",
-      "postgresql://user:pass@host:port/db"
-    ]
-  }
-}
+answer = api.ask("What are the latest orders?")
 ```
 
-## Tools
-
-MCP tools are functions that AI agents can call to interact with external systems. ToolFront comes with tools for databases, APIs, and documents:
-
-| Tool                | Description                                                      | Requires API Key |
-|---------------------|------------------------------------------------------------------|------------------|
-| `discover`          | List all configured databases, APIs, and document libraries     | ✗                |
-| `search_documents`  | Search documents by name pattern or similarity                   | ✗                |
-| `read_document`     | Read document contents with smart pagination                     | ✗                |
-| `search_endpoints`  | Search API endpoints by pattern or similarity                    | ✗                |
-| `search_tables`     | Search database tables by pattern or similarity                  | ✗                |
-| `sample_table`      | Get sample rows from a database table                            | ✗                |
-| `inspect_table`     | Show structure and columns of a database table                   | ✗                |
-| `inspect_endpoint`  | Show structure and parameters of an API endpoint                 | ✗                |
-| `query_database`    | Run read-only SQL queries against databases                      | ✗                |
-| `request_api`       | Make requests to API endpoints                                   | ✗                |
-| `search_queries`    | Retrieve and learn from relevant query samples                   | ✓                |
-| `search_requests`   | Retrieve and learn from relevant requests samples                | ✓                |
-
-## FAQ
+## ❓ FAQ
 
 <details>
 <summary><strong>How is ToolFront different from other MCPs?</strong></summary>
@@ -254,17 +557,6 @@ ToolFront stands out with *multi-database* support, *self-improving* AI, and a *
 </details>
 
 <details>
-<summary><strong>How does the CE/CL API work?</strong></summary>
-<br>
-
-The CE/CL API uses [in-context learning](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html#in-context-learning-key-concept), a novel training-free learning framework pioneered by OpenAI. By augmenting your LLM's context with relevant samples, your agents can reason by analogy over your databases and APIs to quickly arrive at the correct answer.
-
-CE/CL requires an API key and sends your queries and request syntax to an external service. Your data and secrets always remain secure on your local system and are never transmitted.
-
-</details>
-
-
-<details>
 <summary><strong>How does ToolFront keep my data safe?</strong></summary>
 <br>
 
@@ -276,16 +568,8 @@ CE/CL requires an API key and sends your queries and request syntax to an extern
 
 </details>
 
-<details>
-<summary><strong>How do I troubleshoot connection issues?</strong></summary>
-<br>
 
-Run the `uv run toolfront[all]` or `docker run` commands with your database URLs directly from the command line. ToolFront automatically tests all connections when starting and will display detailed errors if a connection fails. If you're still having trouble, double-check your database and API URLs using the examples in the [Databases section](#data-sources) above.
-
-</details>
-
-
-## Support & Community
+## 🤝 Support & Community
 
 Need help with ToolFront? We're here to assist:
 
