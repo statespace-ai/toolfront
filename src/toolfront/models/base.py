@@ -121,13 +121,13 @@ class DataSource(BaseModel, ABC):
         if caller_context.var_type:
             output_type = self._retrieve_class() if caller_context.var_type == pd.DataFrame else caller_context.var_type
 
-        context = self.context(additional_context=context)
+        prompt = self.prompt(context=context)
         tools = [Tool(prepare_tool_for_pydantic_ai(tool), max_retries=MAX_RETRIES) for tool in self.tools()]
 
         agent = Agent(
             model=model,
             tools=tools,
-            system_prompt=context,
+            system_prompt=prompt,
             output_retries=MAX_RETRIES,
             output_type=output_type | None,
         )
@@ -145,7 +145,7 @@ class DataSource(BaseModel, ABC):
         else:
             return result
 
-    def context(self, additional_context: str | None = None) -> str:
+    def prompt(self, context: str | None = None) -> str:
         """
         Get the context for the datasource.
         """
@@ -154,16 +154,16 @@ class DataSource(BaseModel, ABC):
         with instruction_file.open() as f:
             agent_instruction = f.read()
 
-        if additional_context:
-            agent_instruction += f"\n\nThe user has provided the following information:\n\n{additional_context}"
+        if context:
+            agent_instruction += f"\n\nThe user has provided the following information:\n\n{context}"
 
-        context = (
+        prompt = (
             f"{agent_instruction}\n\n"
             f"Use the following information about the user's data to guide your response:\n\n"
             f"{yaml.dump(self.model_dump())}"
         )
 
-        return context
+        return prompt
 
     async def _ask_async(
         self,
