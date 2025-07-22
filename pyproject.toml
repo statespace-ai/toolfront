@@ -85,17 +85,11 @@ oracle = [
 postgres = [
     "ibis-framework[postgres]>=10.6.0",
 ]
-pyspark = [
-    "ibis-framework[pyspark]>=10.6.0",
-]
 snowflake = [
     "ibis-framework[snowflake]>=10.6.0",
 ]
 sqlite = [
     "ibis-framework[sqlite]>=10.6.0",
-]
-sqlserver = [
-    "ibis-framework[mssql]>=10.6.0",
 ]
 trino = [
     "ibis-framework[trino]>=10.6.0",
@@ -112,13 +106,13 @@ all = [
     "toolfront[druid]",
     "toolfront[duckdb]",
     "toolfront[mssql]",
+    "toolfront[mysql]",
     "toolfront[oracle]",
     "toolfront[postgres]",
-    "toolfront[pyspark]",
     "toolfront[snowflake]",
     "toolfront[sqlite]",
-    "toolfront[sqlserver]",
     "toolfront[trino]",
+    "toolfront[document]",
 ]
 
 [build-system]

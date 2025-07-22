@@ -29,8 +29,14 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.text import Text
 
-from toolfront.config import DEFAULT_MODEL, MAX_RETRIES
-from toolfront.utils import deserialize_response, prepare_tool_for_pydantic_ai, sanitize_url, type_allows_none
+from toolfront.config import MAX_RETRIES
+from toolfront.utils import (
+    deserialize_response,
+    get_default_model,
+    prepare_tool_for_pydantic_ai,
+    sanitize_url,
+    type_allows_none,
+)
 
 logger = logging.getLogger("toolfront")
 console = Console()
@@ -99,12 +105,15 @@ class DataSource(BaseModel, ABC):
     def ask(
         self,
         prompt: str,
-        model: models.Model | models.KnownModelName | str | None = DEFAULT_MODEL,
+        model: models.Model | models.KnownModelName | str | None = None,
         context: str | None = None,
     ) -> AskReturnType:
         """
         Ask the datasource a question and display the response beautifully in the terminal.
         """
+
+        if model is None:
+            model = get_default_model()
 
         # Get caller context and add it to the system prompt
         output_type = str

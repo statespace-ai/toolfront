@@ -48,9 +48,11 @@ class Database(DataSource, ABC):
     )
 
     _connection: BaseBackend | None = PrivateAttr(default=None)
+    _connection_kwargs: dict[str, Any] = PrivateAttr(default_factory=dict)
 
     def __init__(self, url: str, tables: list[str] | str | None = None, **kwargs: Any) -> None:
-        super().__init__(url=url, tables=tables, **kwargs)
+        self._connection_kwargs = kwargs
+        super().__init__(url=url, tables=tables)
 
     def __getitem__(self, name: str) -> "ibis.Table":
         parts = name.split(".")
@@ -62,7 +64,7 @@ class Database(DataSource, ABC):
     def model_validator(self) -> "Database":
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
-            self._connection = ibis.connect(self.url)
+            self._connection = ibis.connect(self.url, **self._connection_kwargs)
 
         like = None
         if isinstance(self.tables, str):

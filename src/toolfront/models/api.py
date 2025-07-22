@@ -80,8 +80,8 @@ class API(DataSource, ABC):
 
     def __init__(
         self,
-        url: str | None = None,
         spec: dict | str | None = None,
+        url: str | None = None,
         headers: dict[str, str] | None = None,
         params: dict[str, str] | None = None,
         **kwargs: Any,

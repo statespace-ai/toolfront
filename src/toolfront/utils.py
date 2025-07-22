@@ -2,6 +2,7 @@ import functools
 import inspect
 import json
 import logging
+import os
 from collections.abc import Callable
 from typing import Any, get_args, get_origin
 
@@ -10,7 +11,15 @@ from pydantic import TypeAdapter
 from pydantic_ai import ModelRetry
 from yarl import URL
 
-from toolfront.config import MAX_DATA_CHARS, MAX_DATA_ROWS
+from toolfront.config import (
+    DEFAULT_ANTHROPIC_MODEL,
+    DEFAULT_COHERE_MODEL,
+    DEFAULT_GOOGLE_MODEL,
+    DEFAULT_MISTRAL_MODEL,
+    DEFAULT_OPENAI_MODEL,
+    MAX_DATA_CHARS,
+    MAX_DATA_ROWS,
+)
 
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
@@ -169,3 +178,18 @@ def type_allows_none(type_hint: Any) -> bool:
         return type(None) in args
 
     return False
+
+
+def get_default_model() -> str:
+    """Get the default model to use."""
+    if os.getenv("OPENAI_API_KEY"):
+        return DEFAULT_OPENAI_MODEL
+    elif os.getenv("ANTHROPIC_API_KEY"):
+        return DEFAULT_ANTHROPIC_MODEL
+    elif os.getenv("GOOGLE_API_KEY"):
+        return DEFAULT_GOOGLE_MODEL
+    elif os.getenv("MISTRAL_API_KEY"):
+        return DEFAULT_MISTRAL_MODEL
+    elif os.getenv("COHERE_API_KEY"):
+        return DEFAULT_COHERE_MODEL
+    raise ValueError("Please specify an API key and model to use")
