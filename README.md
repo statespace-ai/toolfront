@@ -65,23 +65,34 @@ That's it! ToolFront returns results in the format you need.
 
 ### LLM Model Selection
 
-ToolFront is model-agnostic supports all major model providers. Specify which model to use:
+ToolFront is model-agnostic and supports all major model providers including OpenAI, Anthropic, Google, and many others.
 
-```python
-data.ask(..., model='openai:gpt-4o')
-data.ask(..., model='anthropic:claude-3-5-sonnet-latest')
-data.ask(..., model='google:gemini-1.5-pro')
+**First, export your API key:**
+
+```bash
+export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
+export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
 ```
 
-> [!NOTE]
-> **Multiple Providers**: ToolFront supports all major model providers (OpenAI, Anthropic, Google, etc.). You can switch between providers by setting the appropriate API key and specifying the model format shown above. Check out [Pydantic-ai](https://ai.pydantic.dev/models/) for the full list of supported model providers.
+**Second, specify the model with your request:**
+
+```python
+data.ask("Your question here", model='openai:gpt-4o')
+data.ask("Your question here", model='anthropic:claude-3-5-sonnet-latest')
+data.ask("Your question here", model='google:gemini-1.5-pro')
+```
+
+> [!TIP]
+> ToolFront's AI module is built on top of Pydantic-AI. Check out [Pydantic-ai](https://ai.pydantic.dev/models/) for the full list of supported models and providers.
 
 ### Extra Context
 
-Provide business context to help AI understand your data:
+You can provide additional business context to help AI understand your data:
 
 ```python
 context = "Our company sells electronics. Revenue is tracked in the 'sales' table."
+
 answer = data.ask("What's our best performing product category?", context=context)
 ```
 
@@ -132,7 +143,6 @@ sales: pd.DataFrame = data.ask("Daily sales last week")
 **Union types** for flexible responses:
 
 ```python
-# Union types for flexible returns
 price: int | float | None = data.ask("What's the price of our best-seller??")
 
 # Output: 29.99
@@ -158,39 +168,7 @@ print(inventory)
 
 > **Note**: If `ask()` fails to answer a question, it will return `None` when the return type annotation includes `None` (e.g. `str | None`), or raise an exception otherwise.
 
-## 🔌 Integrations
 
-<details>
-<summary><strong>🦜️🔗 LangChain (& other AI frameworks)</strong></summary>
-
-```python
-data = Database("postgresql://user:pass@localhost:5432/mydb")
-
-context = data.tools # pass these as tools to your custom AI agent
-tools = data.tools  # pass these as tools to your custom AI agent
-```
-
-</summary>
-</details>
-
-<details>
-<summary><strong>🤝 Model Context Protocol (MCP)</strong></summary>
-
-<br>
-
-ToolFront includes a built-in **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** server that lets you connect your data sources to any MCP-compatible client. Simply create a config file that specifies the `toolfront` command with `uvx` and points to your data.
-
-```json
-{
-  "toolfront": {
-    "command": "uvx",
-    "args": ["toolfront[all]", "postgresql://user:pass@host:port/db"]
-  }
-}
-```
-
-</summary>
-</details>
 
 ## 💾 Data Sources
 
@@ -208,10 +186,13 @@ The list below includes package extras, connection URLs, and parameters for all 
 Install with `pip install toolfront[athena]`, then run
 
 ```python
-db = Database("s3://my-bucket/", **additional_params)
+from toolfront import Database
+
+data = Database(url="s3://my-bucket/", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: S3 bucket URL for Athena queries (required)
   - `workgroup`: The Athena workgroup to use
   - `region`: AWS region (e.g., us-east-1)
   - `database`: The database name
@@ -231,10 +212,13 @@ db = Database("s3://my-bucket/", **additional_params)
 Install with `pip install toolfront[bigquery]`, then run
 
 ```python
-db = Database("bigquery://{project_id}/{dataset_id}", **additional_params)
+from toolfront import Database
+
+data = Database(url="bigquery://{project_id}/{dataset_id}", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: BigQuery connection URL with project and dataset IDs (required)
   - `project_id`: GCP project ID (optional)
   - `dataset_id`: BigQuery dataset ID
   - `credentials`: Google auth credentials (optional)
@@ -259,10 +243,13 @@ db = Database("bigquery://{project_id}/{dataset_id}", **additional_params)
 Install with `pip install toolfront[clickhouse]`, then run
 
 ```python
-db = Database("clickhouse://{user}:{password}@{host}:{port}?secure={secure}", **additional_params)
+from toolfront import Database
+
+data = Database(url="clickhouse://{user}:{password}@{host}:{port}?secure={secure}", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: ClickHouse connection URL with credentials and connection details (required)
   - `host`: Host name of the clickhouse server (default: 'localhost')
   - `port`: ClickHouse HTTP server's port. If not passed, the value depends on whether secure is True or False
   - `database`: Default database when executing queries (default: 'default')
@@ -284,10 +271,13 @@ db = Database("clickhouse://{user}:{password}@{host}:{port}?secure={secure}", **
 Install with `pip install toolfront[databricks]`, then run
 
 ```python
-db = Database("databricks://", **additional_params)
+from toolfront import Database
+
+data = Database(url="databricks://", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: Databricks connection URL (required)
   - `server_hostname`: Databricks workspace hostname
   - `http_path`: HTTP path to the SQL warehouse
   - `access_token`: Databricks personal access token
@@ -310,10 +300,13 @@ db = Database("databricks://", **additional_params)
 Install with `pip install toolfront[druid]`, then run
 
 ```python
-db = Database("druid://localhost:8082/druid/v2/sql", **additional_params)
+from toolfront import Database
+
+data = Database(url="druid://localhost:8082/druid/v2/sql", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: Druid connection URL with hostname, port, and API path (required)
   - `host`: Hostname of the Druid server (default: 'localhost')
   - `port`: Port number of the Druid server (default: 8082)
   - `path`: API path for Druid SQL queries (default: 'druid/v2/sql')
@@ -329,10 +322,13 @@ db = Database("druid://localhost:8082/druid/v2/sql", **additional_params)
 Install with `pip install toolfront[duckdb]`, then run
 
 ```python
-db = Database("duckdb://database.duckdb", **additional_params)
+from toolfront import Database
+
+data = Database(url="duckdb://database.duckdb", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: DuckDB connection URL pointing to database file (required)
   - `database`: Path to the SQLite database file, or None for in-memory database (default: None)
   - `type_map`: Optional mapping from SQLite type names to Ibis DataTypes to override schema inference
 
@@ -347,10 +343,13 @@ db = Database("duckdb://database.duckdb", **additional_params)
 Install with `pip install toolfront[mssql]`, then run
 
 ```python
-db = Database("mssql://{user}:{password}@{host}:{port}/{database}", **additional_params)
+from toolfront import Database
+
+data = Database(url="mssql://{user}:{password}@{host}:{port}/{database}", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: MSSQL connection URL with credentials and database details (required)
   - `host`: Address of MSSQL server to connect to (default: 'localhost')
   - `user`: Username. Leave blank to use Integrated Authentication (default: None)
   - `password`: Password. Leave blank to use Integrated Authentication (default: None)
@@ -371,10 +370,13 @@ db = Database("mssql://{user}:{password}@{host}:{port}/{database}", **additional
 Install with `pip install toolfront[mysql]`, then run
 
 ```python
-db = Database("mysql://{user}:{password}@{host}:{port}/{database}", **additional_params)
+from toolfront import Database
+
+data = Database(url="mysql://{user}:{password}@{host}:{port}/{database}", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: MySQL connection URL with credentials and database details (required)
   - `host`: Hostname (default: 'localhost')
   - `user`: Username (default: None)
   - `password`: Password (default: None)
@@ -393,10 +395,13 @@ db = Database("mysql://{user}:{password}@{host}:{port}/{database}", **additional
 Install with `pip install toolfront[oracle]`, then run
 
 ```python
-db = Database("oracle://{user}:{password}@{host}:{port}/{database}", **additional_params)
+from toolfront import Database
+
+data = Database(url="oracle://{user}:{password}@{host}:{port}/{database}", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: Oracle connection URL with credentials and database details (required)
   - `user`: Username (required)
   - `password`: Password (required)
   - `host`: Hostname (default: 'localhost')
@@ -417,17 +422,20 @@ db = Database("oracle://{user}:{password}@{host}:{port}/{database}", **additiona
 Install with `pip install toolfront[postgres]`, then run
 
 ```python
+from toolfront import Database
+
 # method 1
-db = Database("postgres://{user}:{password}@{host}:{port}/{database}", **additional_params)
+data = Database(url="postgres://{user}:{password}@{host}:{port}/{database}", **extra_params)
 
 # method 2
-db = Database("postgres://{user}:{password}@{host}:{port}/{database}/{schema}", **additional_params)
+data = Database(url="postgres://{user}:{password}@{host}:{port}/{database}/{schema}", **extra_params)
 
 # method 3
-db = Database("postgres://{user}:{password}@{host}:{port}/{database}/{schema}?sslmode=require", **additional_params)
+data = Database(url="postgres://{user}:{password}@{host}:{port}/{database}/{schema}?sslmode=require", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: PostgreSQL connection URL with credentials and database details (required)
   - `host`: Hostname (default: None)
   - `user`: Username (default: None) 
   - `password`: Password (default: None)
@@ -448,10 +456,13 @@ db = Database("postgres://{user}:{password}@{host}:{port}/{database}/{schema}?ss
 Install with `pip install toolfront[snowflake]`, then run
 
 ```python
-db = Database("snowflake://{user}:{password}@{account}/{database}", **additional_params)
+from toolfront import Database
+
+data = Database(url="snowflake://{user}:{password}@{account}/{database}", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: Snowflake connection URL with credentials and account details (required)
   - `user`: Username (required)
   - `account`: A Snowflake organization ID and user ID, separated by a hyphen (required)
   - `database`: A Snowflake database and schema, separated by a / (required)
@@ -471,14 +482,17 @@ db = Database("snowflake://{user}:{password}@{account}/{database}", **additional
 Install with `pip install toolfront[sqlite]`, then run
 
 ```python
+from toolfront import Database
+
 # connect to an existing sqlite database
-db = Database("sqlite://path/to/loca/file", **additional_params)
+data = Database(url="sqlite://path/to/loca/file", **extra_params)
 
 # connect to an ephemeral in-memory database
-db = Database("sqlite://", **additional_params)
+data = Database(url="sqlite://", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: SQLite connection URL pointing to database file or empty for in-memory (required)
   - `database`: Path to SQLite database file, or None for in-memory database
   - `type_map`: Optional mapping from SQLite type names to Ibis DataTypes to override schema inference
 
@@ -493,14 +507,17 @@ db = Database("sqlite://", **additional_params)
 Install with `pip install toolfront[trino]`, then run
 
 ```python
+from toolfront import Database
+
 # connect using default user, password, host and port
-db = Database(f"trino:///{catalog}/{schema}", **additional_params)
+data = Database(url=f"trino:///{catalog}/{schema}", **extra_params)
 
 # connect with explicit user, host and port
-db = Database(f"trino://user@localhost:8080/{catalog}/{schema}", **additional_params)
+data = Database(url=f"trino://user@localhost:8080/{catalog}/{schema}", **extra_params)
 ```
 
-**Additional Parameters**:
+**Parameters**:
+  - `url`: Trino connection URL with catalog and schema details (required)
   - `user`: Username to connect with (default: 'user')
   - `password`: Password to connect with, mutually exclusive with auth (default: None)
   - `host`: Hostname of the Trino server (default: 'localhost')
@@ -520,25 +537,44 @@ db = Database(f"trino://user@localhost:8080/{catalog}/{schema}", **additional_pa
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
-
-> [!TIP]
-> **Installation Options:** Use `toolfront[all]` for all database support, or install specific extras using comma-separated values e.g. `toolfront[postgres,mysql,document]`.
-
 ### APIs
 
-ToolFront supports virtually **all** APIs that have an [OpenAPI](https://www.openapis.org/) or [Swagger](https://swagger.io/) specification. Simply create an `API` object by passing the specification URL, JSON, or YAML file, as well as optional headers and parameters. For example:
+ToolFront supports virtually **all** APIs that have an [OpenAPI](https://www.openapis.org/) or [Swagger](https://swagger.io/) specification.
 
 ```python
 from toolfront import API
 
-api = API(
-    spec="https://api.example.com/openapi.json",
-    headers={"Authorization": "Bearer YOUR-TOKEN"},
-    params={"version": "v1", "format": "json"}
-)
+data = API(spec="https://api.example.com/openapi.json", **extra_params)
 
-answer = api.ask("What are the latest orders?")
+answer: float = data.ask("What's AAPL's current stock price?")
 ```
+
+**Parameters**:
+  - `spec`: OpenAPI/Swagger specification URL, dict, or JSON/YAML file path (required)
+  - `headers`: Dictionary of HTTP headers to include in all requests (optional)
+  - `params`: Dictionary of query parameters to include in all requests (optional)
+
+
+### Libraries
+
+ToolFront supports document libraries for searching and reading various file formats including PDF, DOCX, PPTX, Excel, JSON, Markdown, TXT, XML, YAML, RTF, and HTML.
+
+Install with `pip install toolfront[document]`, then run
+
+```python
+from toolfront import Library
+
+data = Library(url="file:///path/to/document/dir", **extra_params)
+
+answer: str = data.ask("What does my 2023 contract say about payment terms?")
+```
+
+**Parameters**:
+  - `url`: File system path in file:// format pointing to document directory (required)
+
+
+> [!TIP]
+> **Installation Options:** Use `toolfront[all]` for all database support, or install specific extras using comma-separated values e.g. `toolfront[postgres,mysql,document]`.
 
 ## ❓ FAQ
 
@@ -567,6 +603,69 @@ ToolFront stands out with *multi-database* support, *self-improving* AI, and a *
 - **Secure MCP protocol**: Direct communication between agents and databases without third-party storage.
 
 </details>
+
+
+## 🔌 Integrations
+
+<details>
+<summary><strong>🦜️🔗 LangChain & AI Frameworks</strong></summary>
+
+<br>
+
+ToolFront seamlessly integrates with popular AI frameworks by providing tools that can be passed directly to your custom agents.
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain.prompts import PromptTemplate
+from toolfront import Database
+
+# Setup ToolFront
+data = Database("postgresql://user:pass@localhost:5432/mydb")
+
+# Create LangChain agent with ToolFront tools and prompt
+llm = ChatOpenAI(model="gpt-4")
+tools = data.tools()
+prompt = data.prompt()
+
+agent = create_tool_calling_agent(llm, tools, prompt)
+executor = AgentExecutor(agent=agent, tools=tools)
+
+# Use the agent
+result = executor.invoke({"input": "What's our monthly revenue?"})
+```
+
+**Supported Frameworks**: LangChain, LlamaIndex, AutoGPT, and any framework that accepts callable Python functions as tools.
+
+</details>
+
+<details>
+<summary><strong>🌐 Model Context Protocol (MCP)</strong></summary>
+
+<br>
+
+ToolFront includes a built-in **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** server for seamless integration with MCP-compatible AI clients like Claude Desktop.
+
+**Setup Instructions:**
+1. Create an MCP configuration file
+2. Add ToolFront as a server with your data source URL
+3. Connect your AI client
+
+```json
+{
+  "mcpServers": {
+    "toolfront": {
+      "command": "uvx",
+      "args": ["toolfront[postgres]", "postgresql://user:pass@host:port/db"]
+    }
+  }
+}
+```
+
+**Compatible Clients**: Claude Desktop, Cursor, and other MCP-enabled applications.
+
+</details>
+
 
 
 ## 🤝 Support & Community
