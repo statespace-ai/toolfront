@@ -197,9 +197,9 @@ class Customer(BaseModel):
     name: str
     revenue: int
 
-customers: list[Customer] = data.ask("Top 3 customers")
+customers: Customer = data.ask("Who's our fastest grpwomg customer?")
 # Output:
-# [Customer(name='TechCorp Inc.', revenue=50000), Customer(name='DataFlow', revenue=35000)]
+# Customer(name='TechCorp Inc.', revenue=50000)
 ```
 
 **DataFrames** for tabular data analysis:

@@ -1360,15 +1360,6 @@ postgres = [
     { name = "pyarrow-hotfix" },
     { name = "rich" },
 ]
-pyspark = [
-    { name = "numpy" },
-    { name = "packaging" },
-    { name = "pandas" },
-    { name = "pyarrow" },
-    { name = "pyarrow-hotfix" },
-    { name = "pyspark" },
-    { name = "rich" },
-]
 snowflake = [
     { name = "numpy" },
     { name = "pandas" },
@@ -2607,15 +2598,6 @@ wheels = [
 ]
 
 [[package]]
-name = "py4j"
-version = "0.10.9.7"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1e/f2/b34255180c72c36ff7097f7c2cdca02abcbd89f5eebf7c7c41262a9a0637/py4j-0.10.9.7.tar.gz", hash = "sha256:0b6e5315bb3ada5cf62ac651d107bb2ebc02def3dee9d9548e3baac644ea8dbb", size = 1508234, upload-time = "2022-08-12T22:49:09.792Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/10/30/a58b32568f1623aaad7db22aa9eafc4c6c194b429ff35bdc55ca2726da47/py4j-0.10.9.7-py2.py3-none-any.whl", hash = "sha256:85defdfd2b2376eb3abf5ca6474b51ab7e0de341c75a02f46dc9b5976f5a5c1b", size = 200481, upload-time = "2022-08-12T22:49:07.05Z" },
-]
-
-[[package]]
 name = "pyarrow"
 version = "18.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3009,15 +2991,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/0f/49/4cea918a08f02817a
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/dc/491b7661614ab97483abf2056be1deee4dc2490ecbf7bff9ab5cdbac86e1/pyreadline3-3.5.4-py3-none-any.whl", hash = "sha256:eaf8e6cc3c49bcccf145fc6067ba8643d1df34d604a1ec0eccbf7a18e6d3fae6", size = 83178, upload-time = "2024-09-19T02:40:08.598Z" },
 ]
-
-[[package]]
-name = "pyspark"
-version = "3.5.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "py4j" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/2e/62/36e50d38e5fe158e97cddec983b44f9417b1e205b02320e3c463b5f802fa/pyspark-3.5.6.tar.gz", hash = "sha256:f8b1c4360e41ab398c64904fae08740503bcb6bd389457d659fa6d9f2952cc48", size = 317359167, upload-time = "2025-05-27T08:24:20.82Z" }
 
 [[package]]
 name = "pytest"
@@ -3761,7 +3734,8 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
-    { name = "ibis-framework", extra = ["athena", "bigquery", "clickhouse", "databricks", "druid", "duckdb", "mssql", "oracle", "postgres", "pyspark", "snowflake", "sqlite", "trino"] },
+    { name = "ibis-framework", extra = ["athena", "bigquery", "clickhouse", "databricks", "druid", "duckdb", "mssql", "mysql", "oracle", "postgres", "snowflake", "sqlite", "trino"] },
+    { name = "markitdown", extra = ["all"] },
 ]
 athena = [
     { name = "ibis-framework", extra = ["athena"] },
@@ -3800,17 +3774,11 @@ oracle = [
 postgres = [
     { name = "ibis-framework", extra = ["postgres"] },
 ]
-pyspark = [
-    { name = "ibis-framework", extra = ["pyspark"] },
-]
 snowflake = [
     { name = "ibis-framework", extra = ["snowflake"] },
 ]
 sqlite = [
     { name = "ibis-framework", extra = ["sqlite"] },
-]
-sqlserver = [
-    { name = "ibis-framework", extra = ["mssql"] },
 ]
 test = [
     { name = "pytest" },
@@ -3839,11 +3807,9 @@ requires-dist = [
     { name = "ibis-framework", extras = ["druid"], marker = "extra == 'druid'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["duckdb"], marker = "extra == 'duckdb'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["mssql"], marker = "extra == 'mssql'", specifier = ">=10.6.0" },
-    { name = "ibis-framework", extras = ["mssql"], marker = "extra == 'sqlserver'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["mysql"], marker = "extra == 'mysql'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["oracle"], marker = "extra == 'oracle'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["postgres"], marker = "extra == 'postgres'", specifier = ">=10.6.0" },
-    { name = "ibis-framework", extras = ["pyspark"], marker = "extra == 'pyspark'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["snowflake"], marker = "extra == 'snowflake'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["sqlite"], marker = "extra == 'sqlite'", specifier = ">=10.6.0" },
     { name = "ibis-framework", extras = ["trino"], marker = "extra == 'trino'", specifier = ">=10.6.0" },
@@ -3870,19 +3836,19 @@ requires-dist = [
     { name = "toolfront", extras = ["bigquery"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["clickhouse"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["databricks"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["document"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["druid"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["duckdb"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["mssql"], marker = "extra == 'all'" },
+    { name = "toolfront", extras = ["mysql"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["oracle"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["postgres"], marker = "extra == 'all'" },
-    { name = "toolfront", extras = ["pyspark"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["snowflake"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["sqlite"], marker = "extra == 'all'" },
-    { name = "toolfront", extras = ["sqlserver"], marker = "extra == 'all'" },
     { name = "toolfront", extras = ["trino"], marker = "extra == 'all'" },
     { name = "yarl", specifier = ">=1.20.1" },
 ]
-provides-extras = ["test", "dev", "athena", "bigquery", "clickhouse", "databricks", "druid", "duckdb", "mssql", "mysql", "oracle", "postgres", "pyspark", "snowflake", "sqlite", "sqlserver", "trino", "document", "all"]
+provides-extras = ["test", "dev", "athena", "bigquery", "clickhouse", "databricks", "druid", "duckdb", "mssql", "mysql", "oracle", "postgres", "snowflake", "sqlite", "trino", "document", "all"]
 
 [package.metadata.requires-dev]
 dev = [
