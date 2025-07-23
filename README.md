@@ -20,13 +20,14 @@
 
 </div>
 
-> It's hard to ask AI about your data. Out-of-the-box models struggle to understand large databases, APIs, and documents, while fine-tuned models are expensive and brittle. ToolFront solves this by helping AI models discover and learn about your data on the fly, so they can quickly answer your questions.
+> ToolFront helps you build AI systems to quickly retrieve data from databases, APIs, and documents.
 
-<br>
+
+<!-- <br>
 <div align="center">
 <img alt="ToolFront diagram" src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/diagram.png" width="500">
 </div>
-<br>
+<br> -->
 
 ## 🚀 Quickstart
 
@@ -36,7 +37,7 @@
 pip install -U toolfront[all]
 ```
 
-### 2. Setup your LLM API key
+### 2. Setup your model provider API key
 
 ```bash
 export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
@@ -52,7 +53,6 @@ from toolfront import Database
 
 data = Database("postgresql://user:pass@localhost:5432/mydb")
 
-# Get structured responses 
 response: list[int] = data.ask("What's the profit on our 5 best-sellers?")
 
 print(response)  # [1250, 980, 875, 720, 650]
@@ -68,7 +68,6 @@ from toolfront import API
 
 data = API("https://api.example.com/openapi.json")
 
-# Ask questions about API data
 answer: float = data.ask("What's AAPL's current stock price?")
 
 print(answer)  # 150.25
@@ -82,27 +81,19 @@ print(answer)  # 150.25
 ```python
 from toolfront import Document
 
-# Read from file path
 data = Document("/path/to/document.pdf")
 
-# Ask questions about document content
 answer: set[str] = data.ask("Who are the authors of this paper?")
 
-print(answer)  # [1250.0, 875.50, 2100.0]
+print(answer)  # {"John Doe", "Jane Smith"}
 ```
 
 </details>
 
-<br>
-
 That's it! ToolFront returns results in the format you need.
-
-> [!TIP]
-> ToolFront works with databases, APIs, and document libraries. See the [Data Sources](#data-sources) section for details on connecting to each type.
 
 
 ## 🤖 AI Model Configuration
-
 
 ToolFront is model-agnostic and supports all major LLM providers.
 
