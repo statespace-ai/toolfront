@@ -92,10 +92,10 @@ print(answer)  # {"John Doe", "Jane Smith"}
 
 </details>
 
+That's it! ToolFront returns results in the format you need.
+
 > [!TIP]
 > **Installation Options:** Install database-specific extras as needed: `pip install toolfront[postgres]` for PostgreSQL, `pip install toolfront[snowflake]` for Snowflake, etc. See [data sources](#data-sources) for the complete list.
-
-That's it! ToolFront returns results in the format you need.
 
 
 ## 🤖 AI Model Configuration
