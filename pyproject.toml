@@ -35,6 +35,7 @@ dependencies = [
     "ibis-framework>=10.6.0",
     "markitdown>=0.1.2",
     "pyarrow<19.0.0",
+    "executing>=2.2.0",
 ]
 
 [project.scripts]

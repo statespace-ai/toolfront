@@ -20,7 +20,7 @@
 
 </div>
 
-> Data retrieval is messy. ToolFront helps you build reliable AI pipelines to quickly retrieve data from databases, APIs, and documents.
+> ToolFront helps you quickly build AI pipelines to retrieve data from databases, APIs, and documents.
 
 
 <!-- <br>
@@ -34,7 +34,7 @@
 ### 1. Install ToolFront
 
 ```bash
-pip install -U toolfront[all]
+pip install -U toolfront[postgres]
 ```
 
 ### 2. Setup your model provider API key
@@ -47,6 +47,7 @@ export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 
 <details open>
 <summary><strong>Databases</strong></summary>
+<br>
 
 ```python
 from toolfront import Database
@@ -635,10 +636,11 @@ data = Database(url=f"trino://user@localhost:8080/{catalog}/{schema}", **extra_p
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
 > [!TIP]
-> **Table Filtering**: Use the `pattern` parameter to filter which database tables to query using regex patterns
+> **Table Filtering**: Use the `match` parameter to filter which database tables to query using regex patterns.
 > 
 > ```python
-> Database("postgresql://...", pattern="^sales_.*")
+> # Only query tables starting with 'sales_'
+> Database("postgresql://...", match="^sales_.*")
 > ```
 
 ### APIs
