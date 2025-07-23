@@ -1,6 +1,7 @@
 import os
 
 from dotenv import load_dotenv
+
 from toolfront import Database
 
 load_dotenv()
