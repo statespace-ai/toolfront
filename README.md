@@ -55,7 +55,7 @@ from toolfront import Database
 
 data = Database("postgresql://user:pass@localhost:5432/mydb")
 
-response: list[int] = data.ask("What's the profit on our 5 best-sellers?")
+response: list[int] = data.ask("What's the profit on our 5 best-sellers?", stream=True)
 
 print(response)  # [1250, 980, 875, 720, 650]
 ```
@@ -70,7 +70,7 @@ from toolfront import API
 
 data = API("https://api.example.com/openapi.json")
 
-answer: float = data.ask("What's AAPL's current stock price?")
+answer: float = data.ask("What's AAPL's current stock price?", stream=True)
 
 print(answer)  # 150.25
 ```
@@ -85,7 +85,7 @@ from toolfront import Document
 
 data = Document("/path/to/document.pdf")
 
-answer: set[str] = data.ask("Who are the authors of this paper?")
+answer: set[str] = data.ask("Who are the authors of this paper?", stream=True)
 
 print(answer)  # {"John Doe", "Jane Smith"}
 ```
@@ -108,7 +108,7 @@ ToolFront is model-agnostic and supports all major LLM providers.
 Set `export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='openai:gpt-4o')
+data.ask(..., model='openai:gpt-4o', stream=True)
 ```
 
 </details>
@@ -120,7 +120,7 @@ data.ask(..., model='openai:gpt-4o')
 Set `export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='anthropic:claude-3-5-sonnet-latest')
+data.ask(..., model='anthropic:claude-3-5-sonnet-latest', stream=True)
 ```
 
 </details>
@@ -132,7 +132,7 @@ data.ask(..., model='anthropic:claude-3-5-sonnet-latest')
 Set `export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='google:gemini-1.5-pro')
+data.ask(..., model='google:gemini-1.5-pro', stream=True)
 ```
 
 </details>
@@ -144,7 +144,7 @@ data.ask(..., model='google:gemini-1.5-pro')
 Set `export GROQ_API_KEY=<YOUR_GROQ_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='groq:llama-3.1-70b-versatile')
+data.ask(..., model='groq:llama-3.1-70b-versatile', stream=True)
 ```
 
 </details>
@@ -156,7 +156,7 @@ data.ask(..., model='groq:llama-3.1-70b-versatile')
 Set `export COHERE_API_KEY=<YOUR_COHERE_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='cohere:command-r-plus')
+data.ask(..., model='cohere:command-r-plus', stream=True)
 ```
 
 </details>
@@ -168,7 +168,7 @@ data.ask(..., model='cohere:command-r-plus')
 Set `export MISTRAL_API_KEY=<YOUR_MISTRAL_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='mistral:mistral-large-latest')
+data.ask(..., model='mistral:mistral-large-latest', stream=True)
 ```
 
 </details>
@@ -180,7 +180,7 @@ data.ask(..., model='mistral:mistral-large-latest')
 Set `export XAI_API_KEY=<YOUR_XAI_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='xai:grok-beta')
+data.ask(..., model='xai:grok-beta', stream=True)
 ```
 
 </details>
@@ -192,7 +192,7 @@ data.ask(..., model='xai:grok-beta')
 Set `export DEEPSEEK_API_KEY=<YOUR_DEEPSEEK_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='deepseek:deepseek-chat')
+data.ask(..., model='deepseek:deepseek-chat', stream=True)
 ```
 
 </details>
@@ -204,7 +204,7 @@ You can also provide additional business context to help AI understand your data
 ```python
 context = "Our company sells electronics. Revenue is tracked in the 'sales' table."
 
-data.ask("What's our best performing product category?", context=context)
+data.ask("What's our best performing product category?", context=context, stream=True)
 ```
 
 > [!TIP]
@@ -217,10 +217,10 @@ Type annotations automatically structure ToolFront's responses. Add annotations 
 **Primitive types** for simple values:
 
 ```python
-total_revenue: int = data.ask("What's our total revenue this month?")
+total_revenue: int = data.ask("What's our total revenue this month?", stream=True)
 # Output: 125000
 
-has_pending_orders: bool = data.ask("Do we have any pending orders?")
+has_pending_orders: bool = data.ask("Do we have any pending orders?", stream=True)
 # Output: True
 ```
 
@@ -233,7 +233,7 @@ class Customer(BaseModel):
     name: str
     revenue: int
 
-customers: Customer = data.ask("Who's our fastest grpwomg customer?")
+customers: Customer = data.ask("Who's our fastest grpwomg customer?", stream=True)
 # Output:
 # Customer(name='TechCorp Inc.', revenue=50000)
 ```
@@ -241,7 +241,7 @@ customers: Customer = data.ask("Who's our fastest grpwomg customer?")
 **DataFrames** for tabular data analysis:
 
 ```python
-sales: pd.DataFrame = data.ask("Daily sales last week")
+sales: pd.DataFrame = data.ask("Daily sales last week", stream=True)
 # Output:
 #         date  amount
 # 0 2024-01-15   12500
@@ -252,7 +252,7 @@ sales: pd.DataFrame = data.ask("Daily sales last week")
 **Union types** for flexible responses:
 
 ```python
-price: int | float | None = data.ask("What's the price of our best-seller?")
+price: int | float | None = data.ask("What's the price of our best-seller?", stream=True)
 # Output: 29.99
 ```
 
@@ -266,7 +266,7 @@ class Car(BaseModel):
     model: str
     year: int
 
-inventory: list[Car] = data.ask("Show me our car inventory")
+inventory: list[Car] = data.ask("Show me our car inventory", stream=True)
 # Output:
 # [Car(make='Toyota', model='Camry', year=2023), Car(make='Honda', model='Civic', year=2024)]
 ```
@@ -656,7 +656,7 @@ from toolfront import API
 
 data = API(spec="https://api.example.com/openapi.json", **extra_params)
 
-answer: float = data.ask("What's AAPL's current stock price?")
+answer: float = data.ask("What's AAPL's current stock price?", stream=True)
 ```
 
 **Parameters**:
@@ -679,7 +679,7 @@ data = Document(filepath="/path/to/document.pdf")
 # Or provide text content directly
 data = Document(text="Your document content here")
 
-answer: list[float] = data.ask("What are the payment amounts in this documetn?")
+answer: list[float] = data.ask("What are the payment amounts in this documetn?", stream=True)
 ```
 
 **Parameters**:

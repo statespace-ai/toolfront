@@ -4,6 +4,7 @@ import warnings
 from abc import ABC
 from contextlib import closing
 from typing import Any
+from urllib.parse import urlparse
 
 import ibis
 import pandas as pd
@@ -72,6 +73,23 @@ class Database(DataSource, ABC):
     def __init__(self, url: str, match: str | None = None, **kwargs: Any) -> None:
         self._connection_kwargs = kwargs
         super().__init__(url=url, match=match)
+        
+        # Add database-specific dialect hints to the query method's docstring if we have any.
+        dialect_hints = self._get_dialect_hints()
+        if dialect_hints:
+            base_docstring = """
+            This tool allows you to run read-only SQL queries against a database.
+
+            ALWAYS ENCLOSE IDENTIFIERS (TABLE NAMES, COLUMN NAMES) IN QUOTES TO PRESERVE CASE SENSITIVITY AND AVOID RESERVED WORD CONFLICTS AND SYNTAX ERRORS.
+
+            1. ONLY write read-only queries for tables that have been explicitly discovered or referenced.
+            2. Before writing queries, make sure you understand the schema of the tables you are querying.
+            3. ALWAYS use the correct dialect for the database.
+            4. NEVER use aliases in queries unless strictly necessary.
+            5. When a query fails or returns unexpected results, try to diagnose the issue and then retry.
+            """
+                    
+            self.query.__func__.__doc__ = base_docstring + dialect_hints
 
     def __getitem__(self, name: str) -> "ibis.Table":
         parts = name.split(".")
@@ -83,6 +101,52 @@ class Database(DataSource, ABC):
         dump = self.model_dump(exclude={"tables"})
         args = ", ".join(f"{k}={repr(v)}" for k, v in dump.items())
         return f"{self.__class__.__name__}({args})"
+
+    @property
+    def database_type(self) -> str:
+        """Get the database type from the URL scheme."""
+        parsed = urlparse(self.url)
+        scheme = parsed.scheme.lower()
+        
+        # Handle some common aliases
+        scheme_mapping = {
+            'postgres': 'postgresql',
+            'mssql': 'sqlserver',
+        }
+        
+        return scheme_mapping.get(scheme, scheme)
+
+    def _get_dialect_hints(self) -> str:
+        """Get database-specific SQL dialect hints."""
+        hints = {
+            'snowflake': """
+        Snowflake-specific SQL functions:
+        - Use TO_TIMESTAMP(epoch_seconds) or TO_TIMESTAMP(epoch_millis/1000) for timestamp conversion
+        - Use DATEADD(timepart, value, date_expr) for date arithmetic  
+        - Use TO_DATE() for date conversion
+        - Microsecond timestamps: divide by 1000000 before TO_TIMESTAMP()
+        """,
+            'postgresql': """
+        PostgreSQL-specific SQL functions:
+        - Use to_timestamp(epoch_seconds) for timestamp conversion
+        - Use INTERVAL for date arithmetic (e.g., date_column + INTERVAL '1 day')
+        - Use EXTRACT() for date parts
+        """,
+            'mysql': """
+        MySQL-specific SQL functions:
+        - Use FROM_UNIXTIME(unix_timestamp) for timestamp conversion
+        - Use DATE_ADD() and DATE_SUB() for date arithmetic
+        - Use UNIX_TIMESTAMP() to convert to epoch
+        """,
+            'bigquery': """
+        BigQuery-specific SQL functions:
+        - Use TIMESTAMP_SECONDS(epoch_seconds) for timestamp conversion
+        - Use TIMESTAMP_MILLIS(epoch_millis) for millisecond timestamps
+        - Use DATE_ADD() for date arithmetic
+        """,
+        }
+        
+        return hints.get(self.database_type, "")
 
     @model_validator(mode="after")
     def model_validator(self) -> "Database":
