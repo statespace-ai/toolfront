@@ -1,6 +1,5 @@
 """Unit tests for database query validation logic."""
 
-
 from toolfront.models.database import Query
 
 

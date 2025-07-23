@@ -29,17 +29,14 @@ class Query(BaseModel):
     def is_read_only_query(self) -> bool:
         """Check if SQL contains only read operations"""
         # Remove comments and normalize whitespace
-        clean_sql = re.sub(r'--.*?$|/\*.*?\*/', '', self.code, flags=re.MULTILINE | re.DOTALL)
-        clean_sql = re.sub(r'\s+', ' ', clean_sql).strip().upper()
-        
+        clean_sql = re.sub(r"--.*?$|/\*.*?\*/", "", self.code, flags=re.MULTILINE | re.DOTALL)
+        clean_sql = re.sub(r"\s+", " ", clean_sql).strip().upper()
+
         # Split on semicolons to handle multiple statements
-        statements = [s.strip() for s in clean_sql.split(';') if s.strip()]
-        
-        read_only_patterns = [
-            r'^SELECT\b', r'^WITH\b', r'^SHOW\b', 
-            r'^DESCRIBE\b', r'^DESC\b', r'^EXPLAIN\b'
-        ]
-        
+        statements = [s.strip() for s in clean_sql.split(";") if s.strip()]
+
+        read_only_patterns = [r"^SELECT\b", r"^WITH\b", r"^SHOW\b", r"^DESCRIBE\b", r"^DESC\b", r"^EXPLAIN\b"]
+
         return all(any(re.match(pattern, stmt) for pattern in read_only_patterns) for stmt in statements)
 
 

@@ -84,7 +84,6 @@ class TestDeserializeResponse:
         assert "|" in result  # Markdown table format
         assert "a" in result and "b" in result and "c" in result
 
-
     def test_deserialize_list(self):
         """Test deserialization of lists."""
         short_list = [1, 2, 3]
@@ -131,5 +130,3 @@ class TestSanitizeUrl:
         url = "https://user:secret@api.example.com/v1"
         result = sanitize_url(url)
         assert result == "https://user:***@api.example.com/v1"
-
-

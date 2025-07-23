@@ -110,7 +110,7 @@ class DataSource(BaseModel, ABC):
     ) -> AskReturnType:
         """
         Ask the datasource a question and return the result.
-        
+
         Parameters
         ----------
         prompt : str
@@ -121,13 +121,13 @@ class DataSource(BaseModel, ABC):
             Additional context to provide to the model.
         stream : bool, optional
             Whether to display live streaming output in the terminal. Defaults to False.
-            
+
             **Why streaming is off by default:**
             - SDKs should be "quiet by default" - they shouldn't print to stdout unless explicitly requested
-            - Prevents unexpected output in production/automation environments  
+            - Prevents unexpected output in production/automation environments
             - Follows the principle of least surprise for programmatic use
             - Users can easily enable streaming when desired for debugging or interactive exploration
-        
+
         Returns
         -------
         AskReturnType
