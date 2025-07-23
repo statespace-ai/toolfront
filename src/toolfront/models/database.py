@@ -40,11 +40,7 @@ class Query(BaseModel):
             r'^DESCRIBE\b', r'^DESC\b', r'^EXPLAIN\b'
         ]
         
-        for stmt in statements:
-            if not any(re.match(pattern, stmt) for pattern in read_only_patterns):
-                return False
-        
-        return True
+        return all(any(re.match(pattern, stmt) for pattern in read_only_patterns) for stmt in statements)
 
 
 class Database(DataSource, ABC):

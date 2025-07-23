@@ -106,9 +106,32 @@ class DataSource(BaseModel, ABC):
         prompt: str,
         model: models.Model | models.KnownModelName | str | None = None,
         context: str | None = None,
+        stream: bool = False,
     ) -> AskReturnType:
         """
-        Ask the datasource a question and display the response beautifully in the terminal.
+        Ask the datasource a question and return the result.
+        
+        Parameters
+        ----------
+        prompt : str
+            The question or instruction to ask the datasource.
+        model : models.Model | models.KnownModelName | str | None, optional
+            The model to use. If None, uses the default model.
+        context : str | None, optional
+            Additional context to provide to the model.
+        stream : bool, optional
+            Whether to display live streaming output in the terminal. Defaults to False.
+            
+            **Why streaming is off by default:**
+            - SDKs should be "quiet by default" - they shouldn't print to stdout unless explicitly requested
+            - Prevents unexpected output in production/automation environments  
+            - Follows the principle of least surprise for programmatic use
+            - Users can easily enable streaming when desired for debugging or interactive exploration
+        
+        Returns
+        -------
+        AskReturnType
+            The response from the datasource, which can be a string, dict, list, DataFrame, or Pydantic model.
         """
 
         if model is None:
@@ -130,7 +153,7 @@ class DataSource(BaseModel, ABC):
             output_type=output_type | None,
         )
 
-        result = asyncio.run(self._ask_async(prompt, agent))
+        result = asyncio.run(self._ask_async(prompt, agent, stream))
 
         if result is None and not type_allows_none(output_type):
             raise RuntimeError(
@@ -168,64 +191,69 @@ class DataSource(BaseModel, ABC):
         self,
         prompt: str,
         agent: Agent,
+        stream: bool = False,
     ) -> AskReturnType:
         """
-        Stream the agent response with live updating display.
+        Run the agent and optionally stream the response with live updating display.
         Returns the final result from the agent.
         """
 
         panel_title = f"[bold green]{str(self)}[/bold green]"
 
         try:
-            with Live(
-                Panel(
-                    Text("Thinking...", style="dim white"),
-                    title=panel_title,
-                    border_style="green",
-                ),
-                refresh_per_second=10,
-                # vertical_overflow="crop",
-            ) as live:
-                accumulated_content = ""
-                # live.stop()
+            if stream:
+                # Streaming mode with Rich Live display
+                with Live(
+                    Panel(
+                        Text("Thinking...", style="dim white"),
+                        title=panel_title,
+                        border_style="green",
+                    ),
+                    refresh_per_second=10,
+                ) as live:
+                    accumulated_content = ""
 
-                def update_display(content: str):
-                    live.update(Panel(Markdown(content), title=panel_title, border_style="green"))
+                    def update_display(content: str):
+                        live.update(Panel(Markdown(content), title=panel_title, border_style="green"))
 
+                    async with agent.iter(prompt) as run:
+                        async for node in run:
+                            if Agent.is_model_request_node(node):
+                                async with node.stream(run.ctx) as model_stream:
+                                    async for event in model_stream:
+                                        if isinstance(event, PartStartEvent):
+                                            if isinstance(event.part, (TextPart | ThinkingPart)):
+                                                accumulated_content += f"\n{event.part.content}"
+                                                update_display(accumulated_content)
+                                        elif isinstance(event, PartDeltaEvent) and isinstance(
+                                            event.delta, (TextPartDelta | ThinkingPartDelta)
+                                        ):
+                                            accumulated_content += event.delta.content_delta
+                                            update_display(accumulated_content)
+
+                            elif Agent.is_call_tools_node(node):
+                                async with node.stream(run.ctx) as handle_stream:
+                                    async for event in handle_stream:
+                                        if isinstance(event, FunctionToolCallEvent):
+                                            try:
+                                                accumulated_content += f"\n\n>Called tool `{event.part.tool_name}` with args:\n\n```yaml\n{yaml.dump(json.loads(event.part.args))}\n```\n\n"
+                                            except Exception:
+                                                accumulated_content += event.part.args
+                                            update_display(accumulated_content)
+                                        elif isinstance(event, FunctionToolResultEvent):
+                                            tool_result = deserialize_response(event.result.content)
+                                            accumulated_content += (
+                                                f"\n\n>Tool `{event.result.tool_name}` returned:\n\n{tool_result}\n\n"
+                                            )
+                                            update_display(accumulated_content)
+
+                            elif Agent.is_end_node(node):
+                                return node.data.output
+            else:
+                # Quiet mode - just run the agent without display
                 async with agent.iter(prompt) as run:
                     async for node in run:
-                        if Agent.is_model_request_node(node):
-                            async with node.stream(run.ctx) as model_stream:
-                                async for event in model_stream:
-                                    if isinstance(event, PartStartEvent):
-                                        if isinstance(event.part, (TextPart | ThinkingPart)):
-                                            accumulated_content += f"\n{event.part.content}"
-                                            update_display(accumulated_content)
-                                    elif isinstance(event, PartDeltaEvent) and isinstance(
-                                        event.delta, (TextPartDelta | ThinkingPartDelta)
-                                    ):
-                                        accumulated_content += event.delta.content_delta
-                                        update_display(accumulated_content)
-
-                        elif Agent.is_call_tools_node(node):
-                            # A handle-response node => The model returned some data, potentially calls a tool
-                            async with node.stream(run.ctx) as handle_stream:
-                                async for event in handle_stream:
-                                    if isinstance(event, FunctionToolCallEvent):
-                                        try:
-                                            accumulated_content += f"\n\n>Called tool `{event.part.tool_name}` with args:\n\n```yaml\n{yaml.dump(json.loads(event.part.args))}\n```\n\n"
-                                        except Exception:
-                                            accumulated_content += event.part.args
-
-                                        update_display(accumulated_content)
-                                    elif isinstance(event, FunctionToolResultEvent):
-                                        tool_result = deserialize_response(event.result.content)
-                                        accumulated_content += (
-                                            f"\n\n>Tool `{event.result.tool_name}` returned:\n\n{tool_result}\n\n"
-                                        )
-                                        update_display(accumulated_content)
-
-                        elif Agent.is_end_node(node):
+                        if Agent.is_end_node(node):
                             return node.data.output
         except UnexpectedModelBehavior as e:
             logger.error(f"Unexpected model behavior: {e}", exc_info=True)

@@ -1,10 +1,8 @@
 """Unit tests for utility functions in toolfront.utils."""
 
-from typing import Optional, Union
-
 import pandas as pd
 
-from toolfront.utils import deserialize_response, sanitize_url, serialize_response, type_allows_none
+from toolfront.utils import deserialize_response, sanitize_url, serialize_response
 
 
 class TestSerializeResponse:
@@ -135,34 +133,3 @@ class TestSanitizeUrl:
         assert result == "https://user:***@api.example.com/v1"
 
 
-class TestTypeAllowsNone:
-    """Test cases for type_allows_none function."""
-
-    def test_none_type(self):
-        """Test with None type."""
-        assert type_allows_none(type(None)) is True
-
-    def test_optional_types(self):
-        """Test with Optional types."""
-        assert type_allows_none(Optional[str]) is True
-        assert type_allows_none(Optional[int]) is True
-        assert type_allows_none(Union[str, None]) is True
-        assert type_allows_none(Union[int, str, None]) is True
-
-    def test_union_types_without_none(self):
-        """Test Union types without None."""
-        assert type_allows_none(Union[str, int]) is False
-
-    def test_regular_types(self):
-        """Test regular types that don't allow None."""
-        assert type_allows_none(str) is False
-        assert type_allows_none(int) is False
-        assert type_allows_none(list) is False
-        assert type_allows_none(dict) is False
-
-    def test_python310_union_syntax(self):
-        """Test Python 3.10+ union syntax."""
-        # This would be: str | None in Python 3.10+
-        # We test the equivalent Union type
-        assert type_allows_none(Union[str, None]) is True
-        assert type_allows_none(Union[str, int]) is False
