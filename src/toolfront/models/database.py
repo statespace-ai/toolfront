@@ -1,202 +1,266 @@
 import logging
 import re
-from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
+import warnings
+from abc import ABC
+from contextlib import closing
+from typing import Any
+from urllib.parse import urlparse
 
+import ibis
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import create_engine, text
-from sqlalchemy.engine.url import URL, make_url
-from sqlalchemy.exc import InvalidRequestError, StatementError
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.util import immutabledict
+from ibis import BaseBackend
+from pydantic import BaseModel, Field, PrivateAttr, computed_field, field_serializer, model_validator
 
-from toolfront.types import ConnectionResult, SearchMode
-from toolfront.utils import search_items
-
-try:
-    from sqlalchemy.exc import MissingGreenlet
-except ImportError:
-    # MissingGreenlet might not be available in all SQLAlchemy versions
-    class MissingGreenlet(Exception):  # type: ignore[no-redef]
-        pass
-
+from toolfront.models.base import DataSource
+from toolfront.utils import sanitize_url, serialize_response
 
 logger = logging.getLogger("toolfront")
 
 
-class DatabaseError(Exception):
-    """Exception for database-related errors."""
-
-    pass
-
-
-class FileMixin:
-    @field_validator("url", mode="after")
-    def check_file_exists(cls, url: URL) -> URL:
-        if url.database and not Path(url.database).is_file() and "memory:" not in url.database:
-            raise DatabaseError(f"File does not exist: {url.database}")
-        return url
+class Table(BaseModel):
+    path: str = Field(
+        ...,
+        description="Full table path in dot notation e.g. 'schema.table' or 'database.schema.table'.",
+    )
 
 
-class SQLAlchemyMixin:
-    # Type annotation for mixed-in url attribute
-    if TYPE_CHECKING:
-        url: URL
+class Query(BaseModel):
+    code: str = Field(..., description="SQL query string to execute. Must match the SQL dialect of the database.")
 
-    def initialize_session(self) -> str | None:
-        """Return SQL statement to execute for session initialization, or None if no initialization needed."""
-        return None
+    def is_read_only_query(self) -> bool:
+        """Check if SQL contains only read operations"""
+        # Remove comments and normalize whitespace
+        clean_sql = re.sub(r"--.*?$|/\*.*?\*/", "", self.code, flags=re.MULTILINE | re.DOTALL)
+        clean_sql = re.sub(r"\s+", " ", clean_sql).strip().upper()
 
-    async def test_connection(self) -> ConnectionResult:
-        """Test the connection to the database."""
-        try:
-            await self.query("SELECT 1")
-            return ConnectionResult(connected=True, message="Connection successful")
-        except Exception as e:
-            return ConnectionResult(connected=False, message=f"Connection failed: {e}")
+        # Split on semicolons to handle multiple statements
+        statements = [s.strip() for s in clean_sql.split(";") if s.strip()]
 
-    async def query(self, code: str) -> pd.DataFrame:
-        """Execute a SQL query and return results as a DataFrame."""
-        init_sql = self.initialize_session()
+        read_only_patterns = [r"^SELECT\b", r"^WITH\b", r"^SHOW\b", r"^DESCRIBE\b", r"^DESC\b", r"^EXPLAIN\b"]
 
-        # Try async first, fallback to sync for configuration errors
-        try:
-            return await self._execute_async(code, init_sql)
-        except (InvalidRequestError, StatementError) as config_error:
-            logger.debug(f"Async failed due to configuration, trying sync: {config_error}")
-            return await self._execute_sync(code, init_sql, config_error)
-        except Exception as async_error:
-            # Check for greenlet-related errors or asyncpg authentication errors
-            if self._is_greenlet_error(async_error) or self._is_asyncpg_auth_error(async_error):
-                logger.debug(f"Async failed due to greenlet/auth issue, trying sync: {async_error}")
-                return await self._execute_sync(code, init_sql, async_error)
-            else:
-                logger.error(f"Query failed: {async_error}")
-                raise DatabaseError(f"Query execution failed: {async_error}") from async_error
+        return all(any(re.match(pattern, stmt) for pattern in read_only_patterns) for stmt in statements)
 
-    async def _execute_async(self, code: str, init_sql: str | None) -> pd.DataFrame:
-        """Execute query using async engine."""
-        engine = create_async_engine(self.url, echo=False)
-        try:
-            async with engine.connect() as conn:
-                conn = await conn.execution_options(readonly=True)
-                if init_sql:
-                    await conn.execute(text(init_sql))
-                result = await conn.execute(text(code))
-                data = result.fetchall()
-                logger.debug(f"Async query executed successfully: {code[:100]}...")
-                return pd.DataFrame(data)  # .fillna('N/A')
-        finally:
-            await engine.dispose()
 
-    async def _execute_sync(self, code: str, init_sql: str | None, original_error: Exception) -> pd.DataFrame:
-        """Execute query using sync engine as fallback."""
-        # Convert async URL to sync URL
-        sync_url = self._get_sync_url(self.url)
-        engine = create_engine(sync_url, echo=False)
-        try:
-            with engine.connect() as conn:
-                conn = conn.execution_options(readonly=True)
-                if init_sql:
-                    conn.execute(text(init_sql))
-                    conn.commit()
-                result = conn.execute(text(code))
-                data = result.fetchall()
-                logger.debug(f"Sync query executed successfully: {code[:100]}...")
-                return pd.DataFrame(data)  # .fillna('N/A')
-        except Exception as sync_error:
-            logger.error(f"Both async and sync failed. Async: {original_error}, Sync: {sync_error}")
-            raise DatabaseError(f"Query execution failed: {sync_error}") from sync_error
-        finally:
-            engine.dispose()
+class Database(DataSource, ABC):
+    """Abstract base class for all databases.
 
-    def _get_sync_url(self, url: URL) -> URL:
-        """Convert async URL to sync URL for fallback."""
-        driver_mapping = {
-            "postgresql+asyncpg": "postgresql+psycopg2",
-            "mysql+aiomysql": "mysql+pymysql",
-            "sqlite+aiosqlite": "sqlite",
-            "mssql+pyodbc": "mssql+pyodbc",  # SQL Server uses the same driver for sync/async
+    Parameters
+    ----------
+    url : str
+        Database URL for connection.
+    match : str, optional
+        Regex pattern to match tables. If None, all tables will be used.
+
+    Attributes
+    ----------
+    _connection : BaseBackend or None
+        Ibis backend connection to the database.
+    _connection_kwargs : dict[str, Any]
+        Additional keyword arguments for database connection.
+    """
+
+    url: str = Field(description="Database URL.")
+
+    match: str | None = Field(
+        description="Regex pattern to filter tables. If None, all tables will be used.",
+        exclude=True,
+    )
+
+    _tables: list[str] = PrivateAttr(default_factory=list)
+    _connection: BaseBackend | None = PrivateAttr(default=None)
+    _connection_kwargs: dict[str, Any] = PrivateAttr(default_factory=dict)
+
+    def __init__(self, url: str, match: str | None = None, **kwargs: Any) -> None:
+        self._connection_kwargs = kwargs
+        super().__init__(url=url, match=match)
+
+        # Add database-specific dialect hints to the query method's docstring if we have any.
+        dialect_hints = self._get_dialect_hints()
+        if dialect_hints:
+            base_docstring = """
+            This tool allows you to run read-only SQL queries against a database.
+
+            ALWAYS ENCLOSE IDENTIFIERS (TABLE NAMES, COLUMN NAMES) IN QUOTES TO PRESERVE CASE SENSITIVITY AND AVOID RESERVED WORD CONFLICTS AND SYNTAX ERRORS.
+
+            1. ONLY write read-only queries for tables that have been explicitly discovered or referenced.
+            2. Before writing queries, make sure you understand the schema of the tables you are querying.
+            3. ALWAYS use the correct dialect for the database.
+            4. NEVER use aliases in queries unless strictly necessary.
+            5. When a query fails or returns unexpected results, try to diagnose the issue and then retry.
+            """
+
+            self.query.__func__.__doc__ = base_docstring + dialect_hints
+
+    def __getitem__(self, name: str) -> "ibis.Table":
+        parts = name.split(".")
+        if not 1 <= len(parts) <= 3:
+            raise ValueError(f"Invalid table name: {name}")
+        return self._connection.table(parts[-1], database=tuple(parts[:-1]) if len(parts) > 1 else None)
+
+    def __repr__(self) -> str:
+        dump = self.model_dump(exclude={"tables"})
+        args = ", ".join(f"{k}={repr(v)}" for k, v in dump.items())
+        return f"{self.__class__.__name__}({args})"
+
+    @property
+    def database_type(self) -> str:
+        """Get the database type from the URL scheme."""
+        parsed = urlparse(self.url)
+        scheme = parsed.scheme.lower()
+
+        # Handle some common aliases
+        scheme_mapping = {
+            "postgres": "postgresql",
+            "mssql": "sqlserver",
         }
 
-        if url.drivername in driver_mapping:
-            return url.set(drivername=driver_mapping[url.drivername])
-        else:
-            # For other drivers, just return the original URL
-            return url
+        return scheme_mapping.get(scheme, scheme)
 
-    def _is_greenlet_error(self, error: Exception) -> bool:
-        """Check if error is related to greenlet/async configuration."""
-        error_str = str(error).lower()
-        return (
-            (MissingGreenlet is not None and isinstance(error, MissingGreenlet))
-            or "greenlet" in error_str
-            or "greenlet_spawn" in error_str
-            or "await_only" in error_str
-        )
+    def _get_dialect_hints(self) -> str:
+        """Get database-specific SQL dialect hints."""
+        hints = {
+            "snowflake": """
+        Snowflake-specific SQL functions:
+        - Use TO_TIMESTAMP(epoch_seconds) or TO_TIMESTAMP(epoch_millis/1000) for timestamp conversion
+        - Use DATEADD(timepart, value, date_expr) for date arithmetic  
+        - Use TO_DATE() for date conversion
+        - Microsecond timestamps: divide by 1000000 before TO_TIMESTAMP()
+        """,
+            "postgresql": """
+        PostgreSQL-specific SQL functions:
+        - Use to_timestamp(epoch_seconds) for timestamp conversion
+        - Use INTERVAL for date arithmetic (e.g., date_column + INTERVAL '1 day')
+        - Use EXTRACT() for date parts
+        """,
+            "mysql": """
+        MySQL-specific SQL functions:
+        - Use FROM_UNIXTIME(unix_timestamp) for timestamp conversion
+        - Use DATE_ADD() and DATE_SUB() for date arithmetic
+        - Use UNIX_TIMESTAMP() to convert to epoch
+        """,
+            "bigquery": """
+        BigQuery-specific SQL functions:
+        - Use TIMESTAMP_SECONDS(epoch_seconds) for timestamp conversion
+        - Use TIMESTAMP_MILLIS(epoch_millis) for millisecond timestamps
+        - Use DATE_ADD() for date arithmetic
+        """,
+        }
 
-    def _is_asyncpg_auth_error(self, error: Exception) -> bool:
-        """Check if error is related to asyncpg authentication issues."""
-        error_str = str(error).lower()
-        error_type = type(error).__name__
-        return (
-            "internalclienterror" in error_type.lower()
-            or "authentication" in error_str
-            or "scram" in error_str
-            or "'nonetype' object has no attribute 'group'" in error_str
-        )
+        return hints.get(self.database_type, "")
 
+    @model_validator(mode="after")
+    def model_validator(self) -> "Database":
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
+            self._connection = ibis.connect(self.url, **self._connection_kwargs)
 
-class Database(BaseModel, ABC):
-    """Abstract base class for all databases."""
+        # Handle tables parameter: None (all), string (regex), or list (exact names)
+        if self.match:
+            if not isinstance(self.match, str):
+                raise ValueError(f"Match must be a string, got {type(self.match)}")
 
-    url: URL = Field(description="URL of the database")
-    model_config = ConfigDict(ignored_types=(immutabledict,), arbitrary_types_allowed=True, frozen=True)
+            try:
+                re.compile(self.match)
+            except re.error as e:
+                raise ValueError(f"Invalid regex pattern for tables: {self.match} - {str(e)}")
 
-    @field_validator("url", mode="before")
-    def validate_url(cls, v: Any) -> URL:
-        if isinstance(v, str):
-            v = make_url(v)
+        # Discover all available tables in the database
+        catalog = self._connection.current_catalog
+        databases = self._connection.list_databases(catalog=catalog)
 
-        return v  # type: ignore[no-any-return]
+        all_tables = []
+        for db in databases:
+            tables = self._connection.list_tables(like=self.match, database=(catalog, db))
+            prefix = f"{catalog}." if catalog else ""
+            all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
 
-    @abstractmethod
-    async def test_connection(self) -> ConnectionResult:
-        """Test the connection to the database."""
-        raise NotImplementedError("Subclasses must implement test_connection")
+        if not len(all_tables):
+            raise ValueError("No tables found in the database")
 
-    @abstractmethod
-    async def get_tables(self) -> list[str]:
-        """Get the tables of the data source."""
-        raise NotImplementedError("Subclasses must implement get_tables")
+        self._tables = all_tables
 
-    @abstractmethod
-    async def inspect_table(self, table_path: str) -> Any:
-        """Inspect the structure of a table at the given path."""
-        raise NotImplementedError("Subclasses must implement inspect_table")
+        return self
 
-    @abstractmethod
-    async def sample_table(self, table_path: str, n: int = 5) -> Any:
-        """Sample data from the specified table."""
-        raise NotImplementedError("Subclasses must implement sample_table")
+    @field_serializer("url")
+    def serialize_url(self, value: str) -> str:
+        """Serialize URL field by sanitizing sensitive information.
 
-    @abstractmethod
-    async def query(self, code: str) -> pd.DataFrame:
-        """Execute a SQL query and return results as a DataFrame."""
-        raise NotImplementedError("Subclasses must implement query")
+        Parameters
+        ----------
+        value : str
+            Original database URL.
 
-    async def search_tables(self, pattern: str, mode: SearchMode = SearchMode.REGEX, limit: int = 10) -> list[str]:
-        """Search for table names using different algorithms."""
-        table_names = await self.get_tables()
-        if not table_names:
-            return []
+        Returns
+        -------
+        str
+            Sanitized URL with sensitive information removed.
+        """
+        return sanitize_url(value)
 
+    @computed_field
+    @property
+    def tables(self) -> list[str]:
+        return self._tables
+
+    def tools(self) -> list[callable]:
+        """Return list of available tool methods.
+
+        Returns
+        -------
+        list[callable]
+            List containing inspect_table and query methods.
+        """
+        return [self.inspect_table, self.query]
+
+    async def inspect_table(
+        self,
+        table: Table = Field(..., description="Database table to inspect."),
+    ) -> dict[str, Any]:
+        """Inspect the schema of database table and get sample data.
+
+        1. Use this tool to understand table structure like column names, data types, and constraints
+        2. Inspecting tables helps understand the structure of the data
+        3. ALWAYS inspect unfamiliar tables first to learn their columns and data types before querying
+        """
         try:
-            return search_items(table_names, pattern, mode, limit)
-        except re.error as e:
-            raise DatabaseError(f"Invalid regex pattern '{pattern}': {e}")
+            logger.debug(f"Inspecting table: {self.url} {table.path}")
+            table = self[table.path]
+            return {
+                "schema": serialize_response(table.info().to_pandas()),
+                "samples": serialize_response(table.head(5).to_pandas()),
+            }
         except Exception as e:
-            logger.error(f"Table search failed: {e}")
-            raise DatabaseError(f"Table search failed: {e}") from e
+            logger.error(f"Failed to inspect table: {e}", exc_info=True)
+            raise RuntimeError(f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
+
+    async def query(
+        self,
+        query: Query = Field(..., description="Read-only SQL query to execute."),
+    ) -> dict[str, Any]:
+        """
+        This tool allows you to run read-only SQL queries against a database.
+
+        ALWAYS ENCLOSE IDENTIFIERS (TABLE NAMES, COLUMN NAMES) IN QUOTES TO PRESERVE CASE SENSITIVITY AND AVOID RESERVED WORD CONFLICTS AND SYNTAX ERRORS.
+
+        1. ONLY write read-only queries for tables that have been explicitly discovered or referenced.
+        2. Before writing queries, make sure you understand the schema of the tables you are querying.
+        3. ALWAYS use the correct dialect for the database.
+        4. NEVER use aliases in queries unless strictly necessary.
+        5. When a query fails or returns unexpected results, try to diagnose the issue and then retry.
+        """
+        logger.debug(f"Querying database: {self.url} {query.code}")
+        if not query.is_read_only_query():
+            raise ValueError("Only read-only queries are allowed")
+
+        if not hasattr(self._connection, "raw_sql"):
+            raise ValueError("Database does not support raw sql queries")
+
+        with closing(self._connection.raw_sql(query.code)) as cursor:
+            columns = [col[0] for col in cursor.description]
+            return pd.DataFrame(cursor.fetchall(), columns=columns)
+
+    def _preprocess(self, var_type: Any) -> Any:
+        return Query if isinstance(var_type, pd.DataFrame) else var_type
+
+    def _postprocess(self, result: Any) -> Any:
+        return self.query(result) if isinstance(result, Query) else result

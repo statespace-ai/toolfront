@@ -1,128 +1,183 @@
-import logging
+import json
 from abc import ABC
+from enum import Enum
+from pathlib import Path
 from typing import Any
-from urllib.parse import ParseResult, urlparse
+from urllib.parse import urlparse
 
 import httpx
-from pydantic import BaseModel, Field, computed_field
+import yaml
+from pydantic import BaseModel, Field, computed_field, model_validator
 
-from toolfront.models.spec import Spec
-from toolfront.types import ConnectionResult, HTTPMethod, SearchMode
-from toolfront.utils import search_items
-
-logger = logging.getLogger("toolfront")
+from toolfront.config import TIMEOUT_SECONDS
+from toolfront.models.base import DataSource
 
 
-class APIError(Exception):
-    """Exception for API-related errors."""
+class HTTPMethod(str, Enum):
+    """Valid HTTP methods."""
 
-    pass
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    DELETE = "DELETE"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    OPTIONS = "OPTIONS"
+
+    @classmethod
+    def get_supported_methods(cls) -> set[str]:
+        """Get all supported HTTP methods."""
+        return {method.value for method in cls}
 
 
-class API(BaseModel, ABC):
+class Endpoint(BaseModel):
+    method: HTTPMethod = Field(
+        ...,
+        description="HTTP method.",
+    )
+
+    path: str = Field(
+        ...,
+        description="Full endpoint path in slash notation with path parameter names between curly braces e.g. '/path/to/endpoint/{{param}}'.",
+    )
+
+
+class Request(BaseModel):
+    endpoint: Endpoint = Field(
+        ...,
+        description="API endpoint.",
+    )
+
+    path_params: dict[str, Any] | None = Field(
+        None,
+        description="Optional path parameters in JSON format e.g. {'param': 'value'}.",
+    )
+
+    body: dict[str, Any] | None = Field(
+        None,
+        description="Optional request body in JSON format. Only required for POST, PUT, PATCH methods e.g. {'name': 'John', 'age': 30}.",
+    )
+
+    headers: dict[str, Any] | None = Field(
+        None,
+        description="Optional request headers in JSON format.",
+    )
+
+    params: dict[str, Any] | None = Field(
+        None,
+        description="Optional request parameters in JSON format.",
+    )
+
+
+class API(DataSource, ABC):
     """Abstract base class for OpenAPI/Swagger-based APIs."""
 
-    spec: Spec = Field(description="OpenAPI/Swagger specification with auth and URL details")
-    query_params: dict[str, Any] | None = Field(None, description="Additional request parameters.")
+    spec: dict | str = Field(..., description="API specification config.", exclude=True)
+    endpoints: list[str] = Field(..., description="List of available endpoints.")
+    headers: dict[str, str] | None = Field(None, description="Additional headers to include in requests.", exclude=True)
+    params: dict[str, str] | None = Field(None, description="Query parameters to include in requests.", exclude=True)
 
-    @computed_field
-    @property
-    def url(self) -> ParseResult:
-        """URL of the API (backwards compatibility)."""
-        return urlparse(self.spec.url)
+    def __init__(
+        self,
+        spec: dict | str | None = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(spec=spec, headers=headers, params=params, **kwargs)
 
-    @computed_field
-    @property
-    def openapi_spec(self) -> dict[str, Any]:
-        """OpenAPI specification (backwards compatibility)."""
-        return self.spec.spec
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(url='{self.url}')"
 
-    # @computed_field
-    # @property
-    # def auth_headers(self) -> dict[str, Any]:
-    #     """Authentication headers."""
+    @model_validator(mode="before")
+    def validate_model(cls, v: Any) -> Any:
+        spec = v.get("spec")
 
-    #     original_url = load_url_from_mapping(self.spec.url)
-    #     if original_url:
-    #         headers, _ = self.spec.extract_auth_parameters(original_url)
-    #         return headers
-    #     return {}
+        if isinstance(spec, str):
+            parsed_url = urlparse(spec)
+            match parsed_url.scheme:
+                case "file":
+                    path = Path(parsed_url.path)
+                    if not path.exists():
+                        raise ConnectionError(f"OpenAPI spec file not found: {path}")
+                    with path.open() as f:
+                        v["spec"] = yaml.safe_load(f) if path.suffix.lower() in [".yaml", ".yml"] else json.load(f)
+                case "http" | "https":
+                    with httpx.Client(timeout=TIMEOUT_SECONDS) as client:
+                        response = client.get(parsed_url.geturl())
+                        response.raise_for_status()
+                        v["spec"] = response.json()
+                case _:
+                    raise ValueError("Invalid API spec URL")
+        elif not isinstance(spec, dict):
+            raise ValueError("Invalid API spec. Must be a URL string or a dictionary.")
 
-    # @computed_field
-    # @property
-    # def auth_query_params(self) -> dict[str, Any]:
-    #     """Authentication query parameters."""
-    #     _, query_params = self.spec.extract_auth_parameters()
-    #     return query_params
+        # Get the endpoints from the spec
+        paths = v["spec"].get("paths", {})
 
-    async def test_connection(self) -> ConnectionResult:
-        """Test the connection to the API."""
-        return ConnectionResult(connected=True, message="API connection successful")
+        if not paths:
+            raise RuntimeError("No endpoints found in OpenAPI spec")
 
-    async def get_endpoints(self) -> list[str]:
-        """Get the available endpoints from the OpenAPI/Swagger specification."""
         endpoints = []
-        for path, methods in self.spec.get_paths().items():
+        for path, methods in paths.items():
             for method in methods:
                 if method.upper() in [http_method.value.upper() for http_method in HTTPMethod]:
                     endpoints.append(f"{method.upper()} {path}")
-        return endpoints
 
-    async def inspect_endpoint(self, method: str, path: str) -> dict[str, Any]:
-        """Inspect the details of a specific endpoint."""
-        return self.spec.get_endpoint_spec(method, path)
+        v["endpoints"] = endpoints
 
-    async def search_endpoints(self, pattern: str, mode: SearchMode = SearchMode.REGEX, limit: int = 10) -> list[str]:
-        """Search for endpoints using different algorithms."""
-        endpoints = await self.get_endpoints()
-        if not endpoints:
-            return []
+        return v
 
-        try:
-            return search_items(endpoints, pattern, mode, limit)
-        except Exception as e:
-            logger.error(f"Endpoint search failed: {e}")
-            raise APIError(f"Endpoint search failed: {e}") from e
+    @computed_field
+    @property
+    def url(self) -> str:
+        """Base URL for the API."""
+        if isinstance(self.spec, dict):
+            return self.spec.get("servers", [{}])[0].get("url", "")
+        return ""
+
+    def tools(self) -> list[callable]:
+        return [self.inspect_endpoint, self.request]
+
+    async def inspect_endpoint(self, endpoint: Endpoint) -> dict[str, Any]:
+        """
+        Inspect the structure of an API endpoint.
+
+        TO PREVENT ERRORS, ALWAYS ENSURE THE ENDPOINT EXISTS BEFORE INSPECTING IT.
+
+        Inspect Instructions:
+        1. Use this tool to understand endpoint structure like request parameters and response schema
+        2. Inspecting endpoints helps understand the structure of the data
+        3. Always inspect endpoints before writing queries to understand their structure and prevent errors
+        """
+        inspect = self.spec.get("paths", {}).get(endpoint.path, {}).get(endpoint.method.lower(), {})
+        if not inspect:
+            raise RuntimeError(f"Endpoint not found: {endpoint.method} {endpoint.path}")
+        return inspect
 
     async def request(
         self,
-        method: str,
-        path: str,
-        body: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
-        headers: dict[str, Any] | None = None,
+        request: Request,
     ) -> Any:
         """
-        Make a request to the API endpoint.
+        Request an API endpoint.
 
-        Args:
-            method: HTTP method (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
-            path: The API endpoint path (e.g., "/users")
-            body: Request body (for POST, PUT, etc.)
-            params: Query parameters
-            headers: Additional headers to include
+            TO PREVENT ERRORS, ALWAYS ENSURE ENDPOINTS EXIST AND YOU ARE USING THE CORRECT METHOD, PATH, AND PARAMETERS.
+        NEVER PASS API KEYS OR SECRETS TO THIS TOOL. SECRETS AND API KEYS WILL BE AUTOMATICALLY INJECTED INTO THE REQUEST.
 
-        Returns:
-            Response data (typically JSON)
-
-        Raises:
-            APIError: If an invalid HTTP method is provided
+        Request API Instructions:
+            1. Only make requests to endpoints that have been explicitly discovered, searched for, or referenced in the conversation.
+            2. Before making requests, inspect the underlying endpoints to understand their config and prevent errors.
+            3. When a request fails or returns unexpected results, examine the endpoint to diagnose the issue and then retry.
         """
 
-        auth_headers, auth_query_params = self.spec.get_auth_headers_and_query_params()
-
-        # Merge parameters and headers
-        all_params = {**(params or {}), **(self.query_params or {}), **(auth_query_params or {})}
-
-        all_headers = {**(auth_headers or {}), **(headers or {})}
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
             response = await client.request(
-                method=method.upper(),
-                url=f"{self.url.geturl()}{path}",
-                json=body,
-                params=all_params,
-                headers=all_headers,
+                method=request.endpoint.method.upper(),
+                url=f"{self.url}{request.endpoint.path.format(**(request.path_params or {}))}",
+                json=request.body,
+                params={**(request.params or {}), **(self.params or {})},
+                headers={**(request.headers or {}), **(self.headers or {})},
             )
             response.raise_for_status()
             return response.json()

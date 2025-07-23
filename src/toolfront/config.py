@@ -1,21 +1,18 @@
-# Backend URL
-API_URL = "https://api.kruskal.ai"
-
-# API Headers
-API_KEY_HEADER = "X-API-Key"
-
-# Number of items to return from search tools
-NUM_ENDPOINT_SEARCH_ITEMS = 100
-NUM_TABLE_SEARCH_ITEMS = 100
-NUM_DOCUMENT_SEARCH_ITEMS = 100
-NUM_QUERY_SEARCH_ITEMS = 25
-
-# TTL for spec downloads (24 hours)
-SPEC_DOWNLOAD_TTL = 24 * 60 * 60  # 24 hours in seconds
-
-# Data
 MAX_DATA_ROWS = 100
+
 MAX_DATA_CHARS = 30000
 
-# ALRU Cache
-CACHE_TTL = 3600
+TIMEOUT_SECONDS = 30.0
+
+MAX_RETRIES = 3
+
+CHUNK_SIZE = 10000
+
+DEFAULT_OPENAI_MODEL = "openai:gpt-4o"
+DEFAULT_ANTHROPIC_MODEL = "anthropic:claude-3-5-sonnet-latest"
+DEFAULT_GOOGLE_MODEL = "google-vertex:gemini-2.5-pro"
+DEFAULT_MISTRAL_MODEL = "mistral:mistral-large-latest"
+DEFAULT_COHERE_MODEL = "cohere:command-r"
+
+MARKITDOWN_TYPES = {"pptx", "docx", "xlsx", "xls", "pdf", "html"}
+TEXT_TYPES = {"md", "txt", "json", "xml", "yaml", "yml", "rtf"}

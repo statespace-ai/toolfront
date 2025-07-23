@@ -17,30 +17,29 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "aiohttp>=3.11.18",
     "click>=8.1.8",
-    "db-dtypes>=1.4.3",
-    "greenlet>=3.2.2",
     "httpx>=0.28.1",
-    "jellyfish>=1.2.0",
     "mcp[cli]>=1.9.0",
     "numpy>=1.24.0",
     "pandas>=2.2.3",
-    "pyarrow<19.0.0",
     "pydantic>=2.11.4",
     "pytest>=8.3.5",
     "python-decouple>=3.8",
-    "scikit-learn>=1.6.1",
-    "sqlalchemy-utils>=0.41.2",
-    "rank-bm25>=0.2.2",
-    "diskcache>=5.6.3",
     "openapi-spec-validator>=0.7.2",
     "jsonref>=1.1.0",
-    "platformdirs>=4.3.8",
+    "pydantic-ai>=0.4.2",
+    "yarl>=1.20.1",
+    "rich>=14.0.0",
+    "sqlparse>=0.5.3",
+    "tabulate>=0.9.0",
+    "ibis-framework>=10.6.0",
+    "pyarrow<19.0.0",
+    "executing>=2.2.0",
+    "markitdown>=0.1.2",
 ]
 
 [project.scripts]
-toolfront = "toolfront.main:main"
+toolfront = "toolfront.mcp:main"
 
 
 [tool.setuptools.packages.find]
@@ -57,59 +56,63 @@ dev = [
     "pre-commit>=3.0.0",
     "ruff>=0.1.0",
 ]
+athena = [
+    "ibis-framework[athena]>=10.6.0",
+]
 bigquery = [
-    "google-cloud-bigquery>=3.32.0",
-    "google-cloud-bigquery-storage>=2.32.0",
-    "sqlalchemy-bigquery>=1.14.1",
+    "ibis-framework[bigquery]>=10.6.0",
+]
+clickhouse = [
+    "ibis-framework[clickhouse]>=10.6.0",
 ]
 databricks = [
-    "databricks-sql-connector>=2.7.0",
+    "ibis-framework[databricks]>=10.6.0",
+]
+druid = [
+    "ibis-framework[druid]>=10.6.0",
 ]
 duckdb = [
-    "duckdb>=1.2.2",
-    "duckdb-engine>=0.17.0",
-]
-mysql = [
-    "aiomysql>=0.2.0",
-]
-postgresql = [
-    "asyncpg>=0.30.0",
-    "psycopg2-binary>=2.9.9",
-]
-postgres = [
-    "asyncpg>=0.30.0",
-    "psycopg2-binary>=2.9.9",
-]
-snowflake = [
-    "snowflake-sqlalchemy>=1.7.3",
-]
-sqlite = [
-    "aiosqlite>=0.21.0",
-]
-sqlserver = [
-    "pyodbc>=5.0.0",
+    "ibis-framework[duckdb]>=10.6.0",
 ]
 mssql = [
-    "pyodbc>=5.0.0",
+    "ibis-framework[mssql]>=10.6.0",
+]
+mysql = [
+    "ibis-framework[mysql]>=10.6.0",
+]
+oracle = [
+    "ibis-framework[oracle]>=10.6.0",
+]
+postgres = [
+    "ibis-framework[postgres]>=10.6.0",
+]
+snowflake = [
+    "ibis-framework[snowflake]>=10.6.0",
+]
+sqlite = [
+    "ibis-framework[sqlite]>=10.6.0",
+]
+trino = [
+    "ibis-framework[trino]>=10.6.0",
 ]
 document = [
-    "pypdf>=5.2.1",           # PDF documents
-    "python-docx>=1.2.0",     # Word documents
-    "python-pptx>=0.6.23",    # PowerPoint presentations
-    "PyYAML>=6.0.1",          # YAML files
-    "striprtf>=0.0.26",       # RTF files
-    "openpyxl>=3.1.5",        # Excel files (pandas backend)
+    "markitdown[all]>=0.1.2",
 ]
 
 all = [
+    "toolfront[athena]",
     "toolfront[bigquery]",
+    "toolfront[clickhouse]",
     "toolfront[databricks]",
+    "toolfront[druid]",
     "toolfront[duckdb]",
+    "toolfront[mssql]",
     "toolfront[mysql]",
-    "toolfront[postgresql]",
+    "toolfront[oracle]",
+    "toolfront[postgres]",
     "toolfront[snowflake]",
     "toolfront[sqlite]",
-    "toolfront[sqlserver]",
+    "toolfront[trino]",
     "toolfront[document]",
 ]
 
