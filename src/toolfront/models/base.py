@@ -190,7 +190,7 @@ class DataSource(BaseModel, ABC):
                 # vertical_overflow="crop",
             ) as live:
                 accumulated_content = ""
-                live.stop()
+                # live.stop()
 
                 def update_display(content: str):
                     live.update(Panel(Markdown(content), title=panel_title, border_style="green"))
