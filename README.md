@@ -20,7 +20,9 @@
 
 </div>
 
-> ToolFront helps you retrieve information from large databases, APIs, and documents with AI.
+> 
+
+ToolFront helps you retrieve information from large databases, APIs, and documents with AI.
 
 <!-- <br>
 <div align="center">
@@ -33,7 +35,7 @@
 ### 1. Install ToolFront
 
 ```bash
-pip install -U toolfront[postgres]
+pip install toolfront[postgres]
 ```
 
 ### 2. Setup your model provider API key
@@ -89,6 +91,9 @@ print(answer)  # {"John Doe", "Jane Smith"}
 ```
 
 </details>
+
+> [!TIP]
+> **Installation Options:** Install database-specific extras as needed: `pip install toolfront[postgres]` for PostgreSQL, `pip install toolfront[snowflake]` for Snowflake, etc. See [data sources](#data-sources) for the complete list.
 
 That's it! ToolFront returns results in the format you need.
 
