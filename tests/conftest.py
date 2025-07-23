@@ -4,7 +4,6 @@ import os
 
 import pandas as pd
 import pytest
-from sqlalchemy.engine.url import make_url
 
 # Note: pytest-asyncio needed for async tests
 
@@ -47,7 +46,7 @@ def sample_dataframe():
 @pytest.fixture
 def mock_url():
     """Create a mock URL for testing."""
-    return make_url("sqlite:///:memory:")
+    return "sqlite:///:memory:"
 
 
 @pytest.fixture
