@@ -58,14 +58,7 @@ class TestSerializeResponse:
 
     def test_serialize_nested_objects(self):
         """Test serialization of nested objects."""
-        nested = {
-            "level1": {
-                "level2": {
-                    "data": [1, 2, 3],
-                    "name": "test"
-                }
-            }
-        }
+        nested = {"level1": {"level2": {"data": [1, 2, 3], "name": "test"}}}
         result = serialize_response(nested)
         assert result == nested
 

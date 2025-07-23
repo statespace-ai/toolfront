@@ -18,7 +18,7 @@ class TestQueryValidation:
             "DESCRIBE users",
             "EXPLAIN SELECT * FROM users",
         ]
-        
+
         for sql in read_only_queries:
             query = Query(code=sql)
             assert query.is_read_only_query() is True
@@ -34,7 +34,7 @@ class TestQueryValidation:
             "ALTER TABLE users ADD COLUMN email VARCHAR(255)",
             "TRUNCATE TABLE users",
         ]
-        
+
         for sql in write_queries:
             query = Query(code=sql)
             assert query.is_read_only_query() is False
@@ -42,16 +42,18 @@ class TestQueryValidation:
     def test_complex_query_validation(self):
         """Test validation of complex queries."""
         # CTE with SELECT is allowed
-        query = Query(code="""
+        query = Query(
+            code="""
             WITH monthly_sales AS (
                 SELECT DATE_TRUNC('month', date) as month, SUM(amount) as total
                 FROM sales
                 GROUP BY 1
             )
             SELECT * FROM monthly_sales
-        """)
+        """
+        )
         assert query.is_read_only_query() is True
-        
+
         # Multiple statements where one is not read-only
         query = Query(code="SELECT * FROM users; DELETE FROM users WHERE id = 1")
         assert query.is_read_only_query() is False
@@ -65,7 +67,7 @@ class TestQueryValidation:
             ("insert into users values (1)", False),
             ("INSERT INTO users VALUES (1)", False),
         ]
-        
+
         for sql, expected in queries:
             query = Query(code=sql)
             assert query.is_read_only_query() is expected

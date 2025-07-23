@@ -161,7 +161,8 @@ class TestQueryValidation:
     def test_complex_queries(self):
         """Test complex SQL queries."""
         # Complex SELECT with joins
-        query = Query(code="""
+        query = Query(
+            code="""
             SELECT u.name, COUNT(o.id) as order_count
             FROM users u
             LEFT JOIN orders o ON u.id = o.user_id
@@ -170,17 +171,20 @@ class TestQueryValidation:
             HAVING COUNT(o.id) > 5
             ORDER BY order_count DESC
             LIMIT 10
-        """)
+        """
+        )
         assert query.is_read_only_query() is True
 
         # SELECT with subqueries
-        query = Query(code="""
+        query = Query(
+            code="""
             SELECT * FROM users
             WHERE id IN (
                 SELECT user_id FROM orders
                 WHERE total > 1000
             )
-        """)
+        """
+        )
         assert query.is_read_only_query() is True
 
     def test_sql_injection_attempts(self):
@@ -190,11 +194,11 @@ class TestQueryValidation:
             "SELECT * FROM users WHERE name = 'test'; DROP TABLE users; --'",
             "SELECT * FROM users WHERE id = 1 OR 1=1",
         ]
-        
+
         # First one has DROP, so should be rejected
         query = Query(code=queries[0])
         assert query.is_read_only_query() is False
-        
+
         # Second one is still just a SELECT, so allowed
         query = Query(code=queries[1])
         assert query.is_read_only_query() is True
