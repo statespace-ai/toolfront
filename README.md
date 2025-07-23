@@ -97,6 +97,11 @@ That's it! ToolFront returns results in the format you need.
 > [!TIP]
 > **Installation Options:** Install database-specific extras as needed: `pip install toolfront[postgres]` for PostgreSQL, `pip install toolfront[snowflake]` for Snowflake, etc. See [data sources](#data-sources) for the complete list.
 
+## 📁 Examples
+
+Check out the [`examples/`](examples/) directory for complete working examples:
+
+- [`basic.py`](examples/basic.py) - Simple database connection and querying example
 
 ## 🤖 AI Model Configuration
 
