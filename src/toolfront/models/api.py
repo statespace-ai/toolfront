@@ -77,14 +77,6 @@ class API(DataSource, ABC):
     headers: dict[str, str] | None = Field(None, description="Additional headers to include in requests.", exclude=True)
     params: dict[str, str] | None = Field(None, description="Query parameters to include in requests.", exclude=True)
 
-    @computed_field
-    @property
-    def url(self) -> str:
-        """Base URL for the API."""
-        if isinstance(self.spec, dict):
-            return self.spec.get("servers", [{}])[0].get("url", "")
-        return ""
-
     def __init__(
         self,
         spec: dict | str | None = None,
@@ -93,6 +85,9 @@ class API(DataSource, ABC):
         **kwargs: Any,
     ) -> None:
         super().__init__(spec=spec, headers=headers, params=params, **kwargs)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(url='{self.url}')"
 
     @model_validator(mode="before")
     def validate_model(cls, v: Any) -> Any:
@@ -114,8 +109,6 @@ class API(DataSource, ABC):
                         v["spec"] = response.json()
                 case _:
                     raise ValueError("Invalid API spec URL")
-
-            v["params"] = dict(pair.split("=") for pair in parsed_url.query.split("&") if pair) or None
         elif not isinstance(spec, dict):
             raise ValueError("Invalid API spec. Must be a URL string or a dictionary.")
 
@@ -134,6 +127,14 @@ class API(DataSource, ABC):
         v["endpoints"] = endpoints
 
         return v
+
+    @computed_field
+    @property
+    def url(self) -> str:
+        """Base URL for the API."""
+        if isinstance(self.spec, dict):
+            return self.spec.get("servers", [{}])[0].get("url", "")
+        return ""
 
     def tools(self) -> list[callable]:
         return [self.inspect_endpoint, self.request]
