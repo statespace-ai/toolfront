@@ -1,4 +1,5 @@
 import logging
+import re
 import warnings
 from abc import ABC
 from contextlib import closing
@@ -8,7 +9,7 @@ import ibis
 import pandas as pd
 import sqlparse
 from ibis import BaseBackend
-from pydantic import BaseModel, Field, PrivateAttr, field_serializer, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, computed_field, field_serializer, model_validator
 
 from toolfront.models.base import DataSource
 from toolfront.utils import sanitize_url, serialize_response
@@ -39,26 +40,48 @@ class Query(BaseModel):
 
 
 class Database(DataSource, ABC):
-    """Abstract base class for all databases."""
+    """Abstract base class for all databases.
+
+    Parameters
+    ----------
+    url : str
+        Database URL for connection.
+    match : str, optional
+        Regex pattern to match tables. If None, all tables will be used.
+
+    Attributes
+    ----------
+    _connection : BaseBackend or None
+        Ibis backend connection to the database.
+    _connection_kwargs : dict[str, Any]
+        Additional keyword arguments for database connection.
+    """
 
     url: str = Field(description="Database URL.")
 
-    tables: list[str] | str | None = Field(
-        description="List of tables in the database, or a regex pattern to match tables. If None, all tables will be used."
+    match: str | None = Field(
+        description="Regex pattern to filter tables. If None, all tables will be used.",
+        exclude=True,
     )
 
+    _tables: list[str] = PrivateAttr(default_factory=list)
     _connection: BaseBackend | None = PrivateAttr(default=None)
     _connection_kwargs: dict[str, Any] = PrivateAttr(default_factory=dict)
 
-    def __init__(self, url: str, tables: list[str] | str | None = None, **kwargs: Any) -> None:
+    def __init__(self, url: str, match: str | None = None, **kwargs: Any) -> None:
         self._connection_kwargs = kwargs
-        super().__init__(url=url, tables=tables)
+        super().__init__(url=url, match=match)
 
     def __getitem__(self, name: str) -> "ibis.Table":
         parts = name.split(".")
         if not 1 <= len(parts) <= 3:
             raise ValueError(f"Invalid table name: {name}")
         return self._connection.table(parts[-1], database=tuple(parts[:-1]) if len(parts) > 1 else None)
+
+    def __repr__(self) -> str:
+        dump = self.model_dump(exclude={"tables"})
+        args = ", ".join(f"{k}={repr(v)}" for k, v in dump.items())
+        return f"{self.__class__.__name__}({args})"
 
     @model_validator(mode="after")
     def model_validator(self) -> "Database":
@@ -67,9 +90,14 @@ class Database(DataSource, ABC):
             self._connection = ibis.connect(self.url, **self._connection_kwargs)
 
         # Handle tables parameter: None (all), string (regex), or list (exact names)
-        like = None
-        if isinstance(self.tables, str):
-            like = self.tables
+        if self.match:
+            if not isinstance(self.match, str):
+                raise ValueError(f"Match must be a string, got {type(self.match)}")
+
+            try:
+                re.compile(self.match)
+            except re.error as e:
+                raise ValueError(f"Invalid regex pattern for tables: {self.match} - {str(e)}")
 
         # Discover all available tables in the database
         catalog = self._connection.current_catalog
@@ -77,33 +105,53 @@ class Database(DataSource, ABC):
 
         all_tables = []
         for db in databases:
-            tables = self._connection.list_tables(like=like, database=(catalog, db))
+            tables = self._connection.list_tables(like=self.match, database=(catalog, db))
             prefix = f"{catalog}." if catalog else ""
             all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
 
-        # Filter all_tables based on tables parameter
-        if isinstance(self.tables, list):
-            self.tables = [t for t in all_tables if t in self.tables]
-            if not self.tables:
-                raise ValueError(f"None of the specified tables found: {self.tables}")
-        else:
-            self.tables = all_tables
+        if not len(all_tables):
+            raise ValueError("No tables found in the database")
+
+        self._tables = all_tables
 
         return self
 
     @field_serializer("url")
     def serialize_url(self, value: str) -> str:
+        """Serialize URL field by sanitizing sensitive information.
+
+        Parameters
+        ----------
+        value : str
+            Original database URL.
+
+        Returns
+        -------
+        str
+            Sanitized URL with sensitive information removed.
+        """
         return sanitize_url(value)
 
+    @computed_field
+    @property
+    def tables(self) -> list[str]:
+        return self._tables
+
     def tools(self) -> list[callable]:
+        """Return list of available tool methods.
+
+        Returns
+        -------
+        list[callable]
+            List containing inspect_table and query methods.
+        """
         return [self.inspect_table, self.query]
 
     async def inspect_table(
         self,
         table: Table = Field(..., description="Database table to inspect."),
     ) -> dict[str, Any]:
-        """
-        Inspect the schema of database table and get the first 5 samples from it.
+        """Inspect the schema of database table and get sample data.
 
         1. Use this tool to understand table structure like column names, data types, and constraints
         2. Inspecting tables helps understand the structure of the data

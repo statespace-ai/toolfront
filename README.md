@@ -20,7 +20,7 @@
 
 </div>
 
-> ToolFront helps you build AI systems to quickly retrieve data from databases, APIs, and documents.
+> Data retrieval is messy. ToolFront helps you build reliable AI pipelines to quickly retrieve data from databases, APIs, and documents.
 
 
 <!-- <br>
@@ -635,17 +635,10 @@ data = Database(url=f"trino://user@localhost:8080/{catalog}/{schema}", **extra_p
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
 > [!TIP]
-> **Table Filtering**: Use the `tables` parameter to filter specific tables:
+> **Table Filtering**: Use the `pattern` parameter to filter which database tables to query using regex patterns
 > 
 > ```python
-> # Regex pattern
-> Database(url="postgresql://...", tables="^sales_.*")
-> 
-> # Exact table names  
-> Database(url="postgresql://...", tables=["users", "orders"])
-> 
-> # All tables (default)
-> Database(url="postgresql://...")
+> Database("postgresql://...", pattern="^sales_.*")
 > ```
 
 ### APIs
