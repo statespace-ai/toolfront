@@ -81,7 +81,7 @@ def serialize_response(response: Any) -> Any:
 
     # For all other types, use pydantic TypeAdapter
     adapter = TypeAdapter(Any)
-    serialized = adapter.dump_python(response)
+    serialized = adapter.dump_python(response, mode="json")
 
     # Convert to JSON string to check character count
     json_str = json.dumps(serialized)

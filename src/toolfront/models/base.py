@@ -78,9 +78,9 @@ class DataSource(BaseModel, ABC):
 
                 return API(spec=url)
             else:
-                from toolfront.models.document import Library
+                from toolfront.models.document import Document
 
-                return Library(url=url)
+                return Document(filepath=url)
         else:
             from toolfront.models.database import Database
 

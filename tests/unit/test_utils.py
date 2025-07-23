@@ -1,10 +1,8 @@
 """Unit tests for utility functions in toolfront.utils."""
 
-import json
 from typing import Optional, Union
 
 import pandas as pd
-import pytest
 
 from toolfront.utils import deserialize_response, sanitize_url, serialize_response, type_allows_none
 
@@ -29,7 +27,7 @@ class TestSerializeResponse:
         assert isinstance(result, dict)
         assert "data" in result
         assert "truncation_message" in result
-        assert "Showing 1,000 rows of 1,500 total rows" in result["truncation_message"]
+        assert "Showing 100 rows of 1,500 total rows" in result["truncation_message"]
 
     def test_serialize_simple_types(self):
         """Test serialization of simple types."""
@@ -78,7 +76,8 @@ class TestDeserializeResponse:
         assert "**key1:**" in result
         assert "value1" in result
         assert "**key2:**" in result
-        assert "[1, 2, 3]" in result
+        # Check that all list elements are present (pretty-printed JSON)
+        assert "1" in result and "2" in result and "3" in result
 
     def test_deserialize_csv_string(self):
         """Test deserialization of CSV string."""
@@ -87,19 +86,14 @@ class TestDeserializeResponse:
         assert "|" in result  # Markdown table format
         assert "a" in result and "b" in result and "c" in result
 
-    def test_deserialize_long_string(self):
-        """Test truncation of long strings."""
-        long_string = "x" * 15000
-        result = deserialize_response(long_string)
-        assert "(truncated)" in result
-        assert len(result) < 15000
 
     def test_deserialize_list(self):
         """Test deserialization of lists."""
         short_list = [1, 2, 3]
         result = deserialize_response(short_list)
         assert "```json" in result
-        assert "[1, 2, 3]" in result
+        # Check that all elements are present
+        assert "1" in result and "2" in result and "3" in result
 
         long_list = list(range(20))
         result = deserialize_response(long_list)

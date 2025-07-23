@@ -5,7 +5,6 @@ from pydantic import ValidationError
 
 from toolfront.models.api import Endpoint, HTTPMethod, Request
 from toolfront.models.database import Table
-from toolfront.models.library import Read
 
 
 class TestHTTPMethod:
@@ -116,39 +115,6 @@ class TestTable:
         assert "Full table path in dot notation" in field.description
 
 
-class TestRead:
-    """Test cases for Read model."""
-
-    def test_read_with_section_number(self):
-        """Test creating read request with section number."""
-        read = Read(document_path="docs/manual.pdf", pagination=1)
-        assert read.document_path == "docs/manual.pdf"
-        assert read.pagination == 1
-
-    def test_read_with_percentile(self):
-        """Test creating read request with percentile."""
-        read = Read(document_path="report.docx", pagination=0.5)
-        assert read.document_path == "report.docx"
-        assert read.pagination == 0.5
-
-    def test_read_edge_percentiles(self):
-        """Test edge cases for percentile values."""
-        # Start of document
-        read = Read(document_path="doc.txt", pagination=0.0)
-        assert read.pagination == 0.0
-
-        # Near end of document
-        read = Read(document_path="doc.txt", pagination=0.99)
-        assert read.pagination == 0.99
-
-    def test_read_field_descriptions(self):
-        """Test that field descriptions are set correctly."""
-        fields = Read.model_fields
-        assert "document_path" in fields
-        assert "pagination" in fields
-        assert "Section navigation" in fields["pagination"].description
-
-
 class TestLibraryPaginationLogic:
     """Test cases for library pagination calculations."""
 
@@ -174,15 +140,15 @@ class TestLibraryPaginationLogic:
         total_sections = 10
 
         # Section 1 should be index 0
-        section_index = min(int(1) - 1, total_sections - 1)
+        section_index = min(1 - 1, total_sections - 1)
         assert section_index == 0
 
         # Section 10 should be index 9
-        section_index = min(int(10) - 1, total_sections - 1)
+        section_index = min(10 - 1, total_sections - 1)
         assert section_index == 9
 
         # Section 20 (out of bounds) should clamp to index 9
-        section_index = min(int(20) - 1, total_sections - 1)
+        section_index = min(20 - 1, total_sections - 1)
         assert section_index == 9
 
     def test_chunk_boundary_calculation(self):

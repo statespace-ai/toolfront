@@ -7,7 +7,6 @@ from typing import Any
 
 import ibis
 import pandas as pd
-import sqlparse
 from ibis import BaseBackend
 from pydantic import BaseModel, Field, PrivateAttr, computed_field, field_serializer, model_validator
 
@@ -29,13 +28,22 @@ class Query(BaseModel):
 
     def is_read_only_query(self) -> bool:
         """Check if SQL contains only read operations"""
-        parsed = sqlparse.parse(self.code)
-
-        for statement in parsed:
-            stmt_type = statement.get_type()
-            if stmt_type not in ["SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN"]:
+        # Remove comments and normalize whitespace
+        clean_sql = re.sub(r'--.*?$|/\*.*?\*/', '', self.code, flags=re.MULTILINE | re.DOTALL)
+        clean_sql = re.sub(r'\s+', ' ', clean_sql).strip().upper()
+        
+        # Split on semicolons to handle multiple statements
+        statements = [s.strip() for s in clean_sql.split(';') if s.strip()]
+        
+        read_only_patterns = [
+            r'^SELECT\b', r'^WITH\b', r'^SHOW\b', 
+            r'^DESCRIBE\b', r'^DESC\b', r'^EXPLAIN\b'
+        ]
+        
+        for stmt in statements:
+            if not any(re.match(pattern, stmt) for pattern in read_only_patterns):
                 return False
-
+        
         return True
 
 
