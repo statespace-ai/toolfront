@@ -1,8 +1,5 @@
-import ast
 import asyncio
-import inspect
 import json
-import linecache
 import logging
 from abc import ABC, abstractmethod
 from contextvars import ContextVar
@@ -33,6 +30,7 @@ from toolfront.config import MAX_RETRIES
 from toolfront.utils import (
     deserialize_response,
     get_default_model,
+    get_output_type_hint,
     prepare_tool_for_pydantic_ai,
     type_allows_none,
 )
@@ -117,10 +115,9 @@ class DataSource(BaseModel, ABC):
             model = get_default_model()
 
         # Get caller context and add it to the system prompt
-        output_type = str
-        caller_context = self._get_caller_context()
-        if caller_context.var_type:
-            output_type = self._preprocess(caller_context.var_type)
+        output_type = get_output_type_hint() or str
+        if output_type:
+            output_type = self._preprocess(output_type)
 
         system_prompt = self.instructions(context=context)
         tools = [Tool(prepare_tool_for_pydantic_ai(tool), max_retries=MAX_RETRIES) for tool in self.tools()]
@@ -233,46 +230,3 @@ class DataSource(BaseModel, ABC):
         except UnexpectedModelBehavior as e:
             logger.error(f"Unexpected model behavior: {e}", exc_info=True)
             raise RuntimeError(f"Unexpected model behavior: {e}")
-
-    def _get_caller_context(self) -> CallerContext:
-        """
-        Get the raw code that comes after the call to this method.
-        Returns a CallerContext object with formatted context and filtered schema.
-        """
-        try:
-            # Get the caller's frame (go up the call stack)
-            frame = inspect.currentframe()
-            caller_frame = frame.f_back.f_back  # ask() -> this method -> actual caller
-
-            # Get the filename and line number where the call was made
-            filename = caller_frame.f_code.co_filename
-            call_line = caller_frame.f_lineno
-
-            # Use linecache to get all lines at once (much more efficient)
-            all_lines = linecache.getlines(filename)
-
-            # Get the specific line where the call was made
-            call_line_content = all_lines[call_line - 1] if call_line > 0 else ""
-
-            # Extract variable assignment with type annotation
-            var_name = None
-            var_type = None
-
-            try:
-                tree = ast.parse(call_line_content.lstrip())
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.AnnAssign):
-                        # Handle annotated assignments like: var_name: Type = value
-                        if isinstance(node.target, ast.Name):
-                            var_name = node.target.id
-                            annotation_str = ast.unparse(node.annotation)
-                            var_type = eval(annotation_str, caller_frame.f_globals, caller_frame.f_locals)
-                        break
-            except SyntaxError:
-                pass
-
-            return CallerContext(var_name=var_name, var_type=var_type, context=None)
-
-        except Exception as e:
-            logger.debug(f"Could not get caller context: {e}")
-            return CallerContext(var_name=None, var_type=None, context=None)

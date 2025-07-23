@@ -1,3 +1,4 @@
+import ast
 import functools
 import inspect
 import json
@@ -193,3 +194,52 @@ def get_default_model() -> str:
     elif os.getenv("COHERE_API_KEY"):
         return DEFAULT_COHERE_MODEL
     raise ValueError("Please specify an API key and model to use")
+
+
+def get_output_type_hint() -> Any:
+    """
+    Get the caller's variable type annotation using the executing library.
+
+    Returns:
+        The type annotation or None if not found
+    """
+    try:
+        import executing
+    except ImportError:
+        logger.debug("executing library not available")
+        return None
+
+    def _contains_node(tree: ast.AST | None, target: ast.AST) -> bool:
+        """Check if target node is anywhere in the tree."""
+        if tree is None or tree is target:
+            return tree is target
+        return any(_contains_node(child, target) for child in ast.iter_child_nodes(tree))
+
+    try:
+        # Get caller's frame (2 levels up: this function -> ask() -> actual caller)
+        frame = inspect.currentframe().f_back.f_back
+        source = executing.Source.for_frame(frame)
+        node = source.executing(frame).node
+
+        if not node:
+            return None
+
+        parent = node.parent
+
+        # Walk up the AST to find the assignment containing our call
+        if (
+            isinstance(parent, ast.AnnAssign)
+            and _contains_node(parent.value, node)
+            and isinstance(parent.target, ast.Name)
+        ):
+            # Found annotated assignment: var: Type = value
+            try:
+                return eval(ast.unparse(parent.annotation), frame.f_globals, frame.f_locals)
+            except Exception:
+                return ast.unparse(parent.annotation)
+
+        return None
+
+    except Exception as e:
+        logger.debug(f"Could not get caller context: {e}")
+        return None
