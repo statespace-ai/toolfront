@@ -28,24 +28,13 @@ class Query(BaseModel):
 
     def is_read_only_query(self) -> bool:
         """Check if SQL contains only read operations"""
-        import re
-        
-        # Remove comments and normalize whitespace
-        clean_sql = re.sub(r'--.*?$|/\*.*?\*/', '', self.code, flags=re.MULTILINE | re.DOTALL)
-        clean_sql = re.sub(r'\s+', ' ', clean_sql).strip().upper()
-        
-        # Split on semicolons to handle multiple statements
-        statements = [s.strip() for s in clean_sql.split(';') if s.strip()]
-        
-        read_only_patterns = [
-            r'^SELECT\b', r'^WITH\b', r'^SHOW\b', 
-            r'^DESCRIBE\b', r'^DESC\b', r'^EXPLAIN\b'
-        ]
-        
-        for stmt in statements:
-            if not any(re.match(pattern, stmt) for pattern in read_only_patterns):
+        parsed = sqlparse.parse(self.code)
+
+        for statement in parsed:
+            stmt_type = statement.get_type()
+            if stmt_type not in ["SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN"]:
                 return False
-        
+
         return True
 
 
@@ -77,10 +66,12 @@ class Database(DataSource, ABC):
             warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
             self._connection = ibis.connect(self.url, **self._connection_kwargs)
 
+        # Handle tables parameter: None (all), string (regex), or list (exact names)
         like = None
         if isinstance(self.tables, str):
             like = self.tables
 
+        # Discover all available tables in the database
         catalog = self._connection.current_catalog
         databases = self._connection.list_databases(catalog=catalog)
 
@@ -90,6 +81,7 @@ class Database(DataSource, ABC):
             prefix = f"{catalog}." if catalog else ""
             all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
 
+        # Filter all_tables based on tables parameter
         if isinstance(self.tables, list):
             self.tables = [t for t in all_tables if t in self.tables]
             if not self.tables:
@@ -101,7 +93,7 @@ class Database(DataSource, ABC):
 
     @field_serializer("url")
     def serialize_url(self, value: str) -> str:
-        return sanitize_url(self.url)
+        return sanitize_url(value)
 
     def tools(self) -> list[callable]:
         return [self.inspect_table, self.query]

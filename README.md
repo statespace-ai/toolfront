@@ -634,6 +634,20 @@ data = Database(url=f"trino://user@localhost:8080/{catalog}/{schema}", **extra_p
 
 Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolfront/issues) or pull request, or let us know in our [Discord](https://discord.gg/rRyM7zkZTf)!
 
+> [!TIP]
+> **Table Filtering**: Use the `tables` parameter to filter specific tables:
+> 
+> ```python
+> # Regex pattern
+> Database(url="postgresql://...", tables="^sales_.*")
+> 
+> # Exact table names  
+> Database(url="postgresql://...", tables=["users", "orders"])
+> 
+> # All tables (default)
+> Database(url="postgresql://...")
+> ```
+
 ### APIs
 
 ToolFront supports virtually **all** APIs that have an [OpenAPI](https://www.openapis.org/) or [Swagger](https://swagger.io/) specification.
