@@ -76,7 +76,7 @@ class TestRequest:
             path_params={"id": "123"},
             body={"name": "John", "email": "john@example.com"},
             headers={"Authorization": "Bearer token"},
-            params={"include": "profile"}
+            params={"include": "profile"},
         )
         assert request.path_params == {"id": "123"}
         assert request.body == {"name": "John", "email": "john@example.com"}
@@ -156,15 +156,15 @@ class TestLibraryPaginationLogic:
         """Test percentile to section index conversion."""
         # Test data
         total_sections = 10
-        
+
         # 0% should be first section (index 0)
         section_index = min(int(0.0 * total_sections), total_sections - 1)
         assert section_index == 0
-        
+
         # 50% should be middle section (index 5)
         section_index = min(int(0.5 * total_sections), total_sections - 1)
         assert section_index == 5
-        
+
         # 99% should be last section (index 9)
         section_index = min(int(0.99 * total_sections), total_sections - 1)
         assert section_index == 9
@@ -172,15 +172,15 @@ class TestLibraryPaginationLogic:
     def test_pagination_section_number_calculation(self):
         """Test section number to index conversion."""
         total_sections = 10
-        
+
         # Section 1 should be index 0
         section_index = min(int(1) - 1, total_sections - 1)
         assert section_index == 0
-        
+
         # Section 10 should be index 9
         section_index = min(int(10) - 1, total_sections - 1)
         assert section_index == 9
-        
+
         # Section 20 (out of bounds) should clamp to index 9
         section_index = min(int(20) - 1, total_sections - 1)
         assert section_index == 9
@@ -189,21 +189,21 @@ class TestLibraryPaginationLogic:
         """Test chunk boundary calculations."""
         CHUNK_SIZE = 10000
         document_length = 25000  # 3 chunks
-        
+
         # First chunk
         section_index = 0
         start_idx = section_index * CHUNK_SIZE
         end_idx = min(start_idx + CHUNK_SIZE, document_length)
         assert start_idx == 0
         assert end_idx == 10000
-        
+
         # Second chunk
         section_index = 1
         start_idx = section_index * CHUNK_SIZE
         end_idx = min(start_idx + CHUNK_SIZE, document_length)
         assert start_idx == 10000
         assert end_idx == 20000
-        
+
         # Third (partial) chunk
         section_index = 2
         start_idx = section_index * CHUNK_SIZE

@@ -20,8 +20,7 @@
 
 </div>
 
-> ToolFront helps you quickly build AI pipelines to retrieve data from databases, APIs, and documents.
-
+> ToolFront helps you retrieve information from large databases, APIs, and documents with AI.
 
 <!-- <br>
 <div align="center">
