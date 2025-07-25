@@ -12,10 +12,11 @@ python basic.py
 ```
 
 ### 2. pdf_extraction.py
-Extract structured data from PDFs using ToolFront's document processing:
-- Dictionary output (simple and flexible)
-- Pydantic model output (structured and validated)
-- Automatic sample PDF download
+Transform PDF invoices into structured data for accounting systems:
+- Extracts vendor, client, amounts, dates, and line items
+- Uses Pydantic models for validation and type safety
+- Handles errors gracefully for production use
+- Perfect for automating invoice processing workflows
 
 ```bash
 python pdf_extraction.py
@@ -25,7 +26,14 @@ python pdf_extraction.py
 
 1. Install ToolFront:
 ```bash
-pip install toolfront[document]
+# For PDF processing
+pip install toolfront[document-pdf]
+
+# For Office documents (Word, PowerPoint, Excel)
+pip install toolfront[document-office]
+
+# For all document formats (includes cloud services)
+pip install toolfront[document-all]
 ```
 
 2. Set up your environment variables in `.env`:
@@ -57,11 +65,28 @@ python examples/pdf_extraction.py
 - Cross-database analytics
 - Automated reporting
 
+## Important: Type Annotations
+
+**ToolFront uses Python type annotations to determine return types:**
+
+```python
+# Returns dict by default (new in v0.2.0)
+result = doc.ask("Extract data")
+
+# Returns validated Pydantic model
+invoice: Invoice = doc.ask("Extract invoice data")
+
+# Returns list of dictionaries  
+items: list[dict] = doc.ask("Extract line items")
+```
+
+**This type annotation requirement isn't well documented yet** - it's a known UX issue we're working on.
+
 ## Tips
 
-1. **New dict default**: `ask()` now returns dictionaries by default - perfect for data extraction!
-2. **Type hints**: Use type annotations to get Pydantic models, lists, or other structured output
-3. **Be specific**: The more specific your prompt, the better the extraction results
+1. **Always use type annotations** when you want structured output
+2. **Be specific in prompts**: The more detailed your request, the better the extraction
+3. **Handle errors**: Wrap extraction in try/catch for production use
 
 ## Need Help?
 
