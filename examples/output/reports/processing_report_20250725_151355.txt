@@ -1,0 +1,18 @@
+
+📊 INVOICE PROCESSING REPORT
+Generated: 2025-07-25 15:13:55
+
+📈 SUMMARY:
+• Total files processed: 1
+• Successfully extracted: 1 (100.0%)
+• Failed extractions: 0
+• Validation errors: 0
+
+💰 FINANCIAL SUMMARY:
+• Total invoice value: $19.00
+• Average invoice: $19.00
+
+📁 OUTPUT LOCATIONS:
+• Processed PDFs: examples/output/processed/
+• Failed PDFs: examples/output/failed/
+• CSV export: examples/output/reports/invoices.csv

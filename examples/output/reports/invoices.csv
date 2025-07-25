@@ -1,0 +1,2 @@
+invoice_number,vendor_name,client_name,total_amount,currency,due_date,line_items_count,filename,processed_at
+123,"Example, LLC",Customer,19.0,USD,2024-03-25,1,sample-invoice.pdf,2025-07-25T15:13:55.303728
