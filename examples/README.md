@@ -22,13 +22,7 @@ python pdf_extraction.py
 ```
 
 ### 3. invoice_processing_workflow.py
-Complete invoice processing workflow demonstrating ToolFront in production:
-- **Batch processing**: Handle multiple PDF invoices automatically
-- **Business validation**: Apply rules like amount limits and vendor checks
-- **File organization**: Auto-sort processed/failed files into folders
-- **CSV export**: Generate accounting-system-ready data exports
-- **Reporting**: Detailed processing summaries with financial totals
-- **Error handling**: Production-ready exception handling
+This is a basic invoice processing workflow that shows you how to extract structured data out of PDFs and save them to CSVs or use them as part of larger workflows.
 
 ```bash
 python invoice_processing_workflow.py
@@ -52,9 +46,8 @@ pip install toolfront[document-all]
 
 2. Set up your environment variables in `.env`:
 ```env
-# For AI features (required)
+# Your LLM key(required)
 ANTHROPIC_API_KEY=your-api-key
-# or
 OPENAI_API_KEY=your-api-key
 
 # For database examples (optional)
@@ -101,7 +94,3 @@ items: list[dict] = doc.ask("Extract line items")
 1. **Always use type annotations** when you want structured output
 2. **Be specific in prompts**: The more detailed your request, the better the extraction
 3. **Handle errors**: Wrap extraction in try/catch for production use
-
-## Need Help?
-
-Check out the [ToolFront documentation](https://github.com/toolfront/toolfront) for more details.
