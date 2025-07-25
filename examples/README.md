@@ -12,15 +12,29 @@ python basic.py
 ```
 
 ### 2. pdf_extraction.py
-Transform PDF invoices into structured data for accounting systems:
-- Extracts vendor, client, amounts, dates, and line items
-- Uses Pydantic models for validation and type safety
-- Handles errors gracefully for production use
-- Perfect for automating invoice processing workflows
+Simple PDF invoice extraction example:
+- Basic invoice data extraction from PDF
+- Shows type annotation usage with Pydantic models
+- Good starting point for understanding ToolFront document processing
 
 ```bash
 python pdf_extraction.py
 ```
+
+### 3. invoice_processing_workflow.py
+Complete invoice processing workflow demonstrating ToolFront in production:
+- **Batch processing**: Handle multiple PDF invoices automatically
+- **Business validation**: Apply rules like amount limits and vendor checks
+- **File organization**: Auto-sort processed/failed files into folders
+- **CSV export**: Generate accounting-system-ready data exports
+- **Reporting**: Detailed processing summaries with financial totals
+- **Error handling**: Production-ready exception handling
+
+```bash
+python invoice_processing_workflow.py
+```
+
+This example shows how ToolFront PDF extraction fits into a complete business automation pipeline.
 
 ## Getting Started
 
