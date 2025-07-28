@@ -260,7 +260,16 @@ class Database(DataSource, ABC):
             return pd.DataFrame(cursor.fetchall(), columns=columns)
 
     def _preprocess(self, var_type: Any) -> Any:
-        return Query if isinstance(var_type, pd.DataFrame) else var_type
+        if var_type == pd.DataFrame:
+            return Query
+        
+        origin = get_origin(var_type)
+        if origin is not None:
+            args = get_args(var_type)
+            if pd.DataFrame in args:
+                return Query | None if type(None) in args else Query
+        
+        return var_type
 
     def _postprocess(self, result: Any) -> Any:
         return self.query(result) if isinstance(result, Query) else result
