@@ -257,7 +257,8 @@ class Database(DataSource, ABC):
 
         with closing(self._connection.raw_sql(query.code)) as cursor:
             columns = [col[0] for col in cursor.description]
-            return pd.DataFrame(cursor.fetchall(), columns=columns)
+            df = pd.DataFrame(cursor.fetchall(), columns=columns)
+            return serialize_response(df)
 
     def _preprocess(self, var_type: Any) -> Any:
         if var_type == pd.DataFrame:
