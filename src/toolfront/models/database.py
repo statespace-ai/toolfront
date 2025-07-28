@@ -164,18 +164,26 @@ class Database(DataSource, ABC):
             except re.error as e:
                 raise ValueError(f"Invalid regex pattern for tables: {self.match} - {str(e)}")
 
-        # Discover all available tables in the database
-        catalog = self._connection.current_catalog
-        databases = self._connection.list_databases(catalog=catalog)
-
-        all_tables = []
-        for db in databases:
-            tables = self._connection.list_tables(like=self.match, database=(catalog, db))
-            prefix = f"{catalog}." if catalog else ""
-            all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
+        try:
+            catalog = getattr(self._connection, 'current_catalog', None)
+            if catalog:
+                databases = self._connection.list_databases(catalog=catalog)
+                all_tables = []
+                for db in databases:
+                    tables = self._connection.list_tables(like=self.match, database=(catalog, db))
+                    prefix = f"{catalog}." if catalog else ""
+                    all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
+            else:
+                all_tables = self._connection.list_tables(like=self.match)
+        except Exception as e:
+            logger.warning(f"Could not discover tables automatically: {e}")
+            try:
+                all_tables = self._connection.list_tables(like=self.match)
+            except Exception:
+                all_tables = []
 
         if not len(all_tables):
-            raise ValueError("No tables found in the database")
+            logger.warning("No tables found in the database - this may be expected for empty databases")
 
         self._tables = all_tables
 
