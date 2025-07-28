@@ -3,7 +3,7 @@ import re
 import warnings
 from abc import ABC
 from contextlib import closing
-from typing import Any
+from typing import Any, get_args, get_origin
 from urllib.parse import urlparse
 
 import ibis
