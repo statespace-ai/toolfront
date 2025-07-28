@@ -271,5 +271,19 @@ class Database(DataSource, ABC):
         
         return var_type
 
+    def query_raw(self, query: Query) -> pd.DataFrame:
+        """Execute query and return raw DataFrame without truncation."""
+        if not query.is_read_only_query():
+            raise ValueError("Only read-only queries are allowed")
+
+        if not hasattr(self._connection, "raw_sql"):
+            raise ValueError("Database does not support raw sql queries")
+
+        with closing(self._connection.raw_sql(query.code)) as cursor:
+            columns = [col[0] for col in cursor.description]
+            return pd.DataFrame(cursor.fetchall(), columns=columns)
+
     def _postprocess(self, result: Any) -> Any:
-        return self.query(result) if isinstance(result, Query) else result
+        if isinstance(result, Query):
+            return self.query_raw(result)
+        return result
