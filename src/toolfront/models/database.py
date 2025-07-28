@@ -165,7 +165,7 @@ class Database(DataSource, ABC):
                 raise ValueError(f"Invalid regex pattern for tables: {self.match} - {str(e)}")
 
         try:
-            catalog = getattr(self._connection, 'current_catalog', None)
+            catalog = getattr(self._connection, "current_catalog", None)
             if catalog:
                 databases = self._connection.list_databases(catalog=catalog)
                 all_tables = []
@@ -271,13 +271,13 @@ class Database(DataSource, ABC):
     def _preprocess(self, var_type: Any) -> Any:
         if var_type == pd.DataFrame:
             return Query
-        
+
         origin = get_origin(var_type)
         if origin is not None:
             args = get_args(var_type)
             if pd.DataFrame in args:
                 return Query | None if type(None) in args else Query
-        
+
         return var_type
 
     def query_raw(self, query: Query) -> pd.DataFrame:
