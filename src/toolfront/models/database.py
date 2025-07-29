@@ -73,23 +73,6 @@ class Database(DataSource, ABC):
         self._connection_kwargs = kwargs
         super().__init__(url=url, match=match)
 
-        # Add database-specific dialect hints to the query method's docstring if we have any.
-        dialect_hints = self._get_dialect_hints()
-        if dialect_hints:
-            base_docstring = """
-            This tool allows you to run read-only SQL queries against a database.
-
-            ALWAYS ENCLOSE IDENTIFIERS (TABLE NAMES, COLUMN NAMES) IN QUOTES TO PRESERVE CASE SENSITIVITY AND AVOID RESERVED WORD CONFLICTS AND SYNTAX ERRORS.
-
-            1. ONLY write read-only queries for tables that have been explicitly discovered or referenced.
-            2. Before writing queries, make sure you understand the schema of the tables you are querying.
-            3. ALWAYS use the correct dialect for the database.
-            4. NEVER use aliases in queries unless strictly necessary.
-            5. When a query fails or returns unexpected results, try to diagnose the issue and then retry.
-            """
-
-            self.query.__func__.__doc__ = base_docstring + dialect_hints
-
     def __getitem__(self, name: str) -> "ibis.Table":
         parts = name.split(".")
         if not 1 <= len(parts) <= 3:
@@ -115,57 +98,21 @@ class Database(DataSource, ABC):
 
         return scheme_mapping.get(scheme, scheme)
 
-    def _get_dialect_hints(self) -> str:
-        """Get database-specific SQL dialect hints."""
-        hints = {
-            "snowflake": """
-        Snowflake-specific SQL functions:
-        - Use TO_TIMESTAMP(epoch_seconds) or TO_TIMESTAMP(epoch_millis/1000) for timestamp conversion
-        - Use DATEADD(timepart, value, date_expr) for date arithmetic  
-        - Use TO_DATE() for date conversion
-        - Microsecond timestamps: divide by 1000000 before TO_TIMESTAMP()
-        """,
-            "postgresql": """
-        PostgreSQL-specific SQL functions:
-        - Use to_timestamp(epoch_seconds) for timestamp conversion
-        - Use INTERVAL for date arithmetic (e.g., date_column + INTERVAL '1 day')
-        - Use EXTRACT() for date parts
-        """,
-            "mysql": """
-        MySQL-specific SQL functions:
-        - Use FROM_UNIXTIME(unix_timestamp) for timestamp conversion
-        - Use DATE_ADD() and DATE_SUB() for date arithmetic
-        - Use UNIX_TIMESTAMP() to convert to epoch
-        """,
-            "bigquery": """
-        BigQuery-specific SQL functions:
-        - Use TIMESTAMP_SECONDS(epoch_seconds) for timestamp conversion
-        - Use TIMESTAMP_MILLIS(epoch_millis) for millisecond timestamps
-        - Use DATE_ADD() for date arithmetic
-        """,
-        }
-
-        return hints.get(self.database_type, "")
-
     @model_validator(mode="after")
     def model_validator(self) -> "Database":
         with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", "Unable to create Ibis UDFs", UserWarning)
-            self._connection = ibis.connect(
-                self.url, **self._connection_kwargs)
+            warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
+            self._connection = ibis.connect(self.url, **self._connection_kwargs)
 
         # Handle tables parameter: None (all), string (regex), or list (exact names)
         if self.match:
             if not isinstance(self.match, str):
-                raise ValueError(
-                    f"Match must be a string, got {type(self.match)}")
+                raise ValueError(f"Match must be a string, got {type(self.match)}")
 
             try:
                 re.compile(self.match)
             except re.error as e:
-                raise ValueError(
-                    f"Invalid regex pattern for tables: {self.match} - {str(e)}")
+                raise ValueError(f"Invalid regex pattern for tables: {self.match} - {str(e)}")
 
         try:
             catalog = getattr(self._connection, "current_catalog", None)
@@ -173,11 +120,9 @@ class Database(DataSource, ABC):
                 databases = self._connection.list_databases(catalog=catalog)
                 all_tables = []
                 for db in databases:
-                    tables = self._connection.list_tables(
-                        like=self.match, database=(catalog, db))
+                    tables = self._connection.list_tables(like=self.match, database=(catalog, db))
                     prefix = f"{catalog}." if catalog else ""
-                    all_tables.extend(
-                        [f"{prefix}{db}.{table}" for table in tables])
+                    all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
             else:
                 all_tables = self._connection.list_tables(like=self.match)
         except Exception as e:
@@ -188,8 +133,7 @@ class Database(DataSource, ABC):
                 all_tables = []
 
         if not len(all_tables):
-            logger.warning(
-                "No tables found in the database - this may be expected for empty databases")
+            logger.warning("No tables found in the database - this may be expected for empty databases")
 
         self._tables = all_tables
 
@@ -240,18 +184,16 @@ class Database(DataSource, ABC):
             logger.debug(f"Inspecting table: {self.url} {table.path}")
             table = self[table.path]
             return {
-                "schema": serialize_response(table.info().to_pandas()),
+                "schema": serialize_response(table.info()[["name", "type", "nullable"]].to_pandas()),
                 "samples": serialize_response(table.head(5).to_pandas()),
             }
         except Exception as e:
             logger.error(f"Failed to inspect table: {e}", exc_info=True)
-            raise RuntimeError(
-                f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
+            raise RuntimeError(f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
 
     async def query(
         self,
-        query: Query = Field(...,
-                             description="Read-only SQL query to execute."),
+        query: Query = Field(..., description="Read-only SQL query to execute."),
     ) -> dict[str, Any]:
         """
         This tool allows you to run read-only SQL queries against a database.
