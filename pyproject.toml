@@ -35,7 +35,8 @@ dependencies = [
     "ibis-framework>=10.6.0",
     "pyarrow<19.0.0",
     "executing>=2.2.0",
-    "markitdown>=0.1.2",
+    "docling>=2.43.0",
+    "markitdown[docx,pdf,pptx,xls,xlsx]>=0.1.2",
 ]
 
 [project.scripts]
@@ -113,7 +114,6 @@ all = [
     "toolfront[snowflake]",
     "toolfront[sqlite]",
     "toolfront[trino]",
-    "toolfront[document-all]",
 ]
 
 [build-system]
