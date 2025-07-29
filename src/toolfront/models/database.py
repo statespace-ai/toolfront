@@ -31,13 +31,25 @@ class Query(BaseModel):
         """Check if SQL contains only read operations"""
         # Define write operations that make a query non-read-only
         write_operations = [
-            'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER',
-            'TRUNCATE', 'REPLACE', 'MERGE', 'UPSERT', 'GRANT', 'REVOKE',
-            'EXEC', 'EXECUTE', 'CALL'
+            "INSERT",
+            "UPDATE",
+            "DELETE",
+            "DROP",
+            "CREATE",
+            "ALTER",
+            "TRUNCATE",
+            "REPLACE",
+            "MERGE",
+            "UPSERT",
+            "GRANT",
+            "REVOKE",
+            "EXEC",
+            "EXECUTE",
+            "CALL",
         ]
 
         # Create regex pattern that matches any write operation as a complete word
-        pattern = r'\b(?:' + '|'.join(write_operations) + r')\b'
+        pattern = r"\b(?:" + "|".join(write_operations) + r")\b"
 
         # Return True if NO write operations are found (case insensitive)
         return not bool(re.search(pattern, self.code, re.IGNORECASE))
@@ -104,22 +116,18 @@ class Database(DataSource, ABC):
     @model_validator(mode="after")
     def model_validator(self) -> "Database":
         with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", "Unable to create Ibis UDFs", UserWarning)
-            self._connection = ibis.connect(
-                self.url, **self._connection_kwargs)
+            warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
+            self._connection = ibis.connect(self.url, **self._connection_kwargs)
 
         # Handle tables parameter: None (all), string (regex), or list (exact names)
         if self.match:
             if not isinstance(self.match, str):
-                raise ValueError(
-                    f"Match must be a string, got {type(self.match)}")
+                raise ValueError(f"Match must be a string, got {type(self.match)}")
 
             try:
                 re.compile(self.match)
             except re.error as e:
-                raise ValueError(
-                    f"Invalid regex pattern for tables: {self.match} - {str(e)}")
+                raise ValueError(f"Invalid regex pattern for tables: {self.match} - {str(e)}")
 
         try:
             catalog = getattr(self._connection, "current_catalog", None)
@@ -127,11 +135,9 @@ class Database(DataSource, ABC):
                 databases = self._connection.list_databases(catalog=catalog)
                 all_tables = []
                 for db in databases:
-                    tables = self._connection.list_tables(
-                        like=self.match, database=(catalog, db))
+                    tables = self._connection.list_tables(like=self.match, database=(catalog, db))
                     prefix = f"{catalog}." if catalog else ""
-                    all_tables.extend(
-                        [f"{prefix}{db}.{table}" for table in tables])
+                    all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
             else:
                 all_tables = self._connection.list_tables(like=self.match)
         except Exception as e:
@@ -142,8 +148,7 @@ class Database(DataSource, ABC):
                 all_tables = []
 
         if not len(all_tables):
-            logger.warning(
-                "No tables found in the database - this may be expected for empty databases")
+            logger.warning("No tables found in the database - this may be expected for empty databases")
 
         self._tables = all_tables
 
@@ -199,13 +204,11 @@ class Database(DataSource, ABC):
             }
         except Exception as e:
             logger.error(f"Failed to inspect table: {e}", exc_info=True)
-            raise RuntimeError(
-                f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
+            raise RuntimeError(f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
 
     async def query(
         self,
-        query: Query = Field(...,
-                             description="Read-only SQL query to execute."),
+        query: Query = Field(..., description="Read-only SQL query to execute."),
     ) -> dict[str, Any]:
         """
         This tool allows you to run read-only SQL queries against a database.
