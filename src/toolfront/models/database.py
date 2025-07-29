@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 import ibis
 import pandas as pd
+import sqlparse
 from ibis import BaseBackend
 from pydantic import BaseModel, Field, PrivateAttr, computed_field, field_serializer, model_validator
 
@@ -29,16 +30,14 @@ class Query(BaseModel):
 
     def is_read_only_query(self) -> bool:
         """Check if SQL contains only read operations"""
-        # Remove comments and normalize whitespace
-        clean_sql = re.sub(r"--.*?$|/\*.*?\*/", "", self.code, flags=re.MULTILINE | re.DOTALL)
-        clean_sql = re.sub(r"\s+", " ", clean_sql).strip().upper()
+        parsed = sqlparse.parse(self.code)
 
-        # Split on semicolons to handle multiple statements
-        statements = [s.strip() for s in clean_sql.split(";") if s.strip()]
+        for statement in parsed:
+            stmt_type = statement.get_type()
+            if stmt_type not in ["SELECT", "WITH", "SHOW", "DESCRIBE", "EXPLAIN"]:
+                return False
 
-        read_only_patterns = [r"^SELECT\b", r"^WITH\b", r"^SHOW\b", r"^DESCRIBE\b", r"^DESC\b", r"^EXPLAIN\b"]
-
-        return all(any(re.match(pattern, stmt) for pattern in read_only_patterns) for stmt in statements)
+        return True
 
 
 class Database(DataSource, ABC):
@@ -151,18 +150,22 @@ class Database(DataSource, ABC):
     @model_validator(mode="after")
     def model_validator(self) -> "Database":
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
-            self._connection = ibis.connect(self.url, **self._connection_kwargs)
+            warnings.filterwarnings(
+                "ignore", "Unable to create Ibis UDFs", UserWarning)
+            self._connection = ibis.connect(
+                self.url, **self._connection_kwargs)
 
         # Handle tables parameter: None (all), string (regex), or list (exact names)
         if self.match:
             if not isinstance(self.match, str):
-                raise ValueError(f"Match must be a string, got {type(self.match)}")
+                raise ValueError(
+                    f"Match must be a string, got {type(self.match)}")
 
             try:
                 re.compile(self.match)
             except re.error as e:
-                raise ValueError(f"Invalid regex pattern for tables: {self.match} - {str(e)}")
+                raise ValueError(
+                    f"Invalid regex pattern for tables: {self.match} - {str(e)}")
 
         try:
             catalog = getattr(self._connection, "current_catalog", None)
@@ -170,9 +173,11 @@ class Database(DataSource, ABC):
                 databases = self._connection.list_databases(catalog=catalog)
                 all_tables = []
                 for db in databases:
-                    tables = self._connection.list_tables(like=self.match, database=(catalog, db))
+                    tables = self._connection.list_tables(
+                        like=self.match, database=(catalog, db))
                     prefix = f"{catalog}." if catalog else ""
-                    all_tables.extend([f"{prefix}{db}.{table}" for table in tables])
+                    all_tables.extend(
+                        [f"{prefix}{db}.{table}" for table in tables])
             else:
                 all_tables = self._connection.list_tables(like=self.match)
         except Exception as e:
@@ -183,7 +188,8 @@ class Database(DataSource, ABC):
                 all_tables = []
 
         if not len(all_tables):
-            logger.warning("No tables found in the database - this may be expected for empty databases")
+            logger.warning(
+                "No tables found in the database - this may be expected for empty databases")
 
         self._tables = all_tables
 
@@ -239,11 +245,13 @@ class Database(DataSource, ABC):
             }
         except Exception as e:
             logger.error(f"Failed to inspect table: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
+            raise RuntimeError(
+                f"Failed to inspect table {table.path} in {self.url} - {str(e)}") from e
 
     async def query(
         self,
-        query: Query = Field(..., description="Read-only SQL query to execute."),
+        query: Query = Field(...,
+                             description="Read-only SQL query to execute."),
     ) -> dict[str, Any]:
         """
         This tool allows you to run read-only SQL queries against a database.
