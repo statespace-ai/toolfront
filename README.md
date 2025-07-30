@@ -658,10 +658,10 @@ Don't see your database? [Submit an issue](https://github.com/kruskal-labs/toolf
 > # Only query tables starting with 'sales_' from schemas containing 'prod'
 > Database("postgresql://...", match_schema=".*prod.*", match_tables="^sales_.*")
 > 
-> # Filter only table names (any schema/database)
+> # Filter only table names (any schema)
 > Database("postgresql://...", match_tables="^user_.*")
 > 
-> # Filter only schemas/databases (any table names)
+> # Filter only schemas (any table)
 > Database("postgresql://...", match_schema="^analytics_.*")
 > ```
 
