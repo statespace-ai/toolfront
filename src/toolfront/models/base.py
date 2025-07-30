@@ -122,17 +122,11 @@ class DataSource(BaseModel, ABC):
             tools=tools,
             system_prompt=system_prompt,
             output_retries=MAX_RETRIES,
-            output_type=output_type | None,
+            output_type=output_type,
         )
 
         result = asyncio.run(self._ask_async(prompt, agent, stream))
-
-        if result is None and not type_allows_none(output_type):
-            raise RuntimeError(
-                f"ask() failed and returned None but output type {output_type.__name__} does not allow None values. "
-                f"To fix this, update the type annotation to allow None e.g. answer: {output_type.__name__} | None = ask(...)"
-            )
-
+        
         return self._postprocess(result)
 
     def _preprocess(self, var_type: Any) -> Any:
