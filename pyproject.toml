@@ -96,7 +96,7 @@ trino = [
 ]
 document = [
     "docling>=2.43.0",
-    "markitdown[pdf,docx,pptx,xlsx,xls]>=0.1.2",
+    "markitdown[docx,pdf,pptx,xls,xlsx]>=0.1.2",
 ]
 
 all = [
