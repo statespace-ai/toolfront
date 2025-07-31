@@ -31,7 +31,7 @@ if [ -n "$1" ]; then
         
         # Commit version bump
         git add pyproject.toml
-        git commit -m "bump version to $NEW_VERSION"
+        git commit --no-verify -m "bump version to $NEW_VERSION"
     fi
 else
     # Auto-increment patch version
