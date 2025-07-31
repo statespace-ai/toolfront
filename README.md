@@ -55,7 +55,7 @@ from toolfront import Database
 
 data = Database("postgresql://user:pass@localhost:5432/mydb")
 
-response: list[int] = data.ask("What's the profit on our 5 best-sellers?", stream=True)
+response: list[int] = data.ask("What's the profit on our 5 best-sellers?")
 
 print(response)  # [1250, 980, 875, 720, 650]
 ```
@@ -70,7 +70,7 @@ from toolfront import API
 
 data = API("https://api.example.com/openapi.json")
 
-answer: float = data.ask("What's AAPL's current stock price?", stream=True)
+answer: float = data.ask("What's AAPL's current stock price?")
 
 print(answer)  # 150.25
 ```
@@ -85,7 +85,7 @@ from toolfront import Document
 
 data = Document("/path/to/document.pdf")
 
-answer: set[str] = data.ask("Who are the authors of this paper?", stream=True)
+answer: set[str] = data.ask("Who are the authors of this paper?")
 
 print(answer)  # {"John Doe", "Jane Smith"}
 ```
@@ -107,8 +107,6 @@ Explore complete workflows in the [`examples/`](examples/) directory:
 - **[PDF Invoice Extraction](examples/pdf_extraction.py)** - Extract structured data from documents  
 - **[Complete Invoice Workflow](examples/invoice_processing_workflow.py)** - Production-ready batch processing pipeline
 
-[→ See all examples with setup instructions](examples/)
-
 ## 🤖 AI Model Configuration
 
 ToolFront is model-agnostic and supports all major LLM providers.
@@ -119,103 +117,94 @@ ToolFront is model-agnostic and supports all major LLM providers.
 Set `export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='openai:gpt-4o', stream=True)
+data.ask(..., model='openai:gpt-4o')
 ```
 
 </details>
 
 <details>
 <summary><strong>Anthropic</strong></summary>
-<br>
 
 Set `export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='anthropic:claude-3-5-sonnet-latest', stream=True)
+data.ask(..., model='anthropic:claude-3-5-sonnet-latest')
 ```
 
 </details>
 
 <details>
 <summary><strong>Google Gemini</strong></summary>
-<br>
 
 Set `export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='google:gemini-1.5-pro', stream=True)
+data.ask(..., model='google:gemini-1.5-pro')
 ```
 
 </details>
 
 <details>
 <summary><strong>Groq</strong></summary>
-<br>
 
 Set `export GROQ_API_KEY=<YOUR_GROQ_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='groq:llama-3.1-70b-versatile', stream=True)
+data.ask(..., model='groq:llama-3.1-70b-versatile')
 ```
 
 </details>
 
 <details>
 <summary><strong>Cohere</strong></summary>
-<br>
 
 Set `export COHERE_API_KEY=<YOUR_COHERE_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='cohere:command-r-plus', stream=True)
+data.ask(..., model='cohere:command-r-plus')
 ```
 
 </details>
 
 <details>
 <summary><strong>Mistral</strong></summary>
-<br>
 
 Set `export MISTRAL_API_KEY=<YOUR_MISTRAL_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='mistral:mistral-large-latest', stream=True)
+data.ask(..., model='mistral:mistral-large-latest')
 ```
 
 </details>
 
 <details>
 <summary><strong>GROK (xAI)</strong></summary>
-<br>
 
 Set `export XAI_API_KEY=<YOUR_XAI_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='xai:grok-beta', stream=True)
+data.ask(..., model='xai:grok-beta')
 ```
 
 </details>
 
 <details>
 <summary><strong>DeepSeek</strong></summary>
-<br>
 
 Set `export DEEPSEEK_API_KEY=<YOUR_DEEPSEEK_API_KEY>`, then run:
 
 ```python
-data.ask(..., model='deepseek:deepseek-chat', stream=True)
+data.ask(..., model='deepseek:deepseek-chat')
 ```
 
 </details>
-
-<br>
 
 You can also provide additional business context to help AI understand your data:
 
 ```python
 context = "Our company sells electronics. Revenue is tracked in the 'sales' table."
 
-data.ask("What's our best performing product category?", context=context, stream=True)
+data.ask("What's our best performing product category?", context=context)
 ```
 
 > [!TIP]
@@ -228,10 +217,10 @@ Type annotations automatically structure ToolFront's responses. Add annotations 
 **Primitive types** for simple values:
 
 ```python
-total_revenue: int = data.ask("What's our total revenue this month?", stream=True)
+total_revenue: int = data.ask("What's our total revenue this month?")
 # Output: 125000
 
-has_pending_orders: bool = data.ask("Do we have any pending orders?", stream=True)
+has_pending_orders: bool = data.ask("Do we have any pending orders?")
 # Output: True
 ```
 
@@ -244,7 +233,7 @@ class Customer(BaseModel):
     name: str
     revenue: int
 
-customers: Customer = data.ask("Who's our fastest grpwomg customer?", stream=True)
+customers: Customer = data.ask("Who's our fastest growing customer?")
 # Output:
 # Customer(name='TechCorp Inc.', revenue=50000)
 ```
@@ -253,7 +242,7 @@ customers: Customer = data.ask("Who's our fastest grpwomg customer?", stream=Tru
 
 ```python
 # Using pd.DataFrame type hint returns raw data instead of LLM summary
-sales: pd.DataFrame = data.ask("Get all sales transactions", stream=True)
+sales: pd.DataFrame = data.ask("Get all sales transactions")
 
 # Result: Raw DataFrame with potentially 50k+ rows (zero additional tokens!)
 sales.to_csv("export.csv")         # Export any size dataset
@@ -264,9 +253,12 @@ filtered = sales[sales > 1000]     # Process data locally for free
 **Union types** for flexible responses:
 
 ```python
-price: int | float | None = data.ask("What's the price of our best-seller?", stream=True)
+price: int | float | None = data.ask("What's the price of our best-seller?")
 # Output: 29.99
 ```
+
+> [!TIP]
+> **Error Handling:** Use union types with custom Pydantic error objects for robust error handling: `result: str | MyError = data.ask("question")`. This allows you to gracefully handle both successful responses and structured error information when queries fail.
 
 **Collections** for lists, dicts, and other data structures:
 
@@ -278,13 +270,13 @@ class Car(BaseModel):
     model: str
     year: int
 
-inventory: list[Car] = data.ask("Show me our car inventory", stream=True)
+inventory: list[Car] = data.ask("Show me our car inventory")
 # Output:
 # [Car(make='Toyota', model='Camry', year=2023), Car(make='Honda', model='Civic', year=2024)]
 ```
 
-> [!NOTE]
-> If `ask()` fails to answer a question, it will return `None` when the return type annotation includes `None` (e.g. `str | None`), or raise an exception otherwise.
+> [!TIP]
+> **Stream Mode:** Use `stream=True` to see real-time AI reasoning and tool execution in your terminal: `data.ask("question", stream=True)`. This is helpful for debugging and understanding how ToolFront processes your queries.
 
 ## 💾 Data Sources
 
@@ -674,7 +666,7 @@ from toolfront import API
 
 data = API(spec="https://api.example.com/openapi.json", **extra_params)
 
-answer: float = data.ask("What's AAPL's current stock price?", stream=True)
+answer: float = data.ask("What's AAPL's current stock price?")
 ```
 
 **Parameters**:
@@ -712,7 +704,7 @@ data = Document(source="/path/to/document.pdf")
 # Or provide text content directly
 data = Document(text="Your document content here")
 
-answer: list[float] = data.ask("What are the payment amounts in this documetn?", stream=True)
+answer: list[float] = data.ask("What are the payment amounts in this document?")
 ```
 
 **Parameters**:
