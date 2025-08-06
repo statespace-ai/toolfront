@@ -1,0 +1,143 @@
+site_name: ToolFront
+site_description: ToolFront helps you retrieve information from large databases, APIs, and documents with AI.
+site_url: https://toolfront.docs
+repo_url: https://github.com/kruskal-labs/toolfront
+repo_name: kruskal/toolfront
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/lightbulb
+        name: Switch to light mode
+  features:
+    - navigation.expand
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - announce.dismiss
+    - navigation.tracking
+    - navigation.prune 
+
+plugins:
+  - search
+  - social:
+      cards_layout_options:
+        background_color: "#A6A5C4"
+        color: "#2a2a2a"
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_source: false
+            show_bases: false
+            inherited_members: true
+            members_order: source
+            separate_signature: true
+            unwrap_annotated: true
+            merge_init_into_class: true
+            docstring_section_style: spacy
+            signature_crossrefs: true
+            show_root_heading: true
+            show_root_full_path: false
+
+
+nav:
+  - ToolFront: index.md
+  - Getting Started:
+    - Quickstart: getting_started/quickstart.md
+    - FAQ: getting_started/faq.md
+    - Community: getting_started/community.md
+  - Documentation:
+    - Overview: documentation/index.md
+    - Data Sources:
+      - Databases:
+        - documentation/databases/index.md
+        - PostgreSQL: documentation/databases/postgresql.md
+        - Snowflake: documentation/databases/snowflake.md
+        - BigQuery: documentation/databases/bigquery.md
+        - MySQL: documentation/databases/mysql.md
+        - SQLite: documentation/databases/sqlite.md
+        - Databricks: documentation/databases/databricks.md
+        - ClickHouse: documentation/databases/clickhouse.md
+        - Oracle: documentation/databases/oracle.md
+        - SQL Server: documentation/databases/sqlserver.md
+        - DuckDB: documentation/databases/duckdb.md
+        - Trino: documentation/databases/trino.md
+      - API: documentation/api.md
+      - Documents: documentation/document.md
+    - AI Models:
+      - documentation/ai_models/index.md
+      - OpenAI: documentation/ai_models/openai.md
+      - Anthropic: documentation/ai_models/anthropic.md
+      - Google Gemini: documentation/ai_models/google.md
+      - Groq: documentation/ai_models/groq.md
+      - Mistral: documentation/ai_models/mistral.md
+      - xAI (Grok): documentation/ai_models/xai.md
+      - Cohere: documentation/ai_models/cohere.md
+      - DeepSeek: documentation/ai_models/deepseek.md
+    - Structured Outputs: documentation/structured_outputs.md
+  - API Reference:
+    - Database: api_reference/database.md
+    - API: api_reference/api.md
+    - Document: api_reference/document.md
+    - MCP: api_reference/mcp.md
+  - Examples:
+    - Overview: examples/index.md
+    - Database Examples: examples/databases.md
+    - API Examples: examples/apis.md
+    - Document Examples: examples/documents.md
+    - Advanced Examples: examples/advanced.md    
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra_css:
+  - assets/css/custom.css
+  - https://unpkg.com/aos@2.3.1/dist/aos.css
+
+extra_javascript:
+  - https://unpkg.com/aos@2.3.1/dist/aos.js
+  - assets/js/marquee.js
+
+extra:
+  generator: false
+
+copyright: Copyright &copy; 2025 Kruskal Labs, Inc.

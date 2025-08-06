@@ -35,6 +35,8 @@ dependencies = [
     "ibis-framework>=10.6.0",
     "pyarrow<19.0.0",
     "executing>=2.2.0",
+    "mkdocs-material[imaging]>=9.6.16",
+    "mkdocstrings[python]>=0.30.0",
 ]
 
 [project.scripts]

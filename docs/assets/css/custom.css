@@ -1,0 +1,428 @@
+/* :root {
+    --md-primary-fg-color-alpha: rgba(166, 165, 196, 0.8);
+    --md-primary-fg-color: #A6A5C4;
+    --md-primary-bg-color: #2a2a2a;
+    --md-source-fg-color: #2a2a2a;
+    --md-accent-fg-color: #836889;
+    --md-select-fg-color: #836889;
+}
+
+/*Dark mode*/
+/* [data-md-color-scheme="slate"] {
+    --md-default-bg-color: #2a2a2a;
+    --md-code-bg-color: #3a3a3a;
+    --md-code-hl-color: #3a3a3a;
+    --md-admonition-bg-color: #2a2a2a;
+} */
+
+/*Light mode*/
+/* [data-md-color-scheme="light"] {
+    --md-default-bg-color: #FAF4ED;
+    --md-code-bg-color: #F4EEE7;
+    --md-code-hl-color: #F4EEE7;
+    --md-admonition-bg-color: #FAF4ED;
+    --highlight-color: #FFFAF3;
+} */
+
+
+/* .md-nav__source
+{
+    color: var(--md-primary-fg-color);!important;
+} */
+
+.md-button {
+    color: var(--md-accent-fg-color);
+    margin: 1em;
+    width: 220px;
+    text-align: center;
+}
+
+.md-typeset .md-button {
+    border-radius: 0.5em;
+    margin-left: 0;
+}
+
+
+/*.md-header {*/
+/*    !*backdrop-filter: blur(2px);*!*/
+/*    transition: background-color 0.5s;*/
+/*}*/
+
+/* .md-header, */
+/* .md-tabs {
+    background: linear-gradient(45deg, rgb(166, 165, 196), rgb(228, 210, 216));
+    /*backdrop-filter: blur(2px);*/
+/* } */
+
+/* Custom indentation for nested navigation items */
+.md-nav--secondary .md-nav__item {
+  margin-left: 1rem;
+}
+
+.md-nav--secondary .md-nav--secondary .md-nav__item {
+  margin-left: 2rem;
+}
+
+.md-nav--secondary .md-nav--secondary .md-nav--secondary .md-nav__item {
+  margin-left: 3rem;
+}
+
+
+/* .md-header.md-header--shadow {
+    background: linear-gradient(4deg, rgba(166, 165, 196, 0.9), rgba(228, 210, 216, 0.9));
+} */
+
+.md-source {
+    background: transparent;
+}
+
+.md-nav__source {
+    background-color: var(--md-primary-bg-color);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+.main-container-left {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    min-height: 500px;
+    gap: 40px;
+}
+
+.main-container-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    min-height: 500px;
+    gap: 40px;
+}
+
+.main-container-left > div,
+.main-container-right > div {
+    width: 100%;
+    max-width: none;
+}
+
+.grid-item-text {
+    padding: 0 15%;
+}
+
+
+/* Ensure equal width for tabbed set items */
+.tabbed-set .tabbed-labels {
+    display: flex;
+}
+
+.tabbed-set .tabbed-labels > label {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+}
+
+/* .tabbed-set .tabbed-alternate {
+    box-shadow: var(--md-shadow-z3);
+    width: 100%; !important;
+} */
+
+
+#container1, #container3 {
+  background-color: var(--md-code-bg-color);
+}
+
+#container1, #container3 {
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: calc(50vw - 50%);
+  padding-right: calc(50vw - 50%);
+}
+
+/* Add a subtle text shadow to the headings */
+h1, h2, h3 {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes textShine {
+    0% {
+        background-position: 0 50%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Database icons marquee */
+.db-marquee {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    width: 100%;
+    margin: 40px 0;
+}
+
+.db-marquee::before,
+.db-marquee::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.db-marquee::before {
+    left: 0;
+    background: linear-gradient(to right, var(--md-default-bg-color) 0%, transparent 100%);
+}
+
+.db-marquee::after {
+    right: 0;
+    background: linear-gradient(to left, var(--md-default-bg-color) 0%, transparent 100%);
+}
+
+.db-marquee-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 60px;
+    animation: marquee 40s linear infinite;
+    will-change: transform;
+}
+
+.db-marquee:hover .db-marquee-track {
+    animation-play-state: paused;
+}
+
+.db-marquee-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.db-marquee-item:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.db-marquee-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.db-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--md-default-fg-color--light);
+    text-align: center;
+    white-space: nowrap;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes marquee-reverse {
+    0% {
+        transform: translateX(-50%);
+    }
+    100% {
+        transform: translateX(0);
+    }
+}
+
+/* AI Models marquee */
+.models-marquee {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    width: 100%;
+    margin: 40px 0;
+}
+
+.models-marquee::before,
+.models-marquee::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.models-marquee::before {
+    left: 0;
+    background: linear-gradient(to right, var(--md-default-bg-color) 0%, transparent 100%);
+}
+
+.models-marquee::after {
+    right: 0;
+    background: linear-gradient(to left, var(--md-default-bg-color) 0%, transparent 100%);
+}
+
+.models-marquee-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 60px;
+    animation: marquee-reverse 35s linear infinite;
+    will-change: transform;
+}
+
+.models-marquee:hover .models-marquee-track {
+    animation-play-state: paused;
+}
+
+.models-marquee-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.models-marquee-item:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.models-marquee-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+/* Install section styling */
+.install-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: 1px solid #e1e5e9;
+    transition: all 0.3s ease;
+}
+
+.install-section.highlight {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+/* AOS Animation Enhancements */
+[data-aos] {
+    pointer-events: none;
+}
+
+[data-aos].aos-animate {
+    pointer-events: auto;
+}
+
+/* Custom fade animations for better performance */
+[data-aos="fade-left"] {
+    transform: translate3d(-100px, 0, 0);
+    opacity: 0;
+    transition-property: transform, opacity;
+}
+
+[data-aos="fade-right"] {
+    transform: translate3d(100px, 0, 0);
+    opacity: 0;
+    transition-property: transform, opacity;
+}
+
+[data-aos="fade-left"].aos-animate,
+[data-aos="fade-right"].aos-animate {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+}
+
+/* Ensure smooth animations on code blocks */
+.highlight {
+    transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+/* Performance optimizations for animations */
+.main-container-left,
+.main-container-right {
+    will-change: transform, opacity;
+}
+
+
+@media only screen and (max-width: 800px) {
+    .db-marquee-track {
+        gap: 40px;
+    }
+
+    .db-marquee::before,
+    .db-marquee::after {
+        width: 60px;
+    }
+    
+    .db-marquee-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .db-label {
+        font-size: 11px;
+    }
+
+    .models-marquee-track {
+        gap: 40px;
+    }
+
+    .models-marquee::before,
+    .models-marquee::after {
+        width: 60px;
+    }
+    
+    .models-marquee-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .title-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-container-left {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-container-right {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    .features {
+        grid-template-columns: 1fr !important;
+    }
+
+  .grid-item-text {
+    margin-left: 5%;
+    margin-right: 5%;
+    text-align: left;
+  }
+}
