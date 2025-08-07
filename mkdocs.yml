@@ -7,22 +7,20 @@ repo_name: kruskal/toolfront
 theme:
   name: material
   palette:
-    # Palette toggle for light mode
     - scheme: default
-      primary: blue
-      accent: blue
+      primary: custom
+      accent: custom
       toggle:
         icon: material/lightbulb
         name: Switch to dark mode
-    # Palette toggle for dark mode
     - scheme: slate
-      primary: blue
-      accent: blue
+      primary: custom
+      accent: custom
       toggle:
         icon: material/lightbulb
         name: Switch to light mode
   features:
-    - navigation.expand
+    # - navigation.expand
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.top
@@ -35,14 +33,14 @@ theme:
     - search.suggest
     - announce.dismiss
     - navigation.tracking
-    - navigation.prune 
+    - navigation.prune
 
 plugins:
   - search
   - social:
       cards_layout_options:
-        background_color: "#A6A5C4"
-        color: "#2a2a2a"
+        background_color: "#3e8599"
+        color: "#ffffff"
   - autorefs
   - mkdocstrings:
       handlers:
@@ -71,23 +69,25 @@ nav:
     - FAQ: getting_started/faq.md
     - Community: getting_started/community.md
   - Documentation:
-    - Overview: documentation/index.md
-    - Data Sources:
-      - Databases:
-        - documentation/databases/index.md
-        - PostgreSQL: documentation/databases/postgresql.md
-        - Snowflake: documentation/databases/snowflake.md
-        - BigQuery: documentation/databases/bigquery.md
-        - MySQL: documentation/databases/mysql.md
-        - SQLite: documentation/databases/sqlite.md
-        - Databricks: documentation/databases/databricks.md
-        - ClickHouse: documentation/databases/clickhouse.md
-        - Oracle: documentation/databases/oracle.md
-        - SQL Server: documentation/databases/sqlserver.md
-        - DuckDB: documentation/databases/duckdb.md
-        - Trino: documentation/databases/trino.md
-      - API: documentation/api.md
-      - Documents: documentation/document.md
+    - Databases:
+      - documentation/databases/index.md
+      - BigQuery: documentation/databases/bigquery.md
+      - ClickHouse: documentation/databases/clickhouse.md
+      - Databricks: documentation/databases/databricks.md
+      - Druid: documentation/databases/druid.md
+      - DuckDB: documentation/databases/duckdb.md
+      - Flink: documentation/databases/flink.md
+      - MSSQL: documentation/databases/mssql.md
+      - MySQL: documentation/databases/mysql.md
+      - Oracle: documentation/databases/oracle.md
+      - PostgreSQL: documentation/databases/postgresql.md
+      - PySpark: documentation/databases/pyspark.md
+      - RisingWave: documentation/databases/risingwave.md
+      - Snowflake: documentation/databases/snowflake.md
+      - SQLite: documentation/databases/sqlite.md
+      - Trino: documentation/databases/trino.md
+    - APIs: documentation/api.md
+    - Documents: documentation/document.md
     - AI Models:
       - documentation/ai_models/index.md
       - OpenAI: documentation/ai_models/openai.md
@@ -98,6 +98,10 @@ nav:
       - xAI (Grok): documentation/ai_models/xai.md
       - Cohere: documentation/ai_models/cohere.md
       - DeepSeek: documentation/ai_models/deepseek.md
+      - AWS Bedrock: documentation/ai_models/bedrock.md
+      - Azure OpenAI: documentation/ai_models/azure_openai.md
+      - Hugging Face: documentation/ai_models/huggingface.md
+      - Custom/Self-hosted: documentation/ai_models/custom.md
     - Structured Outputs: documentation/structured_outputs.md
   - API Reference:
     - Database: api_reference/database.md
@@ -106,10 +110,23 @@ nav:
     - MCP: api_reference/mcp.md
   - Examples:
     - Overview: examples/index.md
-    - Database Examples: examples/databases.md
-    - API Examples: examples/apis.md
-    - Document Examples: examples/documents.md
-    - Advanced Examples: examples/advanced.md    
+    - Advanced: examples/advanced.md
+    - APIs: examples/apis.md
+    - Databases: examples/databases.md
+    - Documents: examples/documents.md
+    - Use Cases:
+      - Databases:
+        - Sales Analytics: examples/databases/sales_analytics.md
+        - Customer Insights: examples/databases/customer_insights.md
+        - Financial Reporting: examples/databases/financial_reporting.md
+      - APIs:
+        - Weather Data: examples/apis/weather_api.md
+        - E-commerce Integration: examples/apis/ecommerce_api.md
+        - Social Media Analytics: examples/apis/social_media_api.md
+      - Documents:
+        - Financial Reports: examples/documents/financial_reports.md
+        - Research Papers: examples/documents/research_papers.md
+        - Legal Contracts: examples/documents/legal_contracts.md    
 
 markdown_extensions:
   - admonition
