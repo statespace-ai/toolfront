@@ -3,47 +3,64 @@
 ## Installation
 
 ```bash
-pip install toolfront[clickhouse]
+pip install "toolfront[clickhouse]"
 ```
 
-## Basic Connection
+## Connection URL
 
+=== "Basic"
+    ```
+    clickhouse://{user}:{password}@{host}:{port}/{database}
+    ```
+
+=== "With Secure Connection"
+    ```
+    clickhouse://{user}:{password}@{host}:{port}/{database}?secure=true
+    ```
+
+=== "With Compression"
+    ```
+    clickhouse://{user}:{password}@{host}:{port}/{database}?compression=lz4
+    ```
+
+## Connection Parameters
+
+| Name           | Type         | Description                                                                                                                                                                                                                   | Default        |
+|----------------|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------|
+| `host`         | `str`        | Host name of the ClickHouse server.                                                                                                                                                                                           | `'localhost'`  |
+| `port`         | `int | None`| ClickHouse HTTP server's port. If not passed, the value depends on whether `secure` is `True` or `False`.                                                                                                                   | `None`         |
+| `database`     | `str`        | Default database when executing queries.                                                                                                                                                                                      | `'default'`    |
+| `user`         | `str`        | User to authenticate with.                                                                                                                                                                                                    | `'default'`    |
+| `password`     | `str`        | Password to authenticate with.                                                                                                                                                                                                | `''`           |
+| `client_name`  | `str`        | Name of client that will appear in ClickHouse server logs.                                                                                                                                                                    | `'ibis'`       |
+| `secure`       | `bool | None`| Whether or not to use an authenticated endpoint.                                                                                                                                                                              | `None`         |
+| `compression`  | `str | bool`| The kind of compression to use for requests. See [ClickHouse Python Compression Docs](https://clickhouse.com/docs/en/integrations/python#compression) for more information.                                                | `True`         |
+| `kwargs`       | `typing.Any` | Client specific keyword arguments.                                                                                                                                                                                            | `{}`           |
+
+## Examples
+
+**Using Connection URL:**
 ```python
 from toolfront import Database
 
-db = Database("clickhouse://user:password@host:9000/database")
-answer = db.ask("What's our total revenue this month?")
+db = Database("clickhouse://user:pass@localhost:9000/sales")
+revenue = db.ask("What's our total revenue this month?")
 ```
 
-## Connection String Format
-
-```
-clickhouse://[user[:password]@][host][:port][/database][?param1=value1&...]
-```
-
-## Configuration Parameters
-
-- `host`: Host name of the clickhouse server (default: 'localhost')
-- `port`: ClickHouse HTTP server's port. If not passed, the value depends on whether secure is True or False
-- `database`: Default database when executing queries (default: 'default')
-- `user`: User to authenticate with (default: 'default')
-- `password`: Password to authenticate with (default: '')
-- `client_name`: Name of client that will appear in clickhouse server logs (default: 'ibis')
-- `secure`: Whether or not to use an authenticated endpoint
-- `compression`: The kind of compression to use for requests. See https://clickhouse.com/docs/en/integrations/python#compression for more information (default: True)
-- `kwargs`: Client specific keyword arguments
-
-## Connection Examples
-
+**Using Connection Parameters:**
 ```python
 from toolfront import Database
 
-# Basic connection
-db = Database("clickhouse://user:password@localhost:9000/analytics")
-
-# Secure connection
-db = Database("clickhouse://user:pass@host:8443/db?secure=true")
-
-# With compression
-db = Database("clickhouse://user:pass@host:9000/db?compression=lz4")
+db = Database(
+    url="clickhouse://", # REQUIRED (1)
+    host="localhost",
+    port=9000,
+    database="sales",
+    user="user",
+    password="pass",
+    secure=False
+)
+revenue = db.ask("What's our total revenue this month?")
 ```
+
+1. You must always pass `clickhouse` or `clickhouse://` as the URL when creating a ClickHouse `Database` from parameters. This is required for proper backend selection.

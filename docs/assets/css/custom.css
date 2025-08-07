@@ -1,37 +1,21 @@
-/* :root {
-    --md-primary-fg-color-alpha: rgba(166, 165, 196, 0.8);
-    --md-primary-fg-color: #A6A5C4;
-    --md-primary-bg-color: #2a2a2a;
-    --md-source-fg-color: #2a2a2a;
-    --md-accent-fg-color: #836889;
-    --md-select-fg-color: #836889;
+/* Custom color scheme */
+:root {
+    --md-primary-fg-color: #3e8599;
+
 }
 
-/*Dark mode*/
-/* [data-md-color-scheme="slate"] {
-    --md-default-bg-color: #2a2a2a;
-    --md-code-bg-color: #3a3a3a;
-    --md-code-hl-color: #3a3a3a;
-    --md-admonition-bg-color: #2a2a2a;
-} */
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: #3e8599;
+    --md-accent-fg-color: #2f6b7a;
+}
 
-/*Light mode*/
-/* [data-md-color-scheme="light"] {
-    --md-default-bg-color: #FAF4ED;
-    --md-code-bg-color: #F4EEE7;
-    --md-code-hl-color: #F4EEE7;
-    --md-admonition-bg-color: #FAF4ED;
-    --highlight-color: #FFFAF3;
-} */
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #4a9bb3;
+    --md-accent-fg-color: #2f6b7a;
+}
 
-
-/* .md-nav__source
-{
-    color: var(--md-primary-fg-color);!important;
-} */
-
+/* Simple button styling */
 .md-button {
-    color: var(--md-accent-fg-color);
     margin: 1em;
     width: 220px;
     text-align: center;
@@ -42,44 +26,25 @@
     margin-left: 0;
 }
 
+/* Hide paragraph symbols on main page */
+.md-content[data-md-component="content"] .headerlink {
+    display: none;
+}
 
-/*.md-header {*/
-/*    !*backdrop-filter: blur(2px);*!*/
-/*    transition: background-color 0.5s;*/
-/*}*/
-
-/* .md-header, */
-/* .md-tabs {
-    background: linear-gradient(45deg, rgb(166, 165, 196), rgb(228, 210, 216));
-    /*backdrop-filter: blur(2px);*/
-/* } */
-
-/* Custom indentation for nested navigation items */
+/* Navigation styling */
 .md-nav--secondary .md-nav__item {
-  margin-left: 1rem;
+    margin-left: 1rem;
 }
 
 .md-nav--secondary .md-nav--secondary .md-nav__item {
-  margin-left: 2rem;
+    margin-left: 2rem;
 }
 
 .md-nav--secondary .md-nav--secondary .md-nav--secondary .md-nav__item {
-  margin-left: 3rem;
+    margin-left: 3rem;
 }
 
-
-/* .md-header.md-header--shadow {
-    background: linear-gradient(4deg, rgba(166, 165, 196, 0.9), rgba(228, 210, 216, 0.9));
-} */
-
-.md-source {
-    background: transparent;
-}
-
-.md-nav__source {
-    background-color: var(--md-primary-bg-color);
-}
-
+/* Smooth scrolling */
 html {
     scroll-behavior: smooth;
 }
@@ -211,8 +176,6 @@ h1, h2, h3 {
 
 .db-marquee-item:hover {
     opacity: 1;
-    transform: scale(1.05);
-    background: rgba(59, 130, 246, 0.1);
 }
 
 .db-marquee-icon {
@@ -304,8 +267,6 @@ h1, h2, h3 {
 
 .models-marquee-item:hover {
     opacity: 1;
-    transform: scale(1.05);
-    background: rgba(59, 130, 246, 0.1);
 }
 
 .models-marquee-icon {
@@ -325,10 +286,10 @@ h1, h2, h3 {
 }
 
 .install-section.highlight {
-    background: rgba(37, 99, 235, 0.1);
+    background: var(--md-accent-fg-color--transparent);
 }
 
-/* AOS Animation Enhancements */
+/* Animation enhancements */
 [data-aos] {
     pointer-events: none;
 }
@@ -337,7 +298,6 @@ h1, h2, h3 {
     pointer-events: auto;
 }
 
-/* Custom fade animations for better performance */
 [data-aos="fade-left"] {
     transform: translate3d(-100px, 0, 0);
     opacity: 0;
@@ -356,49 +316,38 @@ h1, h2, h3 {
     opacity: 1;
 }
 
-/* Ensure smooth animations on code blocks */
 .highlight {
     transition: transform 0.6s ease, opacity 0.6s ease;
 }
 
-/* Performance optimizations for animations */
 .main-container-left,
 .main-container-right {
     will-change: transform, opacity;
 }
 
 
+/* Responsive design */
 @media only screen and (max-width: 800px) {
-    .db-marquee-track {
+    .db-marquee-track,
+    .models-marquee-track {
         gap: 40px;
     }
 
     .db-marquee::before,
-    .db-marquee::after {
+    .db-marquee::after,
+    .models-marquee::before,
+    .models-marquee::after {
         width: 60px;
     }
     
-    .db-marquee-icon {
+    .db-marquee-icon,
+    .models-marquee-icon {
         width: 40px;
         height: 40px;
     }
 
     .db-label {
         font-size: 11px;
-    }
-
-    .models-marquee-track {
-        gap: 40px;
-    }
-
-    .models-marquee::before,
-    .models-marquee::after {
-        width: 60px;
-    }
-    
-    .models-marquee-icon {
-        width: 40px;
-        height: 40px;
     }
 
     .title-container {
@@ -420,9 +369,9 @@ h1, h2, h3 {
         grid-template-columns: 1fr !important;
     }
 
-  .grid-item-text {
-    margin-left: 5%;
-    margin-right: 5%;
-    text-align: left;
-  }
+    .grid-item-text {
+        margin-left: 5%;
+        margin-right: 5%;
+        text-align: left;
+    }
 }

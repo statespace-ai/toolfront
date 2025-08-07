@@ -98,7 +98,7 @@ class DatabaseMarquee {
                 e.preventDefault();
                 const dbType = item.dataset.db;
                 if (dbType) {
-                    const url = `getting_started/databases/${dbType}/`;
+                    const url = `documentation/databases/${dbType}/`;
                     window.location.href = url;
                 }
             });
@@ -109,7 +109,7 @@ class DatabaseMarquee {
                     e.preventDefault();
                     const dbType = item.dataset.db;
                     if (dbType) {
-                        const url = `getting_started/databases/${dbType}/`;
+                        const url = `documentation/databases/${dbType}/`;
                         window.location.href = url;
                     }
                 }
@@ -130,7 +130,7 @@ class DatabaseMarquee {
                 e.preventDefault();
                 const modelType = item.dataset.model;
                 if (modelType) {
-                    const url = `getting_started/ai_models/${modelType}/`;
+                    const url = `documentation/ai_models/${modelType}/`;
                     window.location.href = url;
                 }
             });
@@ -141,7 +141,7 @@ class DatabaseMarquee {
                     e.preventDefault();
                     const modelType = item.dataset.model;
                     if (modelType) {
-                        const url = `getting_started/ai_models/${modelType}/`;
+                        const url = `documentation/ai_models/${modelType}/`;
                         window.location.href = url;
                     }
                 }

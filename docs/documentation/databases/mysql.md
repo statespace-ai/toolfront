@@ -3,44 +3,49 @@
 ## Installation
 
 ```bash
-pip install toolfront[mysql]
+pip install "toolfront[mysql]"
 ```
 
-## Basic Connection
+## Connection URL
 
+```
+mysql://{user}:{password}@{host}:{port}/{database}
+```
+
+## Connection Parameters
+
+| Name                     | Type                                        | Description                                                                                                                                                                                                                                                                                                                                 | Default           |
+|--------------------------|---------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| `host`                   | `str`                                       | Hostname                                                                                                                                                                                                                                                                                                                                    | `'localhost'`     |
+| `user`                   | `str | None`                                | Username                                                                                                                                                                                                                                                                                                                                    | `None`            |
+| `password`               | `str | None`                                | Password                                                                                                                                                                                                                                                                                                                                    | `None`            |
+| `port`                   | `int`                                       | Port                                                                                                                                                                                                                                                                                                                                        | `3306`            |
+| `autocommit`             | `bool`                                      | Autocommit mode                                                                                                                                                                                                                                                                                                                             | `True`            |
+| `kwargs`                 | `Any`                                       | Additional keyword arguments passed to MySQLdb.connect                                                                                                                                                                                                                                                                                     | `{}`              |
+
+## Examples
+
+**Using Connection URL:**
 ```python
 from toolfront import Database
 
-db = Database("mysql://user:password@host:port/database")
-answer = db.ask("What's our total revenue this month?")
+db = Database("mysql://user:pass@localhost:3306/sales")
+revenue = db.ask("What's our total revenue this month?")
 ```
 
-## Connection String Format
-
-```
-mysql://[user[:password]@][host][:port][/database]
-```
-
-## Configuration Parameters
-
-- `host`: Hostname (default: 'localhost')
-- `user`: Username (default: None)
-- `password`: Password (default: None)
-- `port`: Port (default: 3306)
-- `autocommit`: Autocommit mode (default: True)
-- `kwargs`: Additional keyword arguments passed to MySQLdb.connect
-
-## Connection Examples
-
+**Using Connection Parameters:**
 ```python
 from toolfront import Database
 
-# Basic connection
-db = Database("mysql://root:password@localhost:3306/myapp")
-
-# Remote connection
-db = Database("mysql://user:pass@db.example.com:3306/production")
-
-# With SSL
-db = Database("mysql://user:pass@host:3306/db?ssl=true")
+db = Database(
+    url="mysql://", # REQUIRED (1)
+    host="localhost",
+    port=3306,
+    database="sales",
+    user="user",
+    password="pass"
+)
+revenue = db.ask("What's our total revenue this month?")
 ```
+
+1. You must always pass `mysql` or `mysql://` as the URL when creating a MySQL `Database` from parameters. This is required for proper backend selection.

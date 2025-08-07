@@ -1,8 +1,3 @@
----
-hide:
-  - toc
----
-
 # Frequently Asked Questions
 
 ## How does ToolFront keep my data safe?

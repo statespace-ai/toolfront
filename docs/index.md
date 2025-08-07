@@ -15,15 +15,15 @@ description: "TBD"
 <div style="padding-right: 5%;" markdown>
 
 
-<h1 style="font-size: 50px">
-  <b>Run ETL and retrieval pipelines in plain English</b>
+<h1 style="font-size: 40px">
+  <b>The Big Data Library for AI</b>
 </h1>
 
-<h2> ToolFront ETL and retrieval pipelines in plain English </h2>
+<h2>ToolFront simplifies data retrieval, so you can focus on building AI agents and workflows.</h2>
 
 
 [Quickstart](getting_started/quickstart.md){ .md-button .md-button--primary }
-[Learn more](documentation/index.md){ .md-button .md-button--secondary }
+[Learn more](documentation/databases/index.md){ .md-button .md-button--secondary }
 
 </div>
 
@@ -34,7 +34,7 @@ description: "TBD"
     ```python linenums="1"
     from toolfront import Database
 
-    # Load databases/warehouses
+    # Connect to +10 databases and warehouses
     db = Database("postgresql://user:pass@localhost:5432/mydb")
 
     answer = db.ask("What's the revenue of the top 5 products")
@@ -46,7 +46,7 @@ description: "TBD"
     ```python linenums="1"
     from toolfront import API
 
-    # Load internal/external APIs
+    # Connect to virtually any API with a spec
     api = API("http://localhost:8000/openapi.json")
 
     answer = api.ask("Close the ticket for user_id=42")
@@ -59,7 +59,7 @@ description: "TBD"
     from toolfront import Document
 
     # Load any document
-    doc = Document("/path/to/annual_report.pdf")
+    doc = Document("/path/annual_report.pdf")
 
     answer = doc.ask("Summarize the key financial results.")
     print(answer)
@@ -69,7 +69,9 @@ description: "TBD"
 
 </div>
 
-<h2 align="center"><b>Work with your favorite databases</b></h2>
+<br>
+
+<h2 align="center"><b>Bring your data and LLM. We take care of the rest.</b></h2>
 
 <div class="db-marquee">
   <div class="db-marquee-track">
@@ -105,6 +107,39 @@ description: "TBD"
     </div>
   </div>
 </div>
+
+
+<!-- <h2 align="center"><b>Bring Your Own models</b></h2> -->
+
+<div class="models-marquee">
+  <div class="models-marquee-track">
+    <div class="models-marquee-item" data-model="openai">
+      <img src="assets/icons/models/chatgpt.svg" alt="ChatGPT" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="anthropic">
+      <img src="assets/icons/models/claude.svg" alt="Claude" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="google">
+      <img src="assets/icons/models/gemini.svg" alt="Gemini" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="mistral">
+      <img src="assets/icons/models/mistral.svg" alt="Mistral" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="xai">
+      <img src="assets/icons/models/xai.svg" alt="xAI Grok" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="huggingface">
+      <img src="assets/icons/models/huggingface.svg" alt="Hugging Face" class="models-marquee-icon">
+    </div>    
+    <div class="models-marquee-item" data-model="deepseek">
+      <img src="assets/icons/models/deepseek.svg" alt="DeepSeek" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="groq">
+      <img src="assets/icons/models/groq.svg" alt="Groq" class="models-marquee-icon">
+    </div>    
+  </div>
+</div>
+
 
 <br>
 
@@ -155,10 +190,10 @@ description: "TBD"
     db = Database("postgresql://user:pass@host/db")
 
     price: int | float = db.ask("Price of product XYZ?")
-    # Returns: 29.99, 30
+    # Returns: 29.99 or 30
 
-    result: str | list[str] = db.ask("Best-sellers this month?")
-    # Returns: ["Product A", "Product B"] or "No data found"
+    result: list[str] | str = db.ask("Best-sellers this month?")
+    # Returns: ["Product A", "Product B"] or "Product C"
 
     error: str | None = db.ask("What was the the error message?")
     # Returns: "Connection timeout" or None
@@ -167,39 +202,38 @@ description: "TBD"
 
 === ":fontawesome-solid-sitemap:{ .middle } &nbsp; Pydantic Objects"
 
-    ```python linenums="1"
+    ```python linenums="1" 
     from toolfront import Database
+    from pydantic import BaseModel
 
     db = Database("postgresql://user:pass@host/db")
 
-    from pydantic import BaseModel
     class Customer(BaseModel):
         name: str
-        revenue: int
+        seats: int
+        is_active: bool
 
-    top_customers: list[Customer] = db.ask("Top 2 customers?")
-    # Returns: [Customer(name='Acme Corp', revenue=50000), 
-    #           Customer(name='Beta LLC', revenue=42000)]
+    top_customer: Customer = db.ask("Who's our latest customer?")
+    # Returns: Customer(name='Acme', seats=5, is_active=True), 
     ```
 
 </div>
 
 <div class="grid-item-text" markdown>
 
-## **Structure Your Outputs**
+## **Structured**
 
-Raw data is often messy and inconsistent. With ToolFront, you get structured, type-safe outputs that match exactly what your application expects.
+Data is messy. ToolFront returns structured, type-safe responses that match exactly what your expect.
 
 [Learn more](/docs/concepts/structured_outputs){ .md-button .md-button--secondary }
 
-
 </div>
 
 </div>
 
-<h2 align="center"><b>Bring your own models</b></h2>
+<!-- <h2 align="center"><b>Bring Your Own models</b></h2> -->
 
-<div class="models-marquee">
+<!-- <div class="models-marquee">
   <div class="models-marquee-track">
     <div class="models-marquee-item" data-model="openai">
       <img src="assets/icons/models/chatgpt.svg" alt="ChatGPT" class="models-marquee-icon">
@@ -226,16 +260,19 @@ Raw data is often messy and inconsistent. With ToolFront, you get structured, ty
       <img src="assets/icons/models/groq.svg" alt="Groq" class="models-marquee-icon">
     </div>    
   </div>
-</div>
+</div> -->
 
 
 <div class="main-container-left" markdown>
 
 <div class="grid-item-text" markdown>
 
-## **Plug n' Play**
+## **Composable**
 
-AI frameworks often create vendor lock-in and force you to rebuild existing workflows. ToolFront works with any agent framework or AI tool you're already using.
+Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or with your favorite AI frameworks.
+
+[Learn more](/docs/concepts/structured_outputs){ .md-button .md-button--secondary }
+
 
 </div>
 
@@ -284,7 +321,7 @@ AI frameworks often create vendor lock-in and force you to rebuild existing work
 
     data = Database("postgresql://user:pass@localhost/mydb")
     tools = data.tools()
-    system_prompt = data.instructions()
+    prompt = data.instructions()
 
     llm = OpenAI(model="gpt-4o")  
     agent = FunctionAgent(tools, llm, system_prompt=prompt)

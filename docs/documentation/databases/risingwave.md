@@ -1,27 +1,16 @@
-# PostgreSQL
+# RisingWave
 
 ## Installation
 
 ```bash
-pip install "toolfront[postgres]"
+pip install "toolfront[risingwave]"
 ```
 
 ## Connection URL
 
-=== "All Schemas"
-    ```
-    postgres://{user}:{password}@{host}:{port}/{database}
-    ```
-
-=== "Specific Schema"
-    ```
-    postgres://{user}:{password}@{host}:{port}/{database}/{schema}
-    ```
-
-=== "With SSL Enabled"
-    ```
-    postgres://{user}:{password}@{host}:{port}/{database}/{schema}?sslmode=require
-    ```
+```
+risingwave://
+```
 
 ## Connection Parameters
 
@@ -32,26 +21,16 @@ pip install "toolfront[postgres]"
 | `password`               | `str | None`                                | Password                                                                                                                                                                                                                                                                                                                                    | `None`            |
 | `port`                   | `int`                                       | Port number                                                                                                                                                                                                                                                                                                                                 | `5432`            |
 | `database`               | `str | None`                                | Database to connect to                                                                                                                                                                                                                                                                                                                      | `None`            |
-| `schema`                 | `str | None`                                | PostgreSQL schema to use. If None, use the default search_path.                                                                                                                                                                                                                                                                            | `None`            |
-| `autocommit`             | `bool`                                      | Whether or not to autocommit                                                                                                                                                                                                                                                                                                               | `True`            |
-| `kwargs`                 | `Any`                                       | Additional keyword arguments to pass to the backend client connection.                                                                                                                                                                                                                                                                     | `{}`              |
+| `schema`                 | `str | None`                                | RisingWave schema to use. If None, use the default search_path.                                                                                                                                                                                                                                                                            | `None`            |
 
 ## Examples
-
-**Using Connection URL:**
-```python
-from toolfront import Database
-
-db = Database("postgres://user:pass@localhost:5432/sales")
-revenue = db.ask("What's our total revenue this month?")
-```
 
 **Using Connection Parameters:**
 ```python
 from toolfront import Database
 
 db = Database(
-    url="postgres://", # REQUIRED (1)
+    url="risingwave://", # REQUIRED (1)
     host="localhost",
     port=5432,
     database="sales",
@@ -62,4 +41,4 @@ db = Database(
 revenue = db.ask("What's our total revenue this month?")
 ```
 
-1. You must always pass `postgres` or `postgres://` as the URL when creating a PostgreSQL `Database` from parameters. This is required for proper backend selection.
+1. You must always pass `risingwave` or `risingwave://` as the URL when creating a RisingWave `Database` from parameters. This is required for proper backend selection.

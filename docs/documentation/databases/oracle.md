@@ -1,63 +1,53 @@
-# Oracle Database
-
-Configure ToolFront to connect to Oracle Database.
+# Oracle
 
 ## Installation
 
 ```bash
-pip install toolfront[oracle]
+pip install "toolfront[oracle]"
 ```
 
-## Connection
+## Connection URL
 
+```
+oracle://{user}:{password}@{host}:{port}/{database}
+```
+
+## Connection Parameters
+
+| Name                     | Type                                        | Description                                                                                                                                                                                                                                                                                                                                 | Default           |
+|--------------------------|---------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| `user`                   | `str`                                       | Username                                                                                                                                                                                                                                                                                                                                    | **required**      |
+| `password`               | `str`                                       | Password                                                                                                                                                                                                                                                                                                                                    | **required**      |
+| `host`                   | `str`                                       | Hostname                                                                                                                                                                                                                                                                                                                                    | `'localhost'`     |
+| `port`                   | `int`                                       | Port                                                                                                                                                                                                                                                                                                                                        | `1521`            |
+| `database`               | `str | None`                                | Used as an Oracle service name if provided.                                                                                                                                                                                                                                                                                                | `None`            |
+| `sid`                    | `str | None`                                | Unique name of an Oracle Instance, used to construct a DSN if provided.                                                                                                                                                                                                                                                                   | `None`            |
+| `service_name`           | `str | None`                                | Oracle service name, used to construct a DSN if provided. Only one of database and service_name should be provided.                                                                                                                                                                                                                      | `None`            |
+| `dsn`                    | `str | None`                                | An Oracle Data Source Name. If provided, overrides all other connection arguments except username and password.                                                                                                                                                                                                                          | `None`            |
+
+## Examples
+
+**Using Connection URL:**
 ```python
 from toolfront import Database
 
-db = Database("oracle://user:password@host:1521/service")
-
-# Enterprise database queries
-financial_summary: dict = db.ask("Generate monthly financial summary")
-print(f"Financial data: {financial_summary}")
+db = Database("oracle://user:pass@localhost:1521/sales")
+revenue = db.ask("What's our total revenue this month?")
 ```
 
-## Connection Formats
-
+**Using Connection Parameters:**
 ```python
-# With service name
-db = Database("oracle://hr_user:pass@oracle.company.com:1521/PROD")
+from toolfront import Database
 
-# With SID
-db = Database("oracle://user:pass@host:1521", sid="ORCL")
-
-# With TNS
-db = Database("oracle://user:pass@", dsn="your_tns_entry")
+db = Database(
+    url="oracle://", # REQUIRED (1)
+    user="user",
+    password="pass",
+    host="localhost",
+    port=1521,
+    database="sales"
+)
+revenue = db.ask("What's our total revenue this month?")
 ```
 
-## Enterprise Features
-
-```python
-# Complex financial queries
-financial_analysis = db.ask("Perform complex financial calculations and reporting")
-
-# Data warehouse analytics
-warehouse_insights = db.ask("Analyze enterprise data warehouse metrics")
-
-# Compliance reporting
-compliance_report = db.ask("Generate compliance and audit reports")
-```
-
-## Best Use Cases
-
-- **Enterprise applications**
-- **Financial systems**
-- **Data warehousing**
-- **Compliance reporting**
-- **High-volume OLTP**
-
-```python
-# Enterprise analytics
-enterprise_metrics = db.ask("Calculate enterprise KPIs and performance metrics")
-
-# Regulatory compliance
-compliance_data = db.ask("Generate regulatory compliance reports")
-```
+1. You must always pass `oracle` or `oracle://` as the URL when creating an Oracle `Database` from parameters. This is required for proper backend selection.

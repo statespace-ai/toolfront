@@ -1,8 +1,3 @@
----
-hide:
-  - toc
----
-
 # Quickstart
 
 ## 1. Install ToolFront
@@ -10,7 +5,7 @@ hide:
 Install ToolFront with support for your specific database:
 
 ```bash
-pip install toolfront[postgres]
+pip install "toolfront[postgres]"
 ```
 
 ## 2. Setup your model provider API key
@@ -60,4 +55,4 @@ export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 That's it! ToolFront returns results in the format you need.
 
 !!! tip
-    **Need more options?** Check the [Databases section](../documentation/data_sources/databases.md) for connection examples with Snowflake, BigQuery, Athena, and more. See the [AI Models section](../documentation/ai_models/) for configuration examples with OpenAI, Anthropic, Google, and other providers.
+    **Need more options?** Check the [Databases section](../documentation/databases/index.md) for connection examples with Snowflake, BigQuery, Athena, and more. See the [AI Models section](../documentation/ai_models/index.md) for configuration examples with OpenAI, Anthropic, Google, and other providers.
