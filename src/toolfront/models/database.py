@@ -60,23 +60,23 @@ class Query(BaseModel):
 
 
 class Database(DataSource, ABC):
-    """Abstract base class for all databases.
+    """Natural language interface for databases.
+
+    Supports 15+ database types including PostgreSQL, MySQL, SQLite, Snowflake, BigQuery.
 
     Parameters
     ----------
     url : str
-        Database URL for connection.
+        Database connection URL (e.g., 'postgresql://user:pass@host/db')
     match_schema : str, optional
-        Regex pattern to filter schemas/databases. Passed to list_databases' like parameter.
-    match_tables : str, optional
-        Regex pattern to filter table names. Passed to list_tables' like parameter.
+        Regex pattern to filter schemas. Mutually exclusive with match_tables.
+    match_tables : str, optional  
+        Regex pattern to filter tables. Mutually exclusive with match_schema.
 
-    Attributes
-    ----------
-    _connection : BaseBackend or None
-        Ibis backend connection to the database.
-    _connection_kwargs : dict[str, Any]
-        Additional keyword arguments for database connection.
+    Examples
+    --------
+    >>> db = Database("postgresql://user:pass@localhost/mydb")
+    >>> revenue = db.ask("What's our total revenue?")
     """
 
     url: str = Field(description="Database URL.")
@@ -112,7 +112,7 @@ class Database(DataSource, ABC):
     def __repr__(self) -> str:
         dump = self.model_dump(exclude={"tables"})
         args = ", ".join(f"{k}={repr(v)}" for k, v in dump.items())
-        return f"{self.__class__.__name__}({args})"
+        return f"{self.__class__.__name__}({args})"    
 
     @property
     def database_type(self) -> str:
@@ -130,6 +130,10 @@ class Database(DataSource, ABC):
 
     @model_validator(mode="after")
     def model_validator(self) -> "Database":
+
+        if "://" not in self.url:
+            self.url = f"{self.url}://"
+
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", "Unable to create Ibis UDFs", UserWarning)
             self._connection = ibis.connect(self.url, **self._connection_kwargs)
@@ -199,12 +203,12 @@ class Database(DataSource, ABC):
         return self._tables
 
     def tools(self) -> list[callable]:
-        """Return list of available tool methods.
+        """Available tool methods for database operations.
 
         Returns
         -------
         list[callable]
-            List containing inspect_table and query methods.
+            Methods for table inspection and query execution.
         """
         return [self.inspect_table, self.query]
 

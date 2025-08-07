@@ -70,7 +70,22 @@ class Request(BaseModel):
 
 
 class API(DataSource, ABC):
-    """Abstract base class for OpenAPI/Swagger-based APIs."""
+    """Natural language interface for OpenAPI/Swagger APIs.
+
+    Parameters
+    ----------
+    spec : dict | str
+        OpenAPI specification as URL, file path, or dictionary.
+    headers : dict[str, str], optional
+        HTTP headers for authentication.
+    params : dict[str, str], optional
+        Query parameters for all requests.
+
+    Examples
+    --------
+    >>> api = API("https://api.example.com/openapi.json")
+    >>> result = api.ask("Get user info for ID 123")
+    """
 
     spec: dict | str = Field(..., description="API specification config.", exclude=True)
     endpoints: list[str] = Field(..., description="List of available endpoints.")
@@ -137,6 +152,13 @@ class API(DataSource, ABC):
         return ""
 
     def tools(self) -> list[callable]:
+        """Available tool methods for API operations.
+
+        Returns
+        -------
+        list[callable]
+            Methods for endpoint inspection and request execution.
+        """
         return [self.inspect_endpoint, self.request]
 
     async def inspect_endpoint(self, endpoint: Endpoint) -> dict[str, Any]:

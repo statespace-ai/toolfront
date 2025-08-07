@@ -13,7 +13,23 @@ class Pagination(BaseModel):
 
 
 class Document(DataSource):
-    """Abstract base class for document libraries."""
+    """Natural language interface for documents.
+
+    Supports PDF, DOCX, PPTX, XLSX, HTML, JSON, MD, TXT, XML, YAML, RTF formats.
+    Documents are automatically chunked for efficient processing.
+
+    Parameters
+    ----------
+    source : str, optional  
+        Path to document file. Mutually exclusive with text.
+    text : str, optional
+        Document content as text. Mutually exclusive with source.
+
+    Examples
+    --------
+    >>> doc = Document("report.pdf")
+    >>> summary = doc.ask("What are the key findings?")
+    """
 
     source: str | None = Field(
         default=None,
@@ -70,28 +86,32 @@ class Document(DataSource):
             raise ValueError(f"Unsupported document type: {document_type}")
 
     def tools(self) -> list[callable]:
+        """Available tool methods for document operations.
+
+        Returns
+        -------
+        list[callable]
+            Methods for document reading with intelligent chunking.
+        """
         return [self.read]
 
     async def read(
         self,
         pagination: Pagination,
     ) -> str:
-        """
-        Read the contents of a library's document with automatic chunking.
+        """Read document contents with automatic chunking.
 
-        All documents are automatically chunked into sections of 10,000 characters each for easier navigation.
+        Documents are split into 10,000-character sections for efficient processing.
 
-        Library Read Instructions:
-        1. Documents are split into 10k character chunks for all file types (PDF, DOCX, PPTX, Excel, JSON, MD, TXT, XML, YAML, RTF, HTML).
-        2. Use pagination parameter to navigate through document sections:
-           - 0.0 <= pagination < 1.0: Return section at that percentile (e.g., 0.5 = middle section)
-           - pagination >= 1: Return specific section number (e.g., 1 = first section, 2 = second section)
-        3. When searching for specific information in large documents, use a "soft" binary search approach:
-           - Start with an educated percentile guess based on document type and target content (e.g., 0.8 for conclusions in academic papers, 0.3 for methodology)
-           - Use the context from your initial read to refine your search. If you find related but not target content, adjust percentile accordingly
-           - Iterate between percentile and section number paginations to pinpoint information as you narrow down the location
-        4. Use educated guesses for initial positions based on document structure (e.g., table of contents near start, conclusions near end, etc.).
-        5. NEVER continue reading through the rest of the document unnecessarily once you have found the answer.
+        Parameters
+        ----------
+        pagination : Pagination
+            Section navigation: 0.0-0.99 for percentile, >=1 for section number.
+
+        Returns
+        -------
+        str
+            Document content for the requested section.
         """
         # Use the text content for chunking
         document_content = self.text
