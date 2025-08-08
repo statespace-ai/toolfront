@@ -16,14 +16,14 @@ description: "TBD"
 
 
 <h1 style="font-size: 40px">
-  <b>The Big Data Library for AI</b>
+  <b>Data retrieval for AI agents</b>
 </h1>
 
-<h2>ToolFront simplifies data retrieval, so you can focus on building AI agents and workflows.</h2>
+<h2>Simple, open-source data retrieval with unmatched control, precision, and speed.</h2>
 
 
-[Quickstart](getting_started/quickstart.md){ .md-button .md-button--primary }
-[Learn more](documentation/databases/index.md){ .md-button .md-button--secondary }
+[Quickstart](#quick-install){ .md-button .md-button--primary }
+[Learn more](documentation/retrieval/){ .md-button .md-button--secondary }
 
 </div>
 
@@ -34,10 +34,10 @@ description: "TBD"
     ```python linenums="1"
     from toolfront import Database
 
-    # Connect to +10 databases and warehouses
-    db = Database("postgresql://user:pass@localhost:5432/mydb")
+    # Connect +10 databases and warehouses
+    db = Database("postgres://user:pass@localhost:5432/mydb")
 
-    answer = db.ask("What's the revenue of the top 5 products")
+    answer = db.ask("What's the revenue of our top-5 products")
     print(answer)
     ```
 
@@ -46,10 +46,10 @@ description: "TBD"
     ```python linenums="1"
     from toolfront import API
 
-    # Connect to virtually any API with a spec
+    # Connect any API with a spec
     api = API("http://localhost:8000/openapi.json")
 
-    answer = api.ask("Close the ticket for user_id=42")
+    answer = api.ask("Get the latest ticket for user_id=42")
     print(answer)
     ```
 
@@ -58,10 +58,10 @@ description: "TBD"
     ```python linenums="1"
     from toolfront import Document
 
-    # Load any document
+    # Connect any document
     doc = Document("/path/annual_report.pdf")
 
-    answer = doc.ask("Summarize the key financial results.")
+    answer = doc.retrieve("What were the montlhly payments?")
     print(answer)
     ```
 
@@ -71,10 +71,41 @@ description: "TBD"
 
 <br>
 
-<h2 align="center"><b>Bring your data and LLM. We take care of the rest.</b></h2>
+<h2 align="center"><b>Bring your data and LLM. ToolFront handles the rest.</b></h2>
 
 <div class="db-marquee">
   <div class="db-marquee-track">
+    <div class="db-marquee-item" data-db="postgresql">
+      <img src="assets/icons/databases/postgres.svg" alt="PostgreSQL" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="mysql">
+      <img src="assets/icons/databases/mysql.svg" alt="MySQL" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="sqlite">
+      <img src="assets/icons/databases/sqlite.svg" alt="SQLite" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="snowflake">
+      <img src="assets/icons/databases/snowflake.svg" alt="Snowflake" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="bigquery">
+      <img src="assets/icons/databases/bigquery.svg" alt="BigQuery" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="databricks">
+      <img src="assets/icons/databases/databricks.svg" alt="Databricks" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="duckdb">
+      <img src="assets/icons/databases/duckdb.svg" alt="DuckDB" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="postgresql">
+      <img src="assets/icons/databases/supabase.svg" alt="Supabase" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="oracle">
+      <img src="assets/icons/databases/oracle.svg" alt="Oracle" class="db-marquee-icon">
+    </div>
+    <div class="db-marquee-item" data-db="sqlserver">
+      <img src="assets/icons/databases/mssql.svg" alt="SQL Server" class="db-marquee-icon">
+    </div>
+    <!-- Duplicated items for seamless loop -->
     <div class="db-marquee-item" data-db="postgresql">
       <img src="assets/icons/databases/postgres.svg" alt="PostgreSQL" class="db-marquee-icon">
     </div>
@@ -136,12 +167,87 @@ description: "TBD"
     </div>
     <div class="models-marquee-item" data-model="groq">
       <img src="assets/icons/models/groq.svg" alt="Groq" class="models-marquee-icon">
+    </div>
+    <!-- Duplicated items for seamless loop -->
+    <div class="models-marquee-item" data-model="openai">
+      <img src="assets/icons/models/chatgpt.svg" alt="ChatGPT" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="anthropic">
+      <img src="assets/icons/models/claude.svg" alt="Claude" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="google">
+      <img src="assets/icons/models/gemini.svg" alt="Gemini" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="mistral">
+      <img src="assets/icons/models/mistral.svg" alt="Mistral" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="xai">
+      <img src="assets/icons/models/xai.svg" alt="xAI Grok" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="huggingface">
+      <img src="assets/icons/models/huggingface.svg" alt="Hugging Face" class="models-marquee-icon">
+    </div>    
+    <div class="models-marquee-item" data-model="deepseek">
+      <img src="assets/icons/models/deepseek.svg" alt="DeepSeek" class="models-marquee-icon">
+    </div>
+    <div class="models-marquee-item" data-model="groq">
+      <img src="assets/icons/models/groq.svg" alt="Groq" class="models-marquee-icon">
     </div>    
   </div>
 </div>
 
 
 <br>
+
+<div class="main-container-left" markdown>
+
+<div class="grid-item-text" markdown>
+
+## **Zero Configuration** {#quick-install}
+
+Skip config files and infrastructure setup. ToolFront works out of the box with all your data.
+
+[Learn More](documentation/data/index.md){ .md-button .md-button--secondary }
+
+</div>
+
+<div class="tabbed-set" markdown="1">
+
+=== ":fontawesome-solid-download:{ .middle } &nbsp; Install"
+
+    ```bash linenums="1"
+    # Basic installation
+    pip install toolfront
+
+    # Install with PostgreSQL support using pip
+    pip install "toolfront[postgres]"
+
+    # Install with Snowflake support using uv
+    uv add "toolfront[snowflake]"
+
+    # Install with Databricks support using poetry
+    poetry add "toolfront[databricks]"
+    ```
+
+=== ":fontawesome-solid-key:{ .middle } &nbsp; Export LLM Key"
+
+    ```bash linenums="1"
+    # OpenAI
+    export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+
+    # Anthropic
+    export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
+
+    # Google
+    export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
+
+    # Groq
+    export GROQ_API_KEY=<YOUR_GROQ_API_KEY>
+    ```
+
+</div>
+
+</div>
 
 <div class="main-container-right" markdown>
 
@@ -182,7 +288,7 @@ description: "TBD"
     # Returns: {"Apple", "Dell", "HP"}
     ```
 
-=== ":fontawesome-solid-chain:{ .middle } &nbsp; Union Types"
+=== ":fontawesome-solid-chain:{ .middle } &nbsp; Unions"
 
     ```python linenums="1"
     from toolfront import Database
@@ -221,57 +327,25 @@ description: "TBD"
 
 <div class="grid-item-text" markdown>
 
-## **Structured**
+## **Predictable Results**
 
-Data is messy. ToolFront returns structured, type-safe responses that match exactly what your expect.
+Data is messy. ToolFront returns structured, type-safe responses that match exactly what you want.
 
-[Learn more](/docs/concepts/structured_outputs){ .md-button .md-button--secondary }
-
-</div>
+[Learn more](documentation/retrieval.md){ .md-button .md-button--secondary }
 
 </div>
 
-<!-- <h2 align="center"><b>Bring Your Own models</b></h2> -->
-
-<!-- <div class="models-marquee">
-  <div class="models-marquee-track">
-    <div class="models-marquee-item" data-model="openai">
-      <img src="assets/icons/models/chatgpt.svg" alt="ChatGPT" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="anthropic">
-      <img src="assets/icons/models/claude.svg" alt="Claude" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="google">
-      <img src="assets/icons/models/gemini.svg" alt="Gemini" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="mistral">
-      <img src="assets/icons/models/mistral.svg" alt="Mistral" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="xai">
-      <img src="assets/icons/models/xai.svg" alt="xAI Grok" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="huggingface">
-      <img src="assets/icons/models/huggingface.svg" alt="Hugging Face" class="models-marquee-icon">
-    </div>    
-    <div class="models-marquee-item" data-model="deepseek">
-      <img src="assets/icons/models/deepseek.svg" alt="DeepSeek" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="groq">
-      <img src="assets/icons/models/groq.svg" alt="Groq" class="models-marquee-icon">
-    </div>    
-  </div>
-</div> -->
-
+</div>
 
 <div class="main-container-left" markdown>
 
 <div class="grid-item-text" markdown>
 
-## **Composable**
+## **Composable Workflows**
 
 Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or with your favorite AI frameworks.
 
-[Learn more](/docs/concepts/structured_outputs){ .md-button .md-button--secondary }
+[Learn more](documentation/retrieval.md){ .md-button .md-button--secondary }
 
 
 </div>

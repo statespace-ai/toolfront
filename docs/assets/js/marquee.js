@@ -5,7 +5,7 @@
 class DatabaseMarquee {
     constructor() {
         this.dbConfig = {
-            postgresql: { name: 'PostgreSQL', extra: 'postgresql' },
+            postgres: { name: 'Postgres', extra: 'postgres' },
             mysql: { name: 'MySQL', extra: 'mysql' },
             sqlite: { name: 'SQLite', extra: 'sqlite' },
             snowflake: { name: 'Snowflake', extra: 'snowflake' },
@@ -14,7 +14,7 @@ class DatabaseMarquee {
             duckdb: { name: 'DuckDB', extra: 'duckdb' }
         };
         
-        this.currentDb = 'postgresql';
+        this.currentDb = 'postgres';
         this.highlightTimeout = null;
         
         this.init();
@@ -24,8 +24,6 @@ class DatabaseMarquee {
         this.setupEventListeners();
         this.setupMarqueeClickHandlers();
         this.setupModelsClickHandlers();
-        this.duplicateIcons();
-        this.duplicateModels();
     }
     
     setupEventListeners() {
@@ -98,7 +96,7 @@ class DatabaseMarquee {
                 e.preventDefault();
                 const dbType = item.dataset.db;
                 if (dbType) {
-                    const url = `documentation/databases/${dbType}/`;
+                    const url = `documentation/data/databases/${dbType}/`;
                     window.location.href = url;
                 }
             });
@@ -109,7 +107,7 @@ class DatabaseMarquee {
                     e.preventDefault();
                     const dbType = item.dataset.db;
                     if (dbType) {
-                        const url = `documentation/databases/${dbType}/`;
+                        const url = `documentation/data/databases/${dbType}/`;
                         window.location.href = url;
                     }
                 }
@@ -154,36 +152,6 @@ class DatabaseMarquee {
         });
     }
     
-    duplicateIcons() {
-        const marqueeTrack = document.querySelector('.db-marquee-track');
-        if (!marqueeTrack) return;
-        
-        // Clone all items to create seamless loop
-        const items = marqueeTrack.querySelectorAll('.db-marquee-item');
-        items.forEach(item => {
-            const clone = item.cloneNode(true);
-            marqueeTrack.appendChild(clone);
-        });
-        
-        // Re-setup click handlers for cloned items
-        this.setupMarqueeClickHandlers();
-    }
-    
-    duplicateModels() {
-        const modelsTrack = document.querySelector('.models-marquee-track');
-        if (!modelsTrack) return;
-        
-        // Clone all items to create seamless loop
-        const items = modelsTrack.querySelectorAll('.models-marquee-item');
-        items.forEach(item => {
-            const clone = item.cloneNode(true);
-            modelsTrack.appendChild(clone);
-        });
-        
-        // Re-setup click handlers for cloned items
-        this.setupModelsClickHandlers();
-    }
-    
     // Method to programmatically select a database
     selectDatabase(dbKey) {
         const icon = document.querySelector(`[data-extra="${dbKey}"]`);
@@ -203,13 +171,30 @@ class DatabaseMarquee {
 document.addEventListener('DOMContentLoaded', () => {
     const marquee = new DatabaseMarquee();
     
+    // Initialize simple marquees with CSS animation
+    function initializeMarquees() {
+        const dbTrack = document.querySelector('.db-marquee .swiper-wrapper');
+        const modelsTrack = document.querySelector('.models-marquee .swiper-wrapper');
+        
+        if (dbTrack) {
+            dbTrack.style.animation = 'marquee 20s linear infinite';
+        }
+        
+        if (modelsTrack) {
+            modelsTrack.style.animation = 'marquee-reverse 18s linear infinite';
+        }
+    }
+    
+    // Call initialization
+    setTimeout(initializeMarquees, 100);
+    
     // Initialize AOS (Animate On Scroll)
     if (typeof AOS !== 'undefined') {
         AOS.init({
             duration: 800,
             easing: 'ease-out-quad',
-            once: false, // Allow animations to repeat
-            mirror: true, // Animate out when scrolling past
+            once: false,
+            mirror: true,
             offset: 120,
             delay: 0,
             anchorPlacement: 'top-bottom',
@@ -223,12 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
             throttleDelay: 99
         });
         
-        // Refresh AOS when window is resized
         window.addEventListener('resize', () => {
             AOS.refresh();
         });
         
-        // Force refresh after a short delay to ensure proper initialization
         setTimeout(() => {
             AOS.refresh();
         }, 100);

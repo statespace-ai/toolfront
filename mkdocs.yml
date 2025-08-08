@@ -28,7 +28,6 @@ theme:
     - search.share
     - content.code.copy
     - content.code.annotate
-    - navigation.footer
     - navigation.indexes
     - search.suggest
     - announce.dismiss
@@ -63,70 +62,62 @@ plugins:
 
 
 nav:
-  - ToolFront: index.md
-  - Getting Started:
-    - Quickstart: getting_started/quickstart.md
-    - FAQ: getting_started/faq.md
-    - Community: getting_started/community.md
+  - Home: index.md
   - Documentation:
-    - Databases:
-      - documentation/databases/index.md
-      - BigQuery: documentation/databases/bigquery.md
-      - ClickHouse: documentation/databases/clickhouse.md
-      - Databricks: documentation/databases/databricks.md
-      - Druid: documentation/databases/druid.md
-      - DuckDB: documentation/databases/duckdb.md
-      - Flink: documentation/databases/flink.md
-      - MSSQL: documentation/databases/mssql.md
-      - MySQL: documentation/databases/mysql.md
-      - Oracle: documentation/databases/oracle.md
-      - PostgreSQL: documentation/databases/postgresql.md
-      - PySpark: documentation/databases/pyspark.md
-      - RisingWave: documentation/databases/risingwave.md
-      - Snowflake: documentation/databases/snowflake.md
-      - SQLite: documentation/databases/sqlite.md
-      - Trino: documentation/databases/trino.md
-    - APIs: documentation/api.md
-    - Documents: documentation/document.md
+    - Retrieval: documentation/retrieval.md
+    - Data:
+      - documentation/data/index.md
+      - Databases:
+        - documentation/data/databases/index.md
+        - BigQuery: documentation/data/databases/bigquery.md
+        - ClickHouse: documentation/data/databases/clickhouse.md
+        - Databricks: documentation/data/databases/databricks.md
+        - Druid: documentation/data/databases/druid.md
+        - DuckDB: documentation/data/databases/duckdb.md
+        - Flink: documentation/data/databases/flink.md
+        - MSSQL: documentation/data/databases/mssql.md
+        - MySQL: documentation/data/databases/mysql.md
+        - Oracle: documentation/data/databases/oracle.md
+        - PostgreSQL: documentation/data/databases/postgresql.md
+        - PySpark: documentation/data/databases/pyspark.md
+        - RisingWave: documentation/data/databases/risingwave.md
+        - Snowflake: documentation/data/databases/snowflake.md
+        - SQLite: documentation/data/databases/sqlite.md
+        - Trino: documentation/data/databases/trino.md
+      - APIs: documentation/data/api.md
+      - Documents: documentation/data/document.md
     - AI Models:
       - documentation/ai_models/index.md
       - OpenAI: documentation/ai_models/openai.md
       - Anthropic: documentation/ai_models/anthropic.md
-      - Google Gemini: documentation/ai_models/google.md
+      - Google: documentation/ai_models/google.md
+      - Bedrock: documentation/ai_models/bedrock.md
+      - Cohere: documentation/ai_models/cohere.md
       - Groq: documentation/ai_models/groq.md
       - Mistral: documentation/ai_models/mistral.md
-      - xAI (Grok): documentation/ai_models/xai.md
-      - Cohere: documentation/ai_models/cohere.md
+      - HuggingFace: documentation/ai_models/huggingface.md
+      - Grok (xAI): documentation/ai_models/grok.md
       - DeepSeek: documentation/ai_models/deepseek.md
-      - AWS Bedrock: documentation/ai_models/bedrock.md
-      - Azure OpenAI: documentation/ai_models/azure_openai.md
-      - Hugging Face: documentation/ai_models/huggingface.md
-      - Custom/Self-hosted: documentation/ai_models/custom.md
-    - Structured Outputs: documentation/structured_outputs.md
-  - API Reference:
-    - Database: api_reference/database.md
-    - API: api_reference/api.md
-    - Document: api_reference/document.md
-    - MCP: api_reference/mcp.md
+      - Azure AI: documentation/ai_models/azure.md
+      - Fireworks AI: documentation/ai_models/fireworks.md
+      - Moonshot AI: documentation/ai_models/moonshot.md
+      - GitHub Models: documentation/ai_models/github.md
+      - Heroku AI: documentation/ai_models/heroku.md
+      - OpenRouter: documentation/ai_models/openrouter.md
+      - Ollama: documentation/ai_models/ollama.md
+      - Together AI: documentation/ai_models/together.md
+  - Reference:
+    - Database: reference/database.md
+    - API: reference/api.md
+    - Document: reference/document.md
+    - MCP: reference/mcp.md
   - Examples:
     - Overview: examples/index.md
-    - Advanced: examples/advanced.md
-    - APIs: examples/apis.md
-    - Databases: examples/databases.md
-    - Documents: examples/documents.md
-    - Use Cases:
-      - Databases:
-        - Sales Analytics: examples/databases/sales_analytics.md
-        - Customer Insights: examples/databases/customer_insights.md
-        - Financial Reporting: examples/databases/financial_reporting.md
-      - APIs:
-        - Weather Data: examples/apis/weather_api.md
-        - E-commerce Integration: examples/apis/ecommerce_api.md
-        - Social Media Analytics: examples/apis/social_media_api.md
-      - Documents:
-        - Financial Reports: examples/documents/financial_reports.md
-        - Research Papers: examples/documents/research_papers.md
-        - Legal Contracts: examples/documents/legal_contracts.md    
+    - Basic Queries: examples/basic.md
+    - Invoice Processing: examples/invoice-processing.md
+    - Raw Dataframes: examples/raw-dataframes.md
+    - Dataset Exports: examples/dataset-exports.md
+    - HubSpot Integration: examples/hubspot-integration.md    
 
 markdown_extensions:
   - admonition
@@ -149,12 +140,24 @@ markdown_extensions:
 extra_css:
   - assets/css/custom.css
   - https://unpkg.com/aos@2.3.1/dist/aos.css
+  - https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css
 
 extra_javascript:
   - https://unpkg.com/aos@2.3.1/dist/aos.js
+  - https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js
   - assets/js/marquee.js
 
 extra:
   generator: false
+  social:
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/rRyM7zkZTf
+      name: Join our Discord community
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/toolfront
+      name: Follow us on X (Twitter)
+    - icon: fontawesome/brands/github
+      link: https://github.com/kruskal-labs/toolfront
+      name: Star us on GitHub
 
 copyright: Copyright &copy; 2025 Kruskal Labs, Inc.

@@ -1,33 +1,29 @@
 # Examples
 
-Explore practical, real-world examples of using ToolFront with different data sources. Each example includes complete code, explanations, and tips to help you get started quickly.
+Practical, real-world examples of using ToolFront for common tasks.
 
-## 🗄️ Database Examples
+## Getting Started
 
-Learn how to query databases for business insights:
+All examples assume you have:
+- ToolFront installed: `pip install toolfront`
+- An API key set: `export OPENAI_API_KEY=your_key`
 
-- **[Sales Analytics](databases/sales_analytics.md)** - Analyze sales performance and trends
-- **[Customer Insights](databases/customer_insights.md)** - Extract customer behavior patterns  
-- **[Financial Reporting](databases/financial_reporting.md)** - Generate financial summaries and reports
+## Examples
 
-## 🌐 API Examples
+### [Basic Queries](basic.md)
+Simple database queries with type hints for structured responses.
 
-Integrate with external APIs for real-time data:
+### [Invoice Processing](invoice-processing.md)
+Extract and process invoice data from PDF documents with validation.
 
-- **[Weather Data](apis/weather_api.md)** - Fetch and analyze weather information
-- **[E-commerce Integration](apis/ecommerce_api.md)** - Connect with e-commerce platforms
-- **[Social Media Analytics](apis/social_media_api.md)** - Analyze social media metrics
+### [Raw Dataframes](raw-dataframes.md)
+Export massive datasets without token costs using DataFrame type hints.
 
-## 📄 Document Examples
+### [Dataset Exports](dataset-exports.md)  
+Export structured data with field validation using Pydantic models.
 
-Extract insights from various document formats:
+### [HubSpot Integration](hubspot-integration.md)
+Connect to HubSpot CRM and analyze sales and marketing data.
 
-- **[Financial Reports](documents/financial_reports.md)** - Parse financial statements and reports
-- **[Research Papers](documents/research_papers.md)** - Extract key findings from academic papers
-- **[Legal Contracts](documents/legal_contracts.md)** - Analyze legal documents and contracts
-
-!!! tip "Getting Started"
-    All examples assume you have ToolFront installed with the appropriate extras. For example, use `pip install toolfront[postgres]` for database examples.
-
-!!! info "API Keys Required"
-    These examples require API keys for your chosen AI model provider (OpenAI, Anthropic, etc.). Set your API key as an environment variable before running the examples.
+!!! tip
+    Each example is self-contained and can be run independently. Copy the code and modify it for your specific use case.

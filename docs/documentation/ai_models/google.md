@@ -1,46 +1,36 @@
 # Google
 
-Configure ToolFront to use Google's Gemini models with large context windows.
-
 ## Setup
 
-Export your Google API key as an environment variable:
+Get your API key from [Google AI Studio](https://aistudio.google.com/), and export it as an environment variable:
 
 ```bash
 export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
 ```
 
-Get your API key from [Google AI Studio](https://aistudio.google.com/).
+Google Gemini models can be accessed through two different providers:
 
-## Model Selection
+- **`google-gla:`** - Google Generative Language API (standard)
+- **`google-vertex:`** - Google Vertex AI platform
 
-ToolFront supports two approaches for Google model selection:
+## Examples
 
-### Latest Models
-Use the latest version of any model family. These automatically update to the newest release:
 
 ```python
 from toolfront import Database
 
 db = Database("postgresql://user:pass@host/db")
 
-# Always gets the latest Gemini 2.5 Pro version
-result = db.ask("Perform comprehensive analysis", model="google-gla:gemini-2.5-pro")
+# Latest Gemini 2.0 Flash version (GLA)
+result = db.ask(..., model="google-gla:gemini-2.0-flash-exp")
 
-# Always gets the latest Gemini 2.5 Flash version  
-result = db.ask("Quick data insights", model="google-gla:gemini-2.5-flash")
+# Latest Gemini 2.0 Flash version (Vertex AI)
+result = db.ask(..., model="google-vertex:gemini-2.0-flash-exp")
+
+# Pinned Gemini version
+result = db.ask(..., model="google-gla:gemini-1.5-pro-002")
 ```
 
-### Pinned Snapshots
-Pin to specific model snapshots for reproducible results in production:
 
-```python
-# Pinned to a specific Gemini Pro snapshot
-result = db.ask("Comprehensive analysis", model="google-gla:gemini-2.5-pro-preview-05-06")
-
-# Pinned to a specific Gemini Flash snapshot
-result = db.ask("Quick insights", model="google-gla:gemini-2.5-flash-preview-05-20")
-```
-
-!!! note
-    All Google models must be prefixed with `google-gla:` or `google-vertex:` when using with ToolFront.
+!!! tip "Google Model Names"
+    Always specify a Google model with either the `google-gla:` or `google-vertex:` prefix.

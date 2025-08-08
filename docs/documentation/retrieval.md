@@ -1,15 +1,56 @@
-# Structured Outputs
+# Retrieval
 
-ToolFront uses Python type annotations to automatically structure responses, export data, and handle errors. `ask()` will always return the exact output type you specify.
+ToolFront makes it simple to retrieve information from your data sources using natural language.
 
+## Simple Responses
 
-## Output Types
+Directly calling `ask()` will return a string.
 
-ToolFront supports all standard Python types and Pydantic models for structured data.
+=== ":fontawesome-solid-database:{ .middle } &nbsp; Databases"
+
+    ```python linenums="1"
+    from toolfront import Database
+
+    db = Database("postgresql://user:pass@host/db")
+
+    result = db.ask("What's our total revenue this quarter?")
+    print(result)
+    # Returns: "Total revenue for Q4 2024 is $2.4M"
+    ```
+
+=== ":fontawesome-solid-code:{ .middle } &nbsp; APIs"
+
+    ```python linenums="1"
+    from toolfront import API
+
+    api = API("https://api.example.com/openapi.json")
+
+    result = api.ask("Get the latest status for service XYZ")
+    print(result)
+    # Returns: "Service XYZ is running with 99.9% uptime"
+    ```
+
+=== ":fontawesome-solid-file:{ .middle } &nbsp; Documents"
+
+    ```python linenums="1"
+    from toolfront import Document
+
+    doc = Document("/path/to/annual_report.pdf")
+    
+    result = doc.ask("What were the key achievements this year?")
+    print(result)
+    # Returns: "Key achievements include 30% revenue growth..."
+    ```
+
+Learn more about all supported data sources [here](data/index.md).
+
+---
+
+## Typed Responses
+
+Add a type hint to `ask()` to specify the exact python type you want returned:
 
 === ":fontawesome-solid-cube:{ .middle } &nbsp; Primitives"
-
-    Use Python's built-in types for simple values:
 
     ```python linenums="1"
     from toolfront import Database
@@ -19,19 +60,17 @@ ToolFront supports all standard Python types and Pydantic models for structured 
     total_orders: int = db.ask("How many orders do we have?")
     # Returns: 1250
 
-    avg_price: float = db.ask("What's our average product price?")
+    avg_price: float = db.ask("What's our average ticket price?")
     # Returns: 29.99
 
     best_product: str = db.ask("What's our best-selling product?")
     # Returns: "Wireless Headphones Pro"
 
-    has_inventory: bool = db.ask("Do we have any products in stock?")
+    has_inventory: bool = db.ask("Do we have any monitors in stock?")
     # Returns True
     ```
 
 === ":fontawesome-solid-layer-group:{ .middle } &nbsp; Collections"
-
-    Use Python collections for multiple items:
 
     ```python linenums="1"
     from toolfront import API
@@ -51,9 +90,7 @@ ToolFront supports all standard Python types and Pydantic models for structured 
     # Returns: {"North America", "Europe", "Asia Pacific"}
     ```
 
-=== ":fontawesome-solid-chain:{ .middle } &nbsp; Union Types"
-
-    Handle multiple possible outcomes:
+=== ":fontawesome-solid-chain:{ .middle } &nbsp; Unions"
 
     ```python linenums="1"
     from toolfront import Database
@@ -75,8 +112,6 @@ ToolFront supports all standard Python types and Pydantic models for structured 
 
 === ":fontawesome-solid-sitemap:{ .middle } &nbsp; Pydantic Objects"
 
-    For complex, structured data:
-
     ```python linenums="1"
     from toolfront import Document
     from pydantic import BaseModel, Field
@@ -89,32 +124,32 @@ ToolFront supports all standard Python types and Pydantic models for structured 
         price: float | int = Field(..., description="Product price in USD")
         in_stock: bool = Field(..., description="Product is in stock")
 
-    products: List[Product] = db.ask("Rank our products by price")
-    # Returns: [Product(name="Wireless Headphones", price=300, in_stock=True),
-    #           Product(name="Laptop Pro", price=1299.0, in_stock=False),
-    #           ...]
+
+    # Outputs a structured Pydantic object
+    product: Product = db.ask("What's our best-selling product") 
+    # Returns: Product(name="Blue Headphones", price=300, in_stock=True) # (2)
     ```
     
-    1. Adding a Pydantic Field  description helps ToolFront extract data more accurately.
+    1. Adding a Pydantic field descriptions improves retrieval accuracy.
+    2. You can also retrieve collections of Pydantic objects, e.g. `products: list[Product] = db.ask(...)`
 
 !!! tip
-    All of ToolFront's data sources (databases, APIs, and documents) support output typed outputs.
+    All data sources (databases, APIs, and documents) support all response data types.
 
+---
 
-## Table Exports
+## Datasets Exports
 
-Use `Table` types to export large datasets without consuming LLM tokens. The database output is routed directly, bypassing the LLM entirely.
+Export massive datasets without LLM token costs:
 
-=== ":fontawesome-solid-table:{ .middle } &nbsp; Raw Tables"
+=== ":fontawesome-solid-table:{ .middle } &nbsp; As-Is Export"
 
-    Export data as raw DataFrame:
-
-    ```python linenums="1"
+    ```python linenums="1" hl_lines="6"
     from toolfront import Database
 
     db = Database("postgresql://user:pass@host/db")
 
-    # Export 50,000+ rows with zero tokens
+    # Export 100,000+ rows with zero tokens
     sales_data: db.Table = db.ask("Get all sales from 2024")
 
     # Process locally
@@ -127,11 +162,9 @@ Use `Table` types to export large datasets without consuming LLM tokens. The dat
     print(sales_data.columns)
     ```
 
-=== ":fontawesome-solid-sitemap:{ .middle } &nbsp; Structured Tables"
+=== ":fontawesome-solid-sitemap:{ .middle } &nbsp; Field-Specific"
 
-    Export with Pydantic validation per row:
-
-    ```python linenums="1"
+    ```python linenums="1" hl_lines="6-9 12"
     from toolfront import Database
     from pydantic import BaseModel
 
@@ -142,24 +175,26 @@ Use `Table` types to export large datasets without consuming LLM tokens. The dat
         amount: float
         date: str
 
-    # Each row becomes a Sale object
-    sales_data: db.Table[Sale] = db.ask("Get Q4 sales")
+    # Specify columns fields to retrieve with Pydantic
+    sales_data: db.Table[Sale] = db.ask("Get Q4 sales") # (1)
 
     for sale in sales_data:
         print(f"{sale.customer_name}: ${sale.amount}")
     ```
+    
+    1. `sales_data` can also be converted to a DataFrame with `sales_data.to_dataframe()`
 
 
-!!! note
-    Table exports are currently supported for databases only.
+!!! warning "Database-Only"
+    Dataset exports are only supported for databases.
+
+---
 
 ## Error Handling
 
-Handle failures and edge cases by including error strings in union types or using structured error models.
+Handle failures with error strings, or models, or custom output validation.
 
-=== ":fontawesome-solid-exclamation-triangle:{ .middle } &nbsp; String Errors"
-
-    Include error strings in union types:
+=== ":fontawesome-solid-exclamation-triangle:{ .middle } &nbsp; Error Strings"
 
     ```python linenums="1"
     from toolfront import Database
@@ -170,7 +205,7 @@ Handle failures and edge cases by including error strings in union types or usin
     result: list[dict] | str = db.ask("Complex query that might fail")
     # Returns: [{"id": 1, "name": "John"}] or "Error: table not found"
 
-    # Boolean or error string
+    # Handle both success and error cases
     status: bool | str = db.ask("Is the system healthy?")
     # Returns: True or "Database connection failed"
 
@@ -180,11 +215,9 @@ Handle failures and edge cases by including error strings in union types or usin
         print(f"Found {len(result)} records")
     ```
 
-=== ":fontawesome-solid-cog:{ .middle } &nbsp; Custom Error Models"
+=== ":fontawesome-solid-cog:{ .middle } &nbsp; Error Models"
 
-    Create structured error responses:
-
-    ```python linenums="1"
+    ```python linenums="1" hl_lines="6-9"
     from toolfront import Database
     from pydantic import BaseModel
 
@@ -197,17 +230,15 @@ Handle failures and edge cases by including error strings in union types or usin
 
     # Handle both success and error cases
     result: list[dict] | DatabaseError = db.ask("Complex query")
+    # Returns: list[dict] or DatabaseError
 
     if isinstance(result, DatabaseError):
-        print(f"Error: {result.message}")
-        print(f"Suggestion: {result.suggestion}")
+        print(f"Error: {result.message} | Suggestion: {result.suggestion}")
     ```
 
-=== ":fontawesome-solid-shield-alt:{ .middle } &nbsp; Data Validation"
+=== ":fontawesome-solid-shield-alt:{ .middle } &nbsp; Output Validation"
 
-    Automatically validate responses with Pydantic:
-
-    ```python linenums="1"
+    ```python linenums="1" hl_lines="6-13"
     from toolfront import Database
     from pydantic import BaseModel, Field, validator
 
@@ -222,5 +253,6 @@ Handle failures and edge cases by including error strings in union types or usin
         def validate_email(cls, v):
             return v.lower()
 
+    # Pydantic automatically validates responses
     customers: list[Customer] = db.ask("Get all customers")
     ```

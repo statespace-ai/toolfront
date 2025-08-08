@@ -1,14 +1,23 @@
-# AI Model Configuration
+# AI Models
 
-ToolFront is model-agnostic and supports all major LLM providers. Configure your preferred AI model by setting the appropriate API key and specifying the model in your queries.
-
+ToolFront is model-agnostic and supports 15+ LLM providers.
 
 - **[OpenAI](./openai.md)**
-- **[Google](./google.md)**
 - **[Anthropic](./anthropic.md)**
-- **[xAI](./xai.md)**
-- **[DeepSeek](./deepseek.md)**
-- **[Mistral](./mistral.md)**
+- **[Google](./google.md)**
+- **[Bedrock](./bedrock.md)**
 - **[Cohere](./cohere.md)**
-- **[Azure OpenAI](./azure_openai.md)**
-- **[Custom/self-hosted models](./custom.md)**
+- **[Groq](./groq.md)**
+- **[Mistral](./mistral.md)**
+- **[HuggingFace](./huggingface.md)**
+- **[Grok (xAI)](./grok.md)**
+- **[DeepSeek](./deepseek.md)**
+- **[Azure AI](./azure.md)**
+- **[Fireworks AI](./fireworks.md)**
+- **[Moonshot AI](./moonshot.md)**
+- **[GitHub Models](./github.md)**
+- **[Heroku AI](./heroku.md)**
+- **[OpenRouter](./openrouter.md)**
+- **[Ollama](./openrouter.md)**
+- **[Together AI](./together.md)**
+

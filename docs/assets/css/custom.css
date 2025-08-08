@@ -167,7 +167,7 @@ h1, h2, h3 {
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
-    opacity: 0.7;
+    opacity: 0.9;
     transition: all 0.3s ease;
     cursor: pointer;
     padding: 8px;
@@ -176,6 +176,7 @@ h1, h2, h3 {
 
 .db-marquee-item:hover {
     opacity: 1;
+    transform: scale(1.15);
 }
 
 .db-marquee-icon {
@@ -258,7 +259,7 @@ h1, h2, h3 {
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
-    opacity: 0.7;
+    opacity: 0.9;
     transition: all 0.3s ease;
     cursor: pointer;
     padding: 8px;
@@ -267,6 +268,7 @@ h1, h2, h3 {
 
 .models-marquee-item:hover {
     opacity: 1;
+    transform: scale(1.15);
 }
 
 .models-marquee-icon {
