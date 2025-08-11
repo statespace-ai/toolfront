@@ -20,7 +20,7 @@ class Document(DataSource):
 
     Parameters
     ----------
-    source : str, optional  
+    source : str, optional
         Path to document file. Mutually exclusive with text.
     text : str, optional
         Document content as text. Mutually exclusive with source.
