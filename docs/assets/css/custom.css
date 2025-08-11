@@ -1,17 +1,17 @@
 /* Custom color scheme */
 :root {
-    --md-primary-fg-color: #3e8599;
+    --md-primary-fg-color: #10a2b4;
 
 }
 
 [data-md-color-scheme="default"] {
-    --md-primary-fg-color: #3e8599;
-    --md-accent-fg-color: #2f6b7a;
+    --md-primary-fg-color: #10a2b4;
+    --md-accent-fg-color: #0c7683;
 }
 
 [data-md-color-scheme="slate"] {
-    --md-primary-fg-color: #4a9bb3;
-    --md-accent-fg-color: #2f6b7a;
+    --md-primary-fg-color: #10a2b4;
+    --md-accent-fg-color: #0c7683;
 }
 
 /* Simple button styling */

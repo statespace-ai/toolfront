@@ -1,10 +1,14 @@
 # Retrieval
 
-ToolFront makes it simple to retrieve information from your data sources using natural language.
+ToolFront makes it easy to retrieve data in natural language.
+
+---
 
 ## Simple Responses
 
-Directly calling `ask()` will return a string.
+Directly calling your data source's `ask()` method will return a string.
+
+<div class="tabbed-set" markdown="1">
 
 === ":fontawesome-solid-database:{ .middle } &nbsp; Databases"
 
@@ -42,13 +46,15 @@ Directly calling `ask()` will return a string.
     # Returns: "Key achievements include 30% revenue growth..."
     ```
 
-Learn more about all supported data sources [here](data/index.md).
+</div>
 
 ---
 
 ## Typed Responses
 
-Add a type hint to `ask()` to specify the exact python type you want returned:
+Add a type hint to `ask()` to specify the exact Python type you want returned:
+
+<div class="tabbed-set" markdown="1">
 
 === ":fontawesome-solid-cube:{ .middle } &nbsp; Primitives"
 
@@ -133,23 +139,28 @@ Add a type hint to `ask()` to specify the exact python type you want returned:
     1. Adding a Pydantic field descriptions improves retrieval accuracy.
     2. You can also retrieve collections of Pydantic objects, e.g. `products: list[Product] = db.ask(...)`
 
+</div>
+
 !!! tip
-    All data sources (databases, APIs, and documents) support all response data types.
+    All data sources (databases, APIs, and documents) support typed responses.
 
 ---
 
-## Datasets Exports
+## Dataset Exports
 
-Export massive datasets without LLM token costs:
+Retrieve massive datasets without incurring additional LLM token costs.
 
-=== ":fontawesome-solid-table:{ .middle } &nbsp; As-Is Export"
+
+<div class="tabbed-set" markdown="1">
+
+=== ":fontawesome-solid-table:{ .middle } &nbsp; As-Is"
 
     ```python linenums="1" hl_lines="6"
     from toolfront import Database
 
     db = Database("postgresql://user:pass@host/db")
 
-    # Export 100,000+ rows with zero tokens
+    # Export 100,000+ rows
     sales_data: db.Table = db.ask("Get all sales from 2024")
 
     # Process locally
@@ -162,7 +173,7 @@ Export massive datasets without LLM token costs:
     print(sales_data.columns)
     ```
 
-=== ":fontawesome-solid-sitemap:{ .middle } &nbsp; Field-Specific"
+=== ":fontawesome-solid-list:{ .middle } &nbsp; Specific Fields"
 
     ```python linenums="1" hl_lines="6-9 12"
     from toolfront import Database
@@ -184,6 +195,7 @@ Export massive datasets without LLM token costs:
     
     1. `sales_data` can also be converted to a DataFrame with `sales_data.to_dataframe()`
 
+</div>
 
 !!! warning "Database-Only"
     Dataset exports are only supported for databases.
@@ -193,6 +205,8 @@ Export massive datasets without LLM token costs:
 ## Error Handling
 
 Handle failures with error strings, or models, or custom output validation.
+
+<div class="tabbed-set" markdown="1">
 
 === ":fontawesome-solid-exclamation-triangle:{ .middle } &nbsp; Error Strings"
 
@@ -256,3 +270,5 @@ Handle failures with error strings, or models, or custom output validation.
     # Pydantic automatically validates responses
     customers: list[Customer] = db.ask("Get all customers")
     ```
+
+</div>

@@ -24,11 +24,6 @@ class Document(DataSource):
         Path to document file. Mutually exclusive with text.
     text : str, optional
         Document content as text. Mutually exclusive with source.
-
-    Examples
-    --------
-    >>> doc = Document("report.pdf")
-    >>> summary = doc.ask("What are the key findings?")
     """
 
     source: str | None = Field(

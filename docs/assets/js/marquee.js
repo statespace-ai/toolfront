@@ -96,7 +96,7 @@ class DatabaseMarquee {
                 e.preventDefault();
                 const dbType = item.dataset.db;
                 if (dbType) {
-                    const url = `documentation/data/databases/${dbType}/`;
+                    const url = `documentation/databases/${dbType}/`;
                     window.location.href = url;
                 }
             });
@@ -107,7 +107,7 @@ class DatabaseMarquee {
                     e.preventDefault();
                     const dbType = item.dataset.db;
                     if (dbType) {
-                        const url = `documentation/data/databases/${dbType}/`;
+                        const url = `documentation/databases/${dbType}/`;
                         window.location.href = url;
                     }
                 }
@@ -165,24 +165,120 @@ class DatabaseMarquee {
             }
         }
     }
+    
 }
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     const marquee = new DatabaseMarquee();
     
-    // Initialize simple marquees with CSS animation
+    // Initialize marquees with bulletproof infinite scroll
     function initializeMarquees() {
-        const dbTrack = document.querySelector('.db-marquee .swiper-wrapper');
-        const modelsTrack = document.querySelector('.models-marquee .swiper-wrapper');
+        const dbTrack = document.querySelector('.db-marquee-track');
+        const modelsTrack = document.querySelector('.models-marquee-track');
         
-        if (dbTrack) {
-            dbTrack.style.animation = 'marquee 20s linear infinite';
+        // Proven infinite scroll marquee setup
+        function setupInfiniteMarquee(track, direction = 'left', speed = 5) {
+            if (!track) return;
+            
+            // Clone all items multiple times for seamless loop
+            const originalItems = Array.from(track.children);
+            const cloneCount = 3; // Clone 3 times for safety
+            
+            for (let i = 0; i < cloneCount; i++) {
+                originalItems.forEach(item => {
+                    const clone = item.cloneNode(true);
+                    track.appendChild(clone);
+                });
+            }
+            
+            // Re-setup click handlers for all items (including clones)
+            const allItems = Array.from(track.children);
+            allItems.forEach(item => {
+                // Remove any existing listeners to avoid duplicates
+                item.replaceWith(item.cloneNode(true));
+            });
+            
+            // Get fresh references after cloning
+            const freshItems = Array.from(track.children);
+            freshItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const dbType = item.dataset.db;
+                    const modelType = item.dataset.model;
+                    
+                    if (dbType) {
+                        const url = `documentation/databases/${dbType}/`;
+                        window.location.href = url;
+                    } else if (modelType) {
+                        const url = `documentation/ai_models/${modelType}/`;
+                        window.location.href = url;
+                    }
+                });
+                
+                // Add keyboard navigation
+                item.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const dbType = item.dataset.db;
+                        const modelType = item.dataset.model;
+                        
+                        if (dbType) {
+                            const url = `documentation/databases/${dbType}/`;
+                            window.location.href = url;
+                        } else if (modelType) {
+                            const url = `documentation/ai_models/${modelType}/`;
+                            window.location.href = url;
+                        }
+                    }
+                });
+                
+                // Make items focusable for accessibility
+                item.setAttribute('tabindex', '0');
+                item.setAttribute('role', 'button');
+                const img = item.querySelector('img');
+                if (img) {
+                    item.setAttribute('aria-label', `Learn more about ${img.alt}`);
+                }
+            });
+            
+            // Use transform animation with JavaScript for perfect control
+            let position = 0;
+            const itemWidth = 108; // 48px icon + 60px gap
+            const totalOriginalWidth = originalItems.length * itemWidth;
+            
+            function animate() {
+                if (direction === 'left') {
+                    position -= speed;
+                    if (position <= -totalOriginalWidth) {
+                        position = 0; // Reset to start
+                    }
+                } else {
+                    position += speed;
+                    if (position >= totalOriginalWidth) {
+                        position = 0; // Reset to start
+                    }
+                }
+                
+                track.style.transform = `translateX(${position}px)`;
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            requestAnimationFrame(animate);
+            
+            // Pause on hover
+            const marqueeContainer = track.parentElement;
+            marqueeContainer.addEventListener('mouseenter', () => {
+                track.style.animationPlayState = 'paused';
+            });
+            marqueeContainer.addEventListener('mouseleave', () => {
+                track.style.animationPlayState = 'running';
+            });
         }
         
-        if (modelsTrack) {
-            modelsTrack.style.animation = 'marquee-reverse 18s linear infinite';
-        }
+        setupInfiniteMarquee(dbTrack, 'left', 0.5);
+        setupInfiniteMarquee(modelsTrack, 'right', 0.5);
     }
     
     // Call initialization

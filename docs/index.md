@@ -5,9 +5,6 @@ hide:
   - footer
   - navigation
   - toc
-  
-title: "ToolFront"
-description: "TBD" 
 ---
 
 <div class="grid header" style="padding-top: 10%; padding-bottom: 10%;" markdown>
@@ -31,7 +28,7 @@ description: "TBD"
 
 === ":fontawesome-solid-database:{ .middle } &nbsp; Databases"
 
-    ```python linenums="1"
+    ```python
     from toolfront import Database
 
     # Connect +10 databases and warehouses
@@ -43,7 +40,7 @@ description: "TBD"
 
 === ":fontawesome-solid-code:{ .top } &nbsp; APIs"
 
-    ```python linenums="1"
+    ```python
     from toolfront import API
 
     # Connect any API with a spec
@@ -55,7 +52,7 @@ description: "TBD"
 
 === ":fontawesome-solid-file:{ .top } &nbsp; Documents"
 
-    ```python linenums="1"
+    ```python
     from toolfront import Document
 
     # Connect any document
@@ -71,131 +68,72 @@ description: "TBD"
 
 <br>
 
-<h2 align="center"><b>Bring your data and LLM. ToolFront handles the rest.</b></h2>
+<h2 align="center"><b>Bring your data and LLM.</b></h2>
 
 <div class="db-marquee">
   <div class="db-marquee-track">
-    <div class="db-marquee-item" data-db="postgresql">
-      <img src="assets/icons/databases/postgres.svg" alt="PostgreSQL" class="db-marquee-icon">
+    <div class="db-marquee-item" data-db="postgres">
+      <img src="assets/img/databases/postgres.svg" alt="PostgreSQL" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="mysql">
-      <img src="assets/icons/databases/mysql.svg" alt="MySQL" class="db-marquee-icon">
+      <img src="assets/img/databases/mysql.svg" alt="MySQL" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="sqlite">
-      <img src="assets/icons/databases/sqlite.svg" alt="SQLite" class="db-marquee-icon">
+      <img src="assets/img/databases/sqlite.svg" alt="SQLite" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="snowflake">
-      <img src="assets/icons/databases/snowflake.svg" alt="Snowflake" class="db-marquee-icon">
+      <img src="assets/img/databases/snowflake.svg" alt="Snowflake" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="bigquery">
-      <img src="assets/icons/databases/bigquery.svg" alt="BigQuery" class="db-marquee-icon">
+      <img src="assets/img/databases/bigquery.svg" alt="BigQuery" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="databricks">
-      <img src="assets/icons/databases/databricks.svg" alt="Databricks" class="db-marquee-icon">
+      <img src="assets/img/databases/databricks.svg" alt="Databricks" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="duckdb">
-      <img src="assets/icons/databases/duckdb.svg" alt="DuckDB" class="db-marquee-icon">
+      <img src="assets/img/databases/duckdb.svg" alt="DuckDB" class="db-marquee-icon">
     </div>
-    <div class="db-marquee-item" data-db="postgresql">
-      <img src="assets/icons/databases/supabase.svg" alt="Supabase" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="oracle">
-      <img src="assets/icons/databases/oracle.svg" alt="Oracle" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="sqlserver">
-      <img src="assets/icons/databases/mssql.svg" alt="SQL Server" class="db-marquee-icon">
-    </div>
-    <!-- Duplicated items for seamless loop -->
-    <div class="db-marquee-item" data-db="postgresql">
-      <img src="assets/icons/databases/postgres.svg" alt="PostgreSQL" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="mysql">
-      <img src="assets/icons/databases/mysql.svg" alt="MySQL" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="sqlite">
-      <img src="assets/icons/databases/sqlite.svg" alt="SQLite" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="snowflake">
-      <img src="assets/icons/databases/snowflake.svg" alt="Snowflake" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="bigquery">
-      <img src="assets/icons/databases/bigquery.svg" alt="BigQuery" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="databricks">
-      <img src="assets/icons/databases/databricks.svg" alt="Databricks" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="duckdb">
-      <img src="assets/icons/databases/duckdb.svg" alt="DuckDB" class="db-marquee-icon">
-    </div>
-    <div class="db-marquee-item" data-db="postgresql">
-      <img src="assets/icons/databases/supabase.svg" alt="Supabase" class="db-marquee-icon">
+    <div class="db-marquee-item" data-db="postgres">
+      <img src="assets/img/databases/supabase.svg" alt="Supabase" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="oracle">
-      <img src="assets/icons/databases/oracle.svg" alt="Oracle" class="db-marquee-icon">
+      <img src="assets/img/databases/oracle.svg" alt="Oracle" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="sqlserver">
-      <img src="assets/icons/databases/mssql.svg" alt="SQL Server" class="db-marquee-icon">
+      <img src="assets/img/databases/mssql.svg" alt="SQL Server" class="db-marquee-icon">
     </div>
   </div>
 </div>
 
-
-<!-- <h2 align="center"><b>Bring Your Own models</b></h2> -->
 
 <div class="models-marquee">
   <div class="models-marquee-track">
     <div class="models-marquee-item" data-model="openai">
-      <img src="assets/icons/models/chatgpt.svg" alt="ChatGPT" class="models-marquee-icon">
+      <img src="assets/img/models/chatgpt.svg" alt="ChatGPT" class="models-marquee-icon">
     </div>
     <div class="models-marquee-item" data-model="anthropic">
-      <img src="assets/icons/models/claude.svg" alt="Claude" class="models-marquee-icon">
+      <img src="assets/img/models/claude.svg" alt="Claude" class="models-marquee-icon">
     </div>
     <div class="models-marquee-item" data-model="google">
-      <img src="assets/icons/models/gemini.svg" alt="Gemini" class="models-marquee-icon">
+      <img src="assets/img/models/gemini.svg" alt="Gemini" class="models-marquee-icon">
     </div>
     <div class="models-marquee-item" data-model="mistral">
-      <img src="assets/icons/models/mistral.svg" alt="Mistral" class="models-marquee-icon">
+      <img src="assets/img/models/mistral.svg" alt="Mistral" class="models-marquee-icon">
     </div>
     <div class="models-marquee-item" data-model="xai">
-      <img src="assets/icons/models/xai.svg" alt="xAI Grok" class="models-marquee-icon">
+      <img src="assets/img/models/xai.svg" alt="xAI Grok" class="models-marquee-icon">
     </div>
     <div class="models-marquee-item" data-model="huggingface">
-      <img src="assets/icons/models/huggingface.svg" alt="Hugging Face" class="models-marquee-icon">
-    </div>    
+      <img src="assets/img/models/huggingface.svg" alt="Hugging Face" class="models-marquee-icon">
+    </div>
     <div class="models-marquee-item" data-model="deepseek">
-      <img src="assets/icons/models/deepseek.svg" alt="DeepSeek" class="models-marquee-icon">
+      <img src="assets/img/models/deepseek.svg" alt="DeepSeek" class="models-marquee-icon">
     </div>
     <div class="models-marquee-item" data-model="groq">
-      <img src="assets/icons/models/groq.svg" alt="Groq" class="models-marquee-icon">
+      <img src="assets/img/models/groq.svg" alt="Groq" class="models-marquee-icon">
     </div>
-    <!-- Duplicated items for seamless loop -->
-    <div class="models-marquee-item" data-model="openai">
-      <img src="assets/icons/models/chatgpt.svg" alt="ChatGPT" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="anthropic">
-      <img src="assets/icons/models/claude.svg" alt="Claude" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="google">
-      <img src="assets/icons/models/gemini.svg" alt="Gemini" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="mistral">
-      <img src="assets/icons/models/mistral.svg" alt="Mistral" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="xai">
-      <img src="assets/icons/models/xai.svg" alt="xAI Grok" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="huggingface">
-      <img src="assets/icons/models/huggingface.svg" alt="Hugging Face" class="models-marquee-icon">
-    </div>    
-    <div class="models-marquee-item" data-model="deepseek">
-      <img src="assets/icons/models/deepseek.svg" alt="DeepSeek" class="models-marquee-icon">
-    </div>
-    <div class="models-marquee-item" data-model="groq">
-      <img src="assets/icons/models/groq.svg" alt="Groq" class="models-marquee-icon">
-    </div>    
   </div>
 </div>
-
 
 <br>
 
@@ -205,44 +143,109 @@ description: "TBD"
 
 ## **Zero Configuration** {#quick-install}
 
-Skip config files and infrastructure setup. ToolFront works out of the box with all your data.
+Skip config files and infrastructure setup. ToolFront works out of the box with all your data and models.
 
-[Learn More](documentation/data/index.md){ .md-button .md-button--secondary }
+[Learn More](documentation/ai_models/openai.md){ .md-button .md-button--secondary }
 
 </div>
 
 <div class="tabbed-set" markdown="1">
 
-=== ":fontawesome-solid-download:{ .middle } &nbsp; Install"
-
-    ```bash linenums="1"
-    # Basic installation
-    pip install toolfront
-
-    # Install with PostgreSQL support using pip
+<!-- === ":fontawesome-solid-download:{ .middle } &nbsp; pip"
+    ```bash
     pip install "toolfront[postgres]"
-
-    # Install with Snowflake support using uv
-    uv add "toolfront[snowflake]"
-
-    # Install with Databricks support using poetry
-    poetry add "toolfront[databricks]"
     ```
 
-=== ":fontawesome-solid-key:{ .middle } &nbsp; Export LLM Key"
+    === "OpenAI"
+        ```bash
+        export OPENAI_API_KEY=<YOUR-KEY>
+        ```
 
-    ```bash linenums="1"
-    # OpenAI
-    export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+        <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
 
-    # Anthropic
-    export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
+        ```python
+        Database("postgres://...", model="openai:gpt-4o")
+        ```
 
-    # Google
-    export GOOGLE_API_KEY=<YOUR_GOOGLE_API_KEY>
+    === "Anthropic"
+        ```bash
+        export ANTHROPIC_API_KEY=<YOUR-KEY>
+        ```
 
-    # Groq
-    export GROQ_API_KEY=<YOUR_GROQ_API_KEY>
+        <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
+
+        ```python
+        Database("postgres://...", model="anthropic:claude-3-5-sonnet")
+        ```
+
+
+=== ":simple-uv:{ .middle } &nbsp; uv"
+    ```bash
+    pip install "toolfront[postgres]"
+    ```
+
+    === "OpenAI"
+        ```bash
+        export OPENAI_API_KEY=<YOUR-KEY>
+        ```
+
+    === "Anthropic"
+        ```bash
+        export ANTHROPIC_API_KEY=<YOUR-KEY>
+        ``` -->
+
+=== ":fontawesome-solid-download:{ .middle } &nbsp; pip"
+
+    ```bash
+    pip install "toolfront[postgres]"
+    ```
+
+    <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
+
+    ```bash
+    export OPENAI_API_KEY=<YOUR-KEY>
+    ```
+
+    <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
+
+    ```python
+    Database("postgres://...", model="openai:gpt-4o")
+    ```
+
+=== ":simple-uv:{ .middle } &nbsp; uv"
+
+    ```bash
+    uv add "toolfront[snowflake]"
+    ```
+
+    <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
+
+    ```bash
+    export ANTHROPIC_API_KEY=<YOUR-KEY>
+    ```
+
+    <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
+
+    ```python
+    Database("snowflake://...", model="anthropic:claude-3-5-sonnet")
+    ```
+
+=== ":simple-poetry:{ .middle } &nbsp; poetry"
+
+    ```bash
+    poetry add "toolfront[bigquery]" 
+    ```
+
+    <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
+
+    ```bash
+    export GOOGLE_API_KEY=<YOUR-KEY>
+    ```
+
+    <center>:material-arrow-down:{ style="font-size: 24px;" }</center>
+
+    ```python
+    Database("bigquery://...", model="google:gemini-pro")
     ```
 
 </div>
@@ -255,10 +258,10 @@ Skip config files and infrastructure setup. ToolFront works out of the box with 
 
 === ":fontawesome-solid-cube:{ .middle } &nbsp; Primitives"
 
-    ```python linenums="1"
+    ```python
     from toolfront import Database
 
-    db = Database("postgresql://user:pass@host/db")
+    db = Database("postgres://user:pass@host/db")
 
     best_seller: str = db.ask("What's our best-seller?")
     # Returns: "Laptop Pro"
@@ -273,10 +276,10 @@ Skip config files and infrastructure setup. ToolFront works out of the box with 
 
 === ":fontawesome-solid-layer-group:{ .middle } &nbsp; Collections"
 
-    ```python linenums="1"
+    ```python
     from toolfront import Database
 
-    db = Database("postgresql://user:pass@host/db")
+    db = Database("postgres://user:pass@host/db")
 
     monthly_sales: list[int] = db.ask("Monthly sales this year?")
     # Returns: [15000, 18000, 22000]
@@ -290,13 +293,13 @@ Skip config files and infrastructure setup. ToolFront works out of the box with 
 
 === ":fontawesome-solid-chain:{ .middle } &nbsp; Unions"
 
-    ```python linenums="1"
+    ```python
     from toolfront import Database
 
-    db = Database("postgresql://user:pass@host/db")
+    db = Database("postgres://user:pass@host/db")
 
     price: int | float = db.ask("Price of product XYZ?")
-    # Returns: 29.99 or 30
+    # Returns: 30 or 29.99
 
     result: list[str] | str = db.ask("Best-sellers this month?")
     # Returns: ["Product A", "Product B"] or "Product C"
@@ -308,11 +311,11 @@ Skip config files and infrastructure setup. ToolFront works out of the box with 
 
 === ":fontawesome-solid-sitemap:{ .middle } &nbsp; Pydantic Objects"
 
-    ```python linenums="1" 
+    ```python
     from toolfront import Database
     from pydantic import BaseModel
 
-    db = Database("postgresql://user:pass@host/db")
+    db = Database("postgres://user:pass@host/db")
 
     class Customer(BaseModel):
         name: str
@@ -341,11 +344,11 @@ Data is messy. ToolFront returns structured, type-safe responses that match exac
 
 <div class="grid-item-text" markdown>
 
-## **Composable Workflows**
+## **Use it Anywhere**
 
 Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or with your favorite AI frameworks.
 
-[Learn more](documentation/retrieval.md){ .md-button .md-button--secondary }
+[Learn more](documentation/mcp.md){ .md-button .md-button--secondary }
 
 
 </div>
@@ -362,7 +365,7 @@ Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or wi
           "command": "uvx",
           "args": [
             "toolfront[postgres]", 
-            "postgresql://user:pass@host/db"
+            "postgres://user:pass@host/db"
           ]
         }
       }
@@ -371,13 +374,13 @@ Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or wi
 
 === ":simple-langchain:{ .middle } &nbsp; LangChain"
 
-    ```python linenums="1" hl_lines="1 6-8"
+    ```python hl_lines="1 6-8"
     from toolfront import Database
     from langchain.chat_models import init_chat_model
     from langchain.agents import (create_tool_calling_agent,
                                   AgentExecutor)
 
-    data = Database("postgresql://user:pass@localhost/mydb")
+    data = Database("postgres://user:pass@localhost/mydb")
     tools = data.tools()
     prompt = data.instructions()
 
@@ -388,12 +391,12 @@ Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or wi
 
 === ":simple-ollama:{ .middle } &nbsp; LlamaIndex"
 
-    ```python linenums="1" hl_lines="1 5-7"
+    ```python hl_lines="1 5-7"
     from toolfront import Database
     from llama_index.core.agent.workflow import FunctionAgent
     from llama_index.llms.openai import OpenAI
 
-    data = Database("postgresql://user:pass@localhost/mydb")
+    data = Database("postgres://user:pass@localhost/mydb")
     tools = data.tools()
     prompt = data.instructions()
 
@@ -408,4 +411,3 @@ Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or wi
 </div>
 
 </div>
-

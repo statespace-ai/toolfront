@@ -1,11 +1,15 @@
 site_name: ToolFront
-site_description: ToolFront helps you retrieve information from large databases, APIs, and documents with AI.
-site_url: https://toolfront.docs
+site_description: Data Retrieval for AI agents
+site_url: https://docs.toolfront.ai
 repo_url: https://github.com/kruskal-labs/toolfront
 repo_name: kruskal/toolfront
 
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
+  # logo: assets/img/toolfront.svg
+  favicon: assets/img/favicon.png
   palette:
     - scheme: default
       primary: custom
@@ -38,7 +42,7 @@ plugins:
   - search
   - social:
       cards_layout_options:
-        background_color: "#3e8599"
+        background_color: "#10a2b4"
         color: "#ffffff"
   - autorefs
   - mkdocstrings:
@@ -65,29 +69,7 @@ nav:
   - Home: index.md
   - Documentation:
     - Retrieval: documentation/retrieval.md
-    - Data:
-      - documentation/data/index.md
-      - Databases:
-        - documentation/data/databases/index.md
-        - BigQuery: documentation/data/databases/bigquery.md
-        - ClickHouse: documentation/data/databases/clickhouse.md
-        - Databricks: documentation/data/databases/databricks.md
-        - Druid: documentation/data/databases/druid.md
-        - DuckDB: documentation/data/databases/duckdb.md
-        - Flink: documentation/data/databases/flink.md
-        - MSSQL: documentation/data/databases/mssql.md
-        - MySQL: documentation/data/databases/mysql.md
-        - Oracle: documentation/data/databases/oracle.md
-        - PostgreSQL: documentation/data/databases/postgresql.md
-        - PySpark: documentation/data/databases/pyspark.md
-        - RisingWave: documentation/data/databases/risingwave.md
-        - Snowflake: documentation/data/databases/snowflake.md
-        - SQLite: documentation/data/databases/sqlite.md
-        - Trino: documentation/data/databases/trino.md
-      - APIs: documentation/data/api.md
-      - Documents: documentation/data/document.md
     - AI Models:
-      - documentation/ai_models/index.md
       - OpenAI: documentation/ai_models/openai.md
       - Anthropic: documentation/ai_models/anthropic.md
       - Google: documentation/ai_models/google.md
@@ -96,7 +78,7 @@ nav:
       - Groq: documentation/ai_models/groq.md
       - Mistral: documentation/ai_models/mistral.md
       - HuggingFace: documentation/ai_models/huggingface.md
-      - Grok (xAI): documentation/ai_models/grok.md
+      - xAI: documentation/ai_models/xai.md
       - DeepSeek: documentation/ai_models/deepseek.md
       - Azure AI: documentation/ai_models/azure.md
       - Fireworks AI: documentation/ai_models/fireworks.md
@@ -106,23 +88,43 @@ nav:
       - OpenRouter: documentation/ai_models/openrouter.md
       - Ollama: documentation/ai_models/ollama.md
       - Together AI: documentation/ai_models/together.md
+    - Databases:
+      - BigQuery: documentation/databases/bigquery.md
+      - ClickHouse: documentation/databases/clickhouse.md
+      - Databricks: documentation/databases/databricks.md
+      - Druid: documentation/databases/druid.md
+      - DuckDB: documentation/databases/duckdb.md
+      - Flink: documentation/databases/flink.md
+      - MSSQL: documentation/databases/mssql.md
+      - MySQL: documentation/databases/mysql.md
+      - Oracle: documentation/databases/oracle.md
+      - PostgreSQL: documentation/databases/postgresql.md
+      - PySpark: documentation/databases/pyspark.md
+      - RisingWave: documentation/databases/risingwave.md
+      - Snowflake: documentation/databases/snowflake.md
+      - SQLite: documentation/databases/sqlite.md
+      - Trino: documentation/databases/trino.md
+    - APIs: documentation/api.md
+    - Documents: documentation/document.md
+    - MCP: documentation/mcp.md      
   - Reference:
     - Database: reference/database.md
     - API: reference/api.md
     - Document: reference/document.md
-    - MCP: reference/mcp.md
   - Examples:
-    - Overview: examples/index.md
     - Basic Queries: examples/basic.md
     - Invoice Processing: examples/invoice-processing.md
-    - Raw Dataframes: examples/raw-dataframes.md
     - Dataset Exports: examples/dataset-exports.md
     - HubSpot Integration: examples/hubspot-integration.md    
 
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite

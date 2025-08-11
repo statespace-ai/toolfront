@@ -35,9 +35,6 @@ dependencies = [
     "ibis-framework>=10.6.0",
     "pyarrow<19.0.0",
     "executing>=2.2.0",
-    "mkdocs-material[imaging]>=9.6.16",
-    "mkdocstrings[python]>=0.30.0",
-    "markitdown[docx,pdf,pptx,xls,xlsx]>=0.1.2",
 ]
 
 [project.scripts]
@@ -57,6 +54,9 @@ test = [
 dev = [
     "pre-commit>=3.0.0",
     "ruff>=0.1.0",
+    "mkdocs-material[imaging]>=9.6.16",
+    "mkdocstrings[python]>=0.30.0",
+    "markitdown[docx,pdf,pptx,xls,xlsx]>=0.1.2",    
 ]
 bigquery = [
     "ibis-framework[bigquery]>=10.6.0",
