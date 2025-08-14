@@ -1,28 +1,73 @@
 # Model Context Protocol (MCP)
 
-ToolFront runs as an MCP server to integrate with AI applications like Claude Desktop, Cursor, and GitHub Copilot. Works with all ToolFront data sources: 15+ databases, APIs, and documents.
+ToolFront runs as an MCP server to integrate with AI applications like Claude Desktop, Cursor, and GitHub Copilot.
 
 ---
 
 ## Configuration
 
-Configure by passing your data source URL in the `args` array:
+First, create your MCP config file by passing your data source URL in the `args` array:
 
-```json linenums="1"
-{
-  "mcpServers": {
-    "toolfront": {
-      "command": "uvx",
-      "args": [
-        "toolfront[{database_extra}]",  // (1)!
-        "{connection_url}"
-      ]
+<div class="tabbed-set" markdown="1">
+
+=== ":fontawesome-solid-database:{ .middle } &nbsp; Databases"
+
+    ```json linenums="1"
+    {
+      "mcpServers": {
+        "toolfront": {
+          "command": "uvx",
+          "args": [
+            "toolfront[postgres]", // (1)!
+            "postgresql://user:pass@host:5432/mydb" // (2)!
+          ]
+        }
+      }
     }
-  }
-}
-```
+    ```
+    
+    1. Replace with the necessary database extra
+    2. Replace with your actual connection URL
 
-1. Replace with your database extras and connection URL
+=== ":fontawesome-solid-code:{ .middle } &nbsp; APIs"
+
+    ```json linenums="1"
+    {
+      "mcpServers": {
+        "toolfront": {
+          "command": "uvx",
+          "args": [
+            "toolfront",
+            "https://api.example.com/openapi.json" // (1)!
+          ]
+        }
+      }
+    }
+    ```
+
+    1. OpenAPI specification URL
+
+=== ":fontawesome-solid-file:{ .middle } &nbsp; Documents"
+
+    ```json linenums="1"
+    {
+      "mcpServers": {
+        "toolfront": {
+          "command": "uvx",
+          "args": [
+            "toolfront",
+            "/path/to/document.pdf" // (1)!
+          ]
+        }
+      }
+    }
+    ```
+    
+    4. Path to document file
+
+</div>
+
+Then, copy-paste your config into your preferred MCP-enabled application.
 
 <div class="tabbed-set" markdown="1">
 
@@ -30,28 +75,21 @@ Configure by passing your data source URL in the `args` array:
 
     1. Open Cursor settings
     2. Navigate to MCP configuration section
-    3. Add the configuration above to your MCP settings file
-    4. Replace placeholders with your database extras and connection URL
+    3. Add the appropriate configuration from the tabs above to your MCP settings file
 
 === ":simple-claude:{ .middle } &nbsp; Claude Desktop"
 
     1. Open your home directory
     2. Navigate to `claude_desktop_config.json`
-    3. Add the configuration above to the file
-    4. Replace placeholders with your database extras and connection URL
-    5. Restart Claude Desktop
+    3. Add the appropriate configuration from the tabs above to the file
 
 === ":simple-githubcopilot:{ .middle } &nbsp; GitHub Copilot"
 
     1. Open GitHub Copilot settings
     2. Navigate to MCP configuration section
-    3. Add the configuration above to your MCP settings
-    4. Replace placeholders with your data source URL (no extras needed for APIs/documents)
+    3. Add the appropriate configuration from the tabs above to your MCP settings
 
 </div>
-
-!!! tip "Database Extras"
-    When connecting to databases, include the appropriate extra in brackets (e.g., `toolfront[postgres]`, `toolfront[snowflake]`) to install the required database drivers.
 
 ---
 
@@ -60,5 +98,8 @@ Configure by passing your data source URL in the `args` array:
 Run ToolFront MCP server directly:
 
 ```bash
-uvx toolfront[{database_extra}] "{connection_url}" --transport {stdio|sse}
+uvx toolfront[postgres] "postgresql://user:pass@host:5432/mydb" --transport stdio
 ```
+
+!!! tip
+    Use `uvx toolfront --help` to see all available command options.

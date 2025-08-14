@@ -118,16 +118,12 @@ class Document(DataSource):
             return document_content
 
         # Determine section index and label based on pagination type
-        if pagination < 1:
+        if pagination.value < 1:
             # Percentile-based: convert to section index
-            section_index = min(int(pagination * total_sections), total_sections - 1)
+            section_index = min(int(pagination.value * total_sections), total_sections - 1)
         else:
-            section_index = min(int(pagination), total_sections) - 1
+            section_index = min(int(pagination.value), total_sections) - 1
 
         start_idx = section_index * CHUNK_SIZE
         end_idx = min(start_idx + CHUNK_SIZE, len(document_content))
         return f"Section {section_index + 1} of {total_sections}:\n\n{document_content[start_idx:end_idx]}"
-
-    def retrieve(self, prompt: str, **kwargs: Any) -> str:
-        pagination: Pagination = self.ask(prompt, **kwargs)
-        return self.read(pagination.value)

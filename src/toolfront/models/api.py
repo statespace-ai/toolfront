@@ -80,11 +80,6 @@ class API(DataSource, ABC):
         HTTP headers for authentication.
     params : dict[str, str], optional
         Query parameters for all requests.
-
-    Examples
-    --------
-    >>> api = API("https://api.example.com/openapi.json")
-    >>> result = api.ask("Get user info for ID 123")
     """
 
     spec: dict | str = Field(..., description="API specification config.", exclude=True)

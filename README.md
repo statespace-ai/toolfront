@@ -6,8 +6,6 @@
 
 <div align="center">
 
-<br>
-
 *Simple data retrieval for AI with unmatched control, precision, and speed.*
 
 [![Test Suite](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml/badge.svg)](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml)
@@ -22,7 +20,6 @@
 **Documentation: [docs.toolfront.ai](http://docs.toolfront.ai/)**
 
 ---
-<br>
 
 ## Installation
 
@@ -39,12 +36,14 @@ from toolfront import Database
 
 db = Database("postgres://user:pass@localhost:5432/mydb", model="openai:gpt-4o")
 
+context = "We're an e-commerce company. Sales data is in the `cust_orders` table."
+
 # Returns a string
-answer = db.ask("What's our best-selling product?")
->>> "Wireless Headphones Pro"
+answer = db.ask("What's our best-selling product?", context=context)
+# >>> "Wireless Headphones Pro"
 ```
 
-> **Note**: For databases, install with PyPI extras, e.g.: `pip install "toolfront[postgres]"`. ToolFront supports PostgreSQL, MySQL, SQLite, BigQuery, Snowflake, and 10+ databases. See the [documentation](http://docs.toolfront.ai/) for the complete list.
+> **Note**: For databases, install with PyPI extras, e.g.: `pip install "toolfront[postgres]"`. See the [documentation](http://docs.toolfront.ai/) for the complete list of 10+ databases.
 
 ## Example 2: API retrieval with Claude
 
@@ -55,10 +54,10 @@ api = API("http://localhost:8000/openapi.json", model="anthropic:claude-3-5-sonn
 
 # Returns a list of integers
 answer: list[int] = api.ask("Get the last 5 order IDs for user_id=42")
->>> [1001, 998, 987, 976, 965]
+# >>> [1001, 998, 987, 976, 965]
 ```
 
-> **Note**: ToolFront supports any public or private API with an OpenAPI (formerly Swagger) specification. Most common APIs like Slack, Discord, GitHub and Salesforce provide OpenAPI specs. See the [documentation](http://docs.toolfront.ai/) for more details.
+> **Note**: ToolFront supports any API with an OpenAPI (formerly Swagger) specification. Most common APIs like Slack, Discord, and GitHub have OpenAPI specs. See the [documentation](http://docs.toolfront.ai/) for more details.
 
 
 ## Example 3: Document information extraction with Gemini
@@ -76,10 +75,10 @@ doc = Document("/path/annual_report.pdf", model="google:gemini-pro")
 
 # Returns a structured Pydantic object
 answer: CompanyReport = doc.ask("Extract the key company information from this report")
->>> CompanyReport(company_name="TechCorp Inc.", revenue=2500000, is_profitable=True)
+# >>> CompanyReport(company_name="TechCorp Inc.", revenue=2500000, is_profitable=True)
 ```
 
-> **Note**: ToolFront supports OpenAI, Anthropic, Google, xAI, and 14+ AI models. See the [documentation](http://docs.toolfront.ai/) for the complete list.
+> **Note**: ToolFront supports OpenAI, Anthropic, Google, xAI, and 14+ AI model providers. See the [documentation](http://docs.toolfront.ai/) for the complete list.
 
 
 ## Example 4: Snowflake MCP Server
@@ -103,8 +102,6 @@ answer: CompanyReport = doc.ask("Extract the key company information from this r
 - **Discord**: Join our [community server](https://discord.gg/rRyM7zkZTf) for real-time help and discussions
 - **X**: Follow us [@toolfront](https://x.com/toolfront) for updates and news
 - **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/kruskal-labs/toolfront/issues)
-
-
 
 ## License
 

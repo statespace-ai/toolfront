@@ -141,8 +141,12 @@ Add a type hint to `ask()` to specify the exact Python type you want returned:
 
 </div>
 
-!!! tip
-    All data sources (databases, APIs, and documents) support typed responses.
+!!! tip "Alternative: Output Type Parameter"
+    Instead of type annotations, you can specify the output type using the `output_type` parameter:
+    
+    ```python
+    total_orders = db.ask("How many orders do we have?", output_type=int)
+    ```
 
 ---
 
@@ -199,6 +203,32 @@ Retrieve massive datasets without incurring additional LLM token costs.
 
 !!! warning "Database-Only"
     Dataset exports are only supported for databases.
+
+---
+
+## Adding Context
+
+You can provide additional business context to improve the accuracy of responses using the `context` parameter:
+
+```python linenums="1"
+from toolfront import Database
+
+db = Database("postgresql://user:pass@host/db")
+
+# Add business context for better understanding
+context = """
+Our company operates in the fashion industry.
+Revenue is measured quarterly, and our fiscal year starts in April.
+Product categories include: clothing, accessories, footwear.
+"""
+
+result = db.ask(
+    "What's our total revenue this quarter?",
+    context=context
+)
+print(result)
+# Returns more contextually accurate result
+```
 
 ---
 

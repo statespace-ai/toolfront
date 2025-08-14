@@ -8,7 +8,7 @@ theme:
   name: material
   icon:
     repo: fontawesome/brands/github
-  # logo: assets/img/toolfront.svg
+  logo: assets/img/logo.svg
   favicon: assets/img/favicon.png
   palette:
     - scheme: default
@@ -106,16 +106,17 @@ nav:
       - Trino: documentation/databases/trino.md
     - APIs: documentation/api.md
     - Documents: documentation/document.md
-    - MCP: documentation/mcp.md      
+    - MCP: documentation/mcp.md
   - Reference:
     - Database: reference/database.md
     - API: reference/api.md
     - Document: reference/document.md
   - Examples:
-    - Basic Queries: examples/basic.md
+    - Text2SQL: examples/text2sql.md
     - Invoice Processing: examples/invoice-processing.md
-    - Dataset Exports: examples/dataset-exports.md
-    - HubSpot Integration: examples/hubspot-integration.md    
+    - Dataset Export: examples/dataset-exports.md
+    - CRM Integration: examples/crm-integration.md
+    - Database MCP: examples/database-mcp.md
 
 markdown_extensions:
   - admonition

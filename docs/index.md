@@ -19,8 +19,8 @@ hide:
 <h2>Simple, open-source data retrieval with unmatched control, precision, and speed.</h2>
 
 
-[Quickstart](#quick-install){ .md-button .md-button--primary }
-[Learn more](documentation/retrieval/){ .md-button .md-button--secondary }
+[Quickstart](#quickstart){ .md-button .md-button--primary }
+[Learn more](documentation/retrieval.md){ .md-button .md-button--secondary }
 
 </div>
 
@@ -72,7 +72,7 @@ hide:
 
 <div class="db-marquee">
   <div class="db-marquee-track">
-    <div class="db-marquee-item" data-db="postgres">
+    <div class="db-marquee-item" data-db="postgresql">
       <img src="assets/img/databases/postgres.svg" alt="PostgreSQL" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="mysql">
@@ -93,13 +93,13 @@ hide:
     <div class="db-marquee-item" data-db="duckdb">
       <img src="assets/img/databases/duckdb.svg" alt="DuckDB" class="db-marquee-icon">
     </div>
-    <div class="db-marquee-item" data-db="postgres">
+    <div class="db-marquee-item" data-db="postgresql">
       <img src="assets/img/databases/supabase.svg" alt="Supabase" class="db-marquee-icon">
     </div>
     <div class="db-marquee-item" data-db="oracle">
       <img src="assets/img/databases/oracle.svg" alt="Oracle" class="db-marquee-icon">
     </div>
-    <div class="db-marquee-item" data-db="sqlserver">
+    <div class="db-marquee-item" data-db="mssql">
       <img src="assets/img/databases/mssql.svg" alt="SQL Server" class="db-marquee-icon">
     </div>
   </div>
@@ -141,7 +141,7 @@ hide:
 
 <div class="grid-item-text" markdown>
 
-## **Zero Configuration** {#quick-install}
+## **Zero Configuration** {#quickstart}
 
 Skip config files and infrastructure setup. ToolFront works out of the box with all your data and models.
 
@@ -279,7 +279,7 @@ Skip config files and infrastructure setup. ToolFront works out of the box with 
     ```python
     from toolfront import Database
 
-    db = Database("postgres://user:pass@host/db")
+    db = Database("mysql://user:pass@host/ecommerce")
 
     monthly_sales: list[int] = db.ask("Monthly sales this year?")
     # Returns: [15000, 18000, 22000]
@@ -294,17 +294,17 @@ Skip config files and infrastructure setup. ToolFront works out of the box with 
 === ":fontawesome-solid-chain:{ .middle } &nbsp; Unions"
 
     ```python
-    from toolfront import Database
+    from toolfront import API
 
-    db = Database("postgres://user:pass@host/db")
+    api = API("https://api.example.com/openapi.json")
 
-    price: int | float = db.ask("Price of product XYZ?")
+    price: int | float = api.ask("Price of product XYZ?")
     # Returns: 30 or 29.99
 
-    result: list[str] | str = db.ask("Best-sellers this month?")
+    result: list[str] | str = api.ask("Best-sellers this month?")
     # Returns: ["Product A", "Product B"] or "Product C"
 
-    error: str | None = db.ask("What was the the error message?")
+    error: str | None = api.ask("What was the error message?")
     # Returns: "Connection timeout" or None
     ```
 
@@ -312,18 +312,18 @@ Skip config files and infrastructure setup. ToolFront works out of the box with 
 === ":fontawesome-solid-sitemap:{ .middle } &nbsp; Pydantic Objects"
 
     ```python
-    from toolfront import Database
+    from toolfront import Document
     from pydantic import BaseModel
 
-    db = Database("postgres://user:pass@host/db")
+    doc = Document("/path/to/invoice.pdf")
 
     class Customer(BaseModel):
         name: str
         seats: int
         is_active: bool
 
-    top_customer: Customer = db.ask("Who's our latest customer?")
-    # Returns: Customer(name='Acme', seats=5, is_active=True), 
+    top_customer: Customer = doc.ask("Who's our latest customer?")
+    # Returns: Customer(name='Acme', seats=5, is_active=True)
     ```
 
 </div>
@@ -346,7 +346,7 @@ Data is messy. ToolFront returns structured, type-safe responses that match exac
 
 ## **Use it Anywhere**
 
-Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or with your favorite AI frameworks.
+Avoid migrations. Run ToolFront directly, as an MCP server, or build custom tools for any AI framework.
 
 [Learn more](documentation/mcp.md){ .md-button .md-button--secondary }
 
@@ -357,8 +357,7 @@ Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or wi
 
 === ":simple-modelcontextprotocol:{ .middle } &nbsp; MCP"
 
-    ```python linenums="1"
-    # Add to Cursor/Copilot/Claude Desktop MCP config
+    ```json
     {
       "mcpServers": {
         "toolfront": {
@@ -372,41 +371,21 @@ Avoid lock-ins and migrations. Run ToolFront standalone, as an MCP server, or wi
     }
     ```
 
-=== ":simple-langchain:{ .middle } &nbsp; LangChain"
+=== ":fontawesome-solid-wrench:{ .middle } &nbsp; Custom Tools"
 
-    ```python hl_lines="1 6-8"
+    ```python
     from toolfront import Database
-    from langchain.chat_models import init_chat_model
-    from langchain.agents import (create_tool_calling_agent,
-                                  AgentExecutor)
 
-    data = Database("postgres://user:pass@localhost/mydb")
-    tools = data.tools()
-    prompt = data.instructions()
+    db = Database("postgresql://user:pass@host/db")
 
-    model = init_chat_model("anthropic:claude-3-5-sonnet-latest")
-    agent = create_tool_calling_agent(model, tools, prompt)
-    executor = AgentExecutor(agent=agent, tools=tools)
+    def get_data(query: str):
+        """Get data from the database."""
+        context = "Sales data is in `orders` table. Revenue in USD."
+        return db.ask(query, context=context)
+
+    # Use this function as a tool in any framework
+    tools = [get_data]
     ```
-
-=== ":simple-ollama:{ .middle } &nbsp; LlamaIndex"
-
-    ```python hl_lines="1 5-7"
-    from toolfront import Database
-    from llama_index.core.agent.workflow import FunctionAgent
-    from llama_index.llms.openai import OpenAI
-
-    data = Database("postgres://user:pass@localhost/mydb")
-    tools = data.tools()
-    prompt = data.instructions()
-
-    llm = OpenAI(model="gpt-4o")  
-    agent = FunctionAgent(tools, llm, system_prompt=prompt)
-    response = agent.chat("What's our top selling product?")
-    print(response)
-    ```
-
-</div>
 
 </div>
 

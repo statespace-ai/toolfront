@@ -71,6 +71,33 @@ class DataSource(BaseModel, ABC):
     def tools(self) -> list[callable]:
         raise NotImplementedError("Subclasses must implement tools")
 
+    def instructions(self, context: str | None = None) -> str:
+        """Generate system instructions for AI agents.
+
+        Parameters
+        ----------
+        context : str, optional
+            Additional business context to include in instructions.
+
+        Returns
+        -------
+        str
+            System instructions for AI interaction with this datasource.
+        """
+        instruction_file = files("toolfront") / "instructions" / "ask.txt"
+
+        with instruction_file.open() as f:
+            agent_instruction = f.read()
+
+        if context:
+            agent_instruction += f"\n\nThe user has provided the following information:\n\n{context}"
+
+        return (
+            f"{agent_instruction}\n\n"
+            f"Use the following information about the user's data to guide your response:\n\n"
+            f"{yaml.dump(self.model_dump())}"
+        )
+
     def ask(
         self,
         prompt: str,
@@ -98,13 +125,7 @@ class DataSource(BaseModel, ABC):
         -------
         Any
             Response matching the requested output type.
-
-        Examples
-        --------
-        >>> revenue = db.ask("What's our total revenue?")
-        >>> customers: list[str] = db.ask("List top customers")
         """
-
         if model is None:
             model = get_default_model()
 
@@ -123,33 +144,6 @@ class DataSource(BaseModel, ABC):
         )
 
         return asyncio.run(self._ask_async(prompt, agent, stream))
-
-    def instructions(self, context: str | None = None) -> str:
-        """Generate system instructions for AI agents.
-
-        Parameters
-        ----------
-        context : str, optional
-            Additional business context to include in instructions.
-
-        Returns
-        -------
-        str
-            System instructions for AI interaction with this datasource.
-        """
-        instruction_file = files("toolfront") / "instructions" / "ask.txt"
-
-        with instruction_file.open() as f:
-            agent_instruction = f.read()
-
-        if context:
-            agent_instruction += f"\n\nThe user has provided the following information:\n\n{context}"
-
-        return (
-            f"{agent_instruction}\n\n"
-            f"Use the following information about the user's data to guide your response:\n\n"
-            f"{yaml.dump(self.model_dump())}"
-        )
 
     async def _ask_async(
         self,
