@@ -1,92 +1,17 @@
 /**
- * Database marquee functionality
- * Efficient infinite scroll carousel for database icons
+ * Marquee functionality
+ * Efficient infinite scroll carousel for database and model icons
  */
-class DatabaseMarquee {
+class MarqueeController {
     constructor() {
-        this.dbConfig = {
-            postgres: { name: 'Postgres', extra: 'postgres' },
-            mysql: { name: 'MySQL', extra: 'mysql' },
-            sqlite: { name: 'SQLite', extra: 'sqlite' },
-            snowflake: { name: 'Snowflake', extra: 'snowflake' },
-            bigquery: { name: 'BigQuery', extra: 'bigquery' },
-            databricks: { name: 'Databricks', extra: 'databricks' },
-            duckdb: { name: 'DuckDB', extra: 'duckdb' }
-        };
-        
-        this.currentDb = 'postgres';
-        this.highlightTimeout = null;
-        
         this.init();
     }
     
     init() {
-        this.setupEventListeners();
         this.setupMarqueeClickHandlers();
         this.setupModelsClickHandlers();
     }
     
-    setupEventListeners() {
-        const icons = document.querySelectorAll('.db-icon');
-        const dbName = document.getElementById('db-name');
-        const installCommand = document.getElementById('install-command');
-        const installSection = document.getElementById('install-section');
-        
-        if (!dbName || !installCommand || !installSection) return;
-        
-        icons.forEach(icon => {
-            icon.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleIconClick(icon, dbName, installCommand, installSection);
-            });
-            
-            // Add keyboard navigation
-            icon.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    this.handleIconClick(icon, dbName, installCommand, installSection);
-                }
-            });
-            
-            // Make icons focusable
-            icon.setAttribute('tabindex', '0');
-            icon.setAttribute('role', 'button');
-        });
-    }
-    
-    handleIconClick(icon, dbName, installCommand, installSection) {
-        const extra = icon.dataset.extra;
-        const config = this.dbConfig[extra];
-        
-        if (!config) return;
-        
-        // Update active state
-        document.querySelectorAll('.db-icon').forEach(i => i.classList.remove('active'));
-        icon.classList.add('active');
-        
-        // Update content
-        dbName.textContent = config.name;
-        installCommand.textContent = `pip install toolfront[${config.extra}]`;
-        
-        // Highlight install section
-        this.highlightInstallSection(installSection);
-        
-        // Store current selection
-        this.currentDb = extra;
-    }
-    
-    highlightInstallSection(installSection) {
-        // Clear previous timeout
-        if (this.highlightTimeout) {
-            clearTimeout(this.highlightTimeout);
-        }
-        
-        installSection.classList.add('highlight');
-        
-        this.highlightTimeout = setTimeout(() => {
-            installSection.classList.remove('highlight');
-        }, 300);
-    }
     
     setupMarqueeClickHandlers() {
         const marqueeItems = document.querySelectorAll('.db-marquee-item');
@@ -96,8 +21,7 @@ class DatabaseMarquee {
                 e.preventDefault();
                 const dbType = item.dataset.db;
                 if (dbType) {
-                    const url = `documentation/databases/${dbType}/`;
-                    window.location.href = url;
+                    window.location.href = `documentation/databases/${dbType}/`;
                 }
             });
             
@@ -107,8 +31,7 @@ class DatabaseMarquee {
                     e.preventDefault();
                     const dbType = item.dataset.db;
                     if (dbType) {
-                        const url = `documentation/databases/${dbType}/`;
-                        window.location.href = url;
+                        window.location.href = `documentation/databases/${dbType}/`;
                     }
                 }
             });
@@ -128,8 +51,7 @@ class DatabaseMarquee {
                 e.preventDefault();
                 const modelType = item.dataset.model;
                 if (modelType) {
-                    const url = `documentation/ai_models/${modelType}/`;
-                    window.location.href = url;
+                    window.location.href = `documentation/ai_models/${modelType}/`;
                 }
             });
             
@@ -139,8 +61,7 @@ class DatabaseMarquee {
                     e.preventDefault();
                     const modelType = item.dataset.model;
                     if (modelType) {
-                        const url = `documentation/ai_models/${modelType}/`;
-                        window.location.href = url;
+                        window.location.href = `documentation/ai_models/${modelType}/`;
                     }
                 }
             });
@@ -152,25 +73,12 @@ class DatabaseMarquee {
         });
     }
     
-    // Method to programmatically select a database
-    selectDatabase(dbKey) {
-        const icon = document.querySelector(`[data-extra="${dbKey}"]`);
-        if (icon) {
-            const dbName = document.getElementById('db-name');
-            const installCommand = document.getElementById('install-command');
-            const installSection = document.getElementById('install-section');
-            
-            if (dbName && installCommand && installSection) {
-                this.handleIconClick(icon, dbName, installCommand, installSection);
-            }
-        }
-    }
     
 }
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const marquee = new DatabaseMarquee();
+    const marquee = new MarqueeController();
     
     // Initialize marquees with bulletproof infinite scroll
     function initializeMarquees() {
@@ -208,11 +116,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const modelType = item.dataset.model;
                     
                     if (dbType) {
-                        const url = `documentation/databases/${dbType}/`;
-                        window.location.href = url;
+                        window.location.href = `documentation/databases/${dbType}/`;
                     } else if (modelType) {
-                        const url = `documentation/ai_models/${modelType}/`;
-                        window.location.href = url;
+                        window.location.href = `documentation/ai_models/${modelType}/`;
                     }
                 });
                 
@@ -224,11 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const modelType = item.dataset.model;
                         
                         if (dbType) {
-                            const url = `documentation/databases/${dbType}/`;
-                            window.location.href = url;
+                            window.location.href = `documentation/databases/${dbType}/`;
                         } else if (modelType) {
-                            const url = `documentation/ai_models/${modelType}/`;
-                            window.location.href = url;
+                            window.location.href = `documentation/ai_models/${modelType}/`;
                         }
                     }
                 });
@@ -277,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        setupInfiniteMarquee(dbTrack, 'left', 0.5);
-        setupInfiniteMarquee(modelsTrack, 'right', 0.5);
+        setupInfiniteMarquee(dbTrack, 'left', 0.25);
+        setupInfiniteMarquee(modelsTrack, 'right', 0.25);
     }
     
     // Call initialization
@@ -314,5 +218,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Expose to global scope for potential external control
-    window.DatabaseMarquee = marquee;
+    window.MarqueeController = marquee;
 });
