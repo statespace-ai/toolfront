@@ -94,19 +94,21 @@ class Document(DataSource):
         self,
         pagination: Pagination,
     ) -> str:
-        """Read document contents with automatic chunking.
+        """Read the contents of a library's document with automatic chunking.
 
-        Documents are split into 10,000-character sections for efficient processing.
+        All documents are automatically chunked into sections of 10,000 characters each for easier navigation.
 
-        Parameters
-        ----------
-        pagination : Pagination
-            Section navigation: 0.0-0.99 for percentile, >=1 for section number.
-
-        Returns
-        -------
-        str
-            Document content for the requested section.
+        Instructions:
+        1. Documents are split into 10k character chunks for all file types (PDF, DOCX, PPTX, Excel, JSON, MD, TXT, XML, YAML, RTF, HTML).
+        2. Use pagination value parameter to navigate through document sections:
+           - 0.0 <= pagination value < 1.0: Return section at that percentile (e.g., 0.5 = middle section)
+           - pagination value >= 1: Return specific section number (e.g., 1 = first section, 2 = second section)
+        3. When searching for specific information in large documents, use a "soft" binary search approach:
+           - Start with an educated percentile guess based on document type and target content (e.g., 0.8 for conclusions in academic papers, 0.3 for methodology)
+           - Use the context from your initial read to refine your search. If you find related but not target content, adjust percentile accordingly
+           - Iterate between percentile and section number paginations to pinpoint information as you narrow down the location
+        4. Use educated guesses for initial positions based on document structure (e.g., table of contents near start, conclusions near end, etc.).
+        5. NEVER continue reading through the rest of the document unnecessarily once you have found the answer.
         """
         # Use the text content for chunking
         document_content = self.text

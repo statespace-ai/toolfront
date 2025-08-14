@@ -1069,6 +1069,7 @@ class Database(DataSource, ABC):
     ) -> dict[str, Any]:
         """Inspect the schema of database table and get sample data.
 
+        Instructions:
         1. Use this tool to understand table structure like column names, data types, and constraints
         2. Inspecting tables helps understand the structure of the data
         3. ALWAYS inspect unfamiliar tables first to learn their columns and data types before querying
@@ -1088,11 +1089,11 @@ class Database(DataSource, ABC):
         self,
         query: Query = Field(..., description="Read-only SQL query to execute."),
     ) -> dict[str, Any]:
-        """
-        This tool allows you to run read-only SQL queries against a database.
+        """Run read-only SQL queries against a database.
 
         ALWAYS ENCLOSE IDENTIFIERS (TABLE NAMES, COLUMN NAMES) IN QUOTES TO PRESERVE CASE SENSITIVITY AND AVOID RESERVED WORD CONFLICTS AND SYNTAX ERRORS.
 
+        Instructions:
         1. ONLY write read-only queries for tables that have been explicitly discovered or referenced, using the correct dialect for the database.
         2. Before writing queries, make sure you understand the schema of the tables you are querying.
         3. When a query fails or returns unexpected results, try to diagnose the issue and then retry.
