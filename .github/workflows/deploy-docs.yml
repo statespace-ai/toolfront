@@ -1,6 +1,7 @@
 name: Deploy Documentation
 
 on:
+  workflow_dispatch:  # Allow manual triggering from GitHub Actions tab
   push:
     branches:
       - main
@@ -12,7 +13,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     
     steps:
       - name: Checkout code
@@ -21,9 +22,14 @@ jobs:
       - name: Setup Fly.io
         uses: superfly/flyctl-actions/setup-flyctl@master
       
+      - name: Verify Fly CLI
+        run: |
+          which fly || (echo "fly command not found in PATH" && exit 1)
+          fly version
+      
       - name: Deploy to Fly.io
         run: |
           cd docs
-          ./deploy.sh
+          bash deploy.sh
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
