@@ -155,7 +155,9 @@ extra:
   generator: false
   analytics:
     provider: google
-    property: !ENV GOOGLE_ANALYTICS_ID
+
+    # Google Analytics Measurement ID (This is fine to share publicly)
+    property: G-EH352HTY05
   social:
     - icon: fontawesome/brands/discord
       link: https://discord.gg/rRyM7zkZTf
