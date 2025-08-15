@@ -29,13 +29,35 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
     exit 1
 fi
 
-if ! git diff-index --quiet HEAD --; then
-    log_error "You have uncommitted changes. Please commit or stash them first."
+if ! git diff-index --quiet HEAD -- ':!pyproject.toml'; then
+    log_error "You have uncommitted changes (other than pyproject.toml). Please commit or stash them first."
     exit 1
 fi
 
 CURRENT_VERSION=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
-log_info "Current version: $CURRENT_VERSION"
+log_info "Current version in pyproject.toml: $CURRENT_VERSION"
+
+# Check git for the last released version
+LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+LAST_VERSION=${LAST_TAG#v}
+
+if [ "$CURRENT_VERSION" == "$LAST_VERSION" ]; then
+    log_error "Version not bumped! Current version ($CURRENT_VERSION) matches last tag ($LAST_TAG)"
+    log_error "Please update the version in pyproject.toml first, then run this script"
+    echo
+    echo "Suggested next versions:"
+    IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+    MAJOR=${VERSION_PARTS[0]}
+    MINOR=${VERSION_PARTS[1]}
+    PATCH=${VERSION_PARTS[2]}
+    echo "  Patch: $MAJOR.$MINOR.$((PATCH + 1))"
+    echo "  Minor: $MAJOR.$((MINOR + 1)).0"
+    echo "  Major: $((MAJOR + 1)).0.0"
+    exit 1
+fi
+
+NEW_VERSION="$CURRENT_VERSION"
+log_info "Preparing to release version: $NEW_VERSION"
 
 check_pypi_version() {
     local version="$1"
@@ -56,30 +78,16 @@ check_git_tag() {
     fi
 }
 
-if [ -n "$1" ]; then
-    NEW_VERSION="$1"
-    log_info "Using provided version: $NEW_VERSION"
-    
-    if ! [[ "$NEW_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        log_error "Invalid version format. Please use X.Y.Z format (e.g., 0.2.0)"
-        exit 1
-    fi
-else
-    # Auto-increment patch version
-    IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
-    MAJOR=${VERSION_PARTS[0]}
-    MINOR=${VERSION_PARTS[1]}
-    PATCH=${VERSION_PARTS[2]}
-    NEW_PATCH=$((PATCH + 1))
-    NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-    
-    log_info "Auto-bumping patch version to: $NEW_VERSION"
-fi
-
 # Check if this version has already been released
 PYPI_EXISTS=false
 GIT_TAG_EXISTS=false
-VERSION_BUMP_NEEDED=true
+NEED_COMMIT=false
+
+# Check if there are uncommitted changes to pyproject.toml
+if git diff --name-only | grep -q "pyproject.toml"; then
+    NEED_COMMIT=true
+    log_info "Detected uncommitted changes to pyproject.toml"
+fi
 
 if check_pypi_version "$NEW_VERSION"; then
     PYPI_EXISTS=true
@@ -91,21 +99,9 @@ if check_git_tag "$NEW_VERSION"; then
     log_warning "Git tag v$NEW_VERSION already exists"
 fi
 
-if [ "$CURRENT_VERSION" == "$NEW_VERSION" ]; then
-    VERSION_BUMP_NEEDED=false
-    log_info "Version is already set to $NEW_VERSION in pyproject.toml"
-fi
-
 # Determine what steps need to be performed
-NEED_VERSION_BUMP=false
 NEED_PYPI_PUBLISH=false
-NEED_GIT_PUSH=false
 NEED_GIT_TAG=false
-
-if [ "$VERSION_BUMP_NEEDED" = true ]; then
-    NEED_VERSION_BUMP=true
-    NEED_GIT_PUSH=true
-fi
 
 if [ "$PYPI_EXISTS" = false ]; then
     NEED_PYPI_PUBLISH=true
@@ -115,16 +111,15 @@ if [ "$GIT_TAG_EXISTS" = false ]; then
     NEED_GIT_TAG=true
 fi
 
-if [ "$NEED_VERSION_BUMP" = false ] && [ "$NEED_PYPI_PUBLISH" = false ] && [ "$NEED_GIT_TAG" = false ]; then
+if [ "$NEED_COMMIT" = false ] && [ "$NEED_PYPI_PUBLISH" = false ] && [ "$NEED_GIT_TAG" = false ]; then
     log_success "Version $NEW_VERSION has already been fully released!"
     exit 0
 fi
 
 echo
 log_info "Release plan for version $NEW_VERSION:"
-[ "$NEED_VERSION_BUMP" = true ] && echo "  ✓ Bump version in pyproject.toml and commit"
+[ "$NEED_COMMIT" = true ] && echo "  ✓ Commit version bump in pyproject.toml"
 [ "$NEED_PYPI_PUBLISH" = true ] && echo "  ✓ Build and publish to PyPI"
-[ "$NEED_GIT_PUSH" = true ] && echo "  ✓ Push commits to remote"
 [ "$NEED_GIT_TAG" = true ] && echo "  ✓ Create and push git tag"
 echo
 
@@ -135,12 +130,11 @@ if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     exit 0
 fi
 
-if [ "$NEED_VERSION_BUMP" = true ]; then
-    log_info "Bumping version from $CURRENT_VERSION to $NEW_VERSION"
-    sed -i "" "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" pyproject.toml
+if [ "$NEED_COMMIT" = true ]; then
+    log_info "Committing version bump to $NEW_VERSION"
     git add pyproject.toml
     git commit --no-verify -m "bump version to $NEW_VERSION"
-    log_success "Version bumped and committed"
+    log_success "Version bump committed"
 fi
 
 if [ "$NEED_PYPI_PUBLISH" = true ]; then
@@ -162,7 +156,7 @@ if [ "$NEED_PYPI_PUBLISH" = true ]; then
     fi
 fi
 
-if [ "$NEED_GIT_PUSH" = true ]; then
+if [ "$NEED_COMMIT" = true ] || [ "$NEED_GIT_TAG" = true ]; then
     log_info "Pushing commits to remote..."
     if git push; then
         log_success "Commits pushed to remote"
