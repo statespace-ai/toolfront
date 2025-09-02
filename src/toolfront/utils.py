@@ -4,11 +4,16 @@ import inspect
 import json
 import logging
 import os
+import re
 from collections.abc import Callable
-from typing import Any, get_args, get_origin
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Union, get_args, get_origin
+from urllib import parse
 
 import executing
 import pandas as pd
+import yaml
 from pydantic import TypeAdapter
 from pydantic_ai import ModelRetry
 from yarl import URL
@@ -26,6 +31,15 @@ from toolfront.config import (
 logger = logging.getLogger("toolfront")
 logger.setLevel(logging.INFO)
 
+
+@contextmanager
+def change_dir(destination):
+    prev_dir = Path.cwd()  # save current directory
+    os.chdir(destination)  # change to new directory
+    try:
+        yield
+    finally:
+        os.chdir(prev_dir)  # restore original directory
 
 def prepare_tool_for_pydantic_ai(func: Callable[..., Any]) -> Callable[..., Any]:
     """
@@ -241,3 +255,80 @@ def get_output_type_hint() -> Any:
     except Exception as e:
         logger.debug(f"Could not get caller context: {e}")
         return None
+
+def parse_markdown_with_frontmatter(markdown: str) -> tuple[str, dict[str, Any]]:
+    """Parse frontmatter from markdown content and return both raw markdown and frontmatter.
+    
+    Args:
+        markdown: Raw markdown content with optional frontmatter
+        
+    Returns:
+        Tuple of (raw_markdown_without_frontmatter, frontmatter_config)
+    """
+    frontmatter_pattern = r"^\n*---\s*\n(.*?)\n---\s*\n(.*)"
+    match = re.match(frontmatter_pattern, markdown, re.DOTALL)
+
+    if not match:
+        return markdown, {}
+
+    try:
+        frontmatter_yaml = match.group(1)
+        content_without_frontmatter = match.group(2)
+        config = yaml.safe_load(frontmatter_yaml) or {}
+        return content_without_frontmatter, config
+    except Exception as e:
+        logger.warning(f"Failed to parse frontmatter YAML: {e}")
+        return markdown, {}
+
+def url_to_path(url: str) -> Path:
+    parsed_url = parse.urlparse(url)
+    return Path(parsed_url.netloc.rstrip("/")) / parsed_url.path.lstrip("/")
+
+
+
+def parse_jsdoc_type_to_python(jsdoc_type: str) -> type:
+    """Parse JSDoc type annotations into equivalent Python type annotations."""
+    if not jsdoc_type:
+        raise ValueError("Empty JSDoc type")
+
+    # Handle union types like 'Engineering' | 'HR' | 'Marketing'
+    if "|" in jsdoc_type:
+        raw_types = [t.strip() for t in jsdoc_type.split("|")]
+
+        # For literal unions, we'll just return str since we can't create
+        # dynamic Literal types at runtime
+        if all(t.startswith("'") and t.endswith("'") for t in raw_types):
+            return str
+
+        # Map each type in the union
+        types = []
+        for raw_type in raw_types:
+            types.append(_map_single_jsdoc_type(raw_type.strip("'\"")))
+
+        return Union[tuple(types)] if len(types) > 1 else types[0]
+
+    # Handle single types
+    return _map_single_jsdoc_type(jsdoc_type)
+
+
+def _map_single_jsdoc_type(jsdoc_type: str) -> type:
+    """Map a single JSDoc type to its Python equivalent."""
+    # Standard JSDoc to Python type mappings
+    type_mappings = {
+        "string": str,
+        "number": Union[int, float],
+        "int": int,
+        "float": float,
+        "boolean": bool,
+        "void": type(None),
+        "table": Any,
+        "object": dict,
+        "array": list,
+    }
+
+    if jsdoc_type in type_mappings:
+        return type_mappings[jsdoc_type]
+
+    # Handle string literals - return str since we can't create dynamic Literals
+    if jsdoc_type.startswith("'") and jsdoc_type.endswith("'"):
+        return str

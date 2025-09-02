@@ -173,6 +173,7 @@ class DataSource(BaseModel, ABC):
                         border_style="green",
                     ),
                     refresh_per_second=10,
+                    vertical_overflow="visible",
                 ) as live:
                     accumulated_content = ""
 
