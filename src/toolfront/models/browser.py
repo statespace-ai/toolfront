@@ -268,3 +268,8 @@ class Browser(DataSource, ABC):
 
         self.page = ToolPage(url=url, headers=self.headers, params=self.params)
         return self.page.content
+
+    def restart(self) -> None:
+        """Reset the browser."""
+        self.page = ToolPage(url=self.start_url, headers=self.headers, params=self.params)
+        return self.page.content
