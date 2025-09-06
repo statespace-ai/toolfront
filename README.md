@@ -34,12 +34,12 @@ pip install toolfront
 ```python
 from toolfront import Database
 
-db = Database("postgres://user:pass@localhost:5432/mydb", model="openai:gpt-4o")
+db = Database("postgres://user:pass@localhost:5432/mydb")
 
 context = "We're an e-commerce company. Sales data is in the `cust_orders` table."
 
 # Returns a string
-answer = db.ask("What's our best-selling product?", context=context)
+answer = db.ask("What's our best-selling product?",  model="openai:gpt-4o", context=context)
 # >>> "Wireless Headphones Pro"
 ```
 
@@ -50,10 +50,10 @@ answer = db.ask("What's our best-selling product?", context=context)
 ```python
 from toolfront import API
 
-api = API("http://localhost:8000/openapi.json", model="anthropic:claude-3-5-sonnet")
+api = API("http://localhost:8000/openapi.json")
 
 # Returns a list of integers
-answer: list[int] = api.ask("Get the last 5 order IDs for user_id=42")
+answer: list[int] = api.ask("Get the last 5 order IDs for user_id=42",  model="anthropic:claude-3-5-sonnet")
 # >>> [1001, 998, 987, 976, 965]
 ```
 
@@ -71,10 +71,10 @@ class CompanyReport(BaseModel):
     revenue: int | float = Field(..., description="Annual revenue in USD")
     is_profitable: bool = Field(..., description="Whether the company is profitable")
 
-doc = Document("/path/annual_report.pdf", model="google:gemini-pro")
+doc = Document("/path/annual_report.pdf")
 
 # Returns a structured Pydantic object
-answer: CompanyReport = doc.ask("Extract the key company information from this report")
+answer: CompanyReport = doc.ask("Extract the key company information from this report", model="google:gemini-pro")
 # >>> CompanyReport(company_name="TechCorp Inc.", revenue=2500000, is_profitable=True)
 ```
 
