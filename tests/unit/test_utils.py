@@ -35,3 +35,10 @@ class TestSanitizeUrl:
         url = "https://user:secret@api.example.com/v1"
         result = sanitize_url(url)
         assert result == "https://user:***@api.example.com/v1"
+
+    def test_sanitize_malformed_url(self):
+        """Test that malformed URLs don't crash sanitize_url."""
+        url = "mssql://user:foo*&%^#bar@url"  # This breaks yarl parsing
+        result = sanitize_url(url)
+        # Should return original URL when parsing fails
+        assert result == url

@@ -155,10 +155,15 @@ def deserialize_response(tool_result: Any) -> str:
 
 def sanitize_url(url: str) -> str:
     """Sanitize the url by removing the password."""
-    url = URL(url)
-    if url.password:
-        url = url.with_password("***")
-    return str(url)
+    try:
+        url_obj = URL(url)
+        if url_obj.password:
+            url_obj = url_obj.with_password("***")
+        return str(url_obj)
+    except Exception:
+        # If URL parsing fails, just return the original URL
+        # This can happen with malformed URLs but we still want to show something
+        return url
 
 
 def type_allows_none(type_hint: Any) -> bool:
