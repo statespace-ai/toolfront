@@ -29,15 +29,10 @@ def load_env_file(env_file: Path = Path(".env")) -> None:
 
 
 def process_database_url(url: str) -> str:
-    """Process database URL with password substitution and encoding.
-
-    If the URL contains {password} placeholder and DATABASE_PASSWORD env var exists,
-    URL-encode the password and substitute it into the URL.
-    """
+    """Process database URL with password substitution and encoding."""
     if "{password}" in url:
         password = os.getenv("DATABASE_PASSWORD")
         if password:
-            # URL-encode the password to handle special characters
             encoded_password = quote(password, safe="")
             url = url.format(password=encoded_password)
             logger.info("Substituted and encoded DATABASE_PASSWORD into URL")
@@ -48,7 +43,6 @@ def process_database_url(url: str) -> str:
 
 
 async def get_mcp(url: str) -> FastMCP:
-    # Process URL with password substitution and encoding
     processed_url = process_database_url(url)
     datasource = DataSource.from_url(processed_url)
 
@@ -74,14 +68,12 @@ async def get_mcp(url: str) -> FastMCP:
 @click.command()
 @click.argument("url", type=click.STRING, required=False)
 @click.option("--transport", type=click.Choice(["stdio", "sse"]), default="stdio", help="Transport mode for MCP server")
-@click.option("--env-file", type=click.Path(exists=True, path_type=Path), default=".env", help="Path to .env file")
+@click.option("--env-file", type=click.Path(path_type=Path), default=".env", help="Path to .env file")
 def main(url: str | None = None, transport: Literal["stdio", "sse"] = "stdio", env_file: Path = Path(".env")) -> None:
     logger.info("Starting MCP server")
 
-    # Load environment variables from .env file
     load_env_file(env_file)
 
-    # If no URL provided via argument, try to get from environment
     if not url:
         url = os.getenv("DATABASE_URL")
         if not url:
