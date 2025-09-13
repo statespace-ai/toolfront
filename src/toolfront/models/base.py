@@ -106,6 +106,7 @@ class DataSource(BaseModel, ABC):
         context: str | None = None,
         output_type: BaseModel | None = None,
         stream: bool = False,
+        durable: bool = False,
     ) -> Any:
         """Ask natural language questions and get structured responses.
 
@@ -121,6 +122,8 @@ class DataSource(BaseModel, ABC):
             Pydantic model for structured responses.
         stream : bool, optional
             Show live AI reasoning in terminal.
+        durable : bool, optional
+            Enable durable execution with DBOS.
 
         Returns
         -------
@@ -146,6 +149,18 @@ class DataSource(BaseModel, ABC):
                 temperature=0.0,
             ),
         )
+
+        if durable:
+            try:
+                import uuid
+
+                from pydantic_ai.durable_exec.dbos import DBOSAgent
+
+                agent_name = f"toolfront-agent-{str(uuid.uuid4())[:8]}"
+                agent = DBOSAgent(agent, name=agent_name)
+            except ImportError:
+                logger.warning("DBOS not available. Install with: pip install 'toolfront[durable]'")
+                logger.info("Falling back to non-durable execution")
 
         return asyncio.run(self._ask_async(prompt, agent, stream))
 
