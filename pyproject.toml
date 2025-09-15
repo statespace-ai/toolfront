@@ -41,6 +41,7 @@ dependencies = [
 [project.scripts]
 toolfront = "cli.main:cli"
 
+
 [tool.setuptools]
 include-package-data = true
 

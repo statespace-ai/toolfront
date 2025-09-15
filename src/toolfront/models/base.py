@@ -3,7 +3,7 @@ import json
 import logging
 from abc import ABC, abstractmethod
 from importlib.resources import files
-from typing import Any, Self
+from typing import Any
 
 import yaml
 from pydantic import BaseModel
@@ -24,11 +24,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 
 from toolfront.config import MAX_RETRIES
-from toolfront.utils import (
-    get_model_from_env,
-    get_output_type_hint,
-    prepare_tool_for_pydantic_ai,
-)
+from toolfront.utils import get_model_from_env, get_output_type_hint, history_processor, prepare_tool_for_pydantic_ai
 
 logger = logging.getLogger("toolfront")
 console = Console()
@@ -44,26 +40,6 @@ class DataSource(BaseModel, ABC):
 
     def __str__(self) -> str:
         return self.__repr__()
-
-    @classmethod
-    def from_url(cls, url: str) -> Self:
-        if url.startswith("http"):
-            from toolfront import API
-
-            return API(spec=url)
-        elif url.startswith("file"):
-            if url.endswith(".json") or url.endswith(".yaml") or url.endswith(".yml"):
-                from toolfront import API
-
-                return API(spec=url)
-            else:
-                from toolfront import Document
-
-                return Document(source=url)
-        else:
-            from toolfront import Database
-
-            return Database(url=url)
 
     @abstractmethod
     def tools(self) -> list[callable]:
@@ -103,7 +79,8 @@ class DataSource(BaseModel, ABC):
         context: str | None = None,
         output_type: BaseModel | None = None,
         temperature: float = 0.0,
-        stream: bool = False,
+        context_window: int = 10,
+        verbose: bool = False,
     ) -> Any:
         """Ask natural language questions and get structured responses.
 
@@ -117,7 +94,9 @@ class DataSource(BaseModel, ABC):
             Additional business context for better responses.
         output_type : BaseModel, optional
             Pydantic model for structured responses.
-        stream : bool, optional
+        context_window : int, optional
+            Number of messages to keep in memory.
+        verbose : bool, optional
             Show live AI reasoning in terminal.
 
         Returns
@@ -125,9 +104,10 @@ class DataSource(BaseModel, ABC):
         Any
             Response matching the requested output type.
         """
+        # Get the model from the environment or use the default model
         model = model or get_model_from_env()
 
-        # Get caller context and add it to the system prompt
+        # Get the output type from the caller or use the default output type
         output_type = get_output_type_hint() or output_type or str
 
         system_prompt = self.instructions(context=context)
@@ -143,15 +123,16 @@ class DataSource(BaseModel, ABC):
             model_settings=ModelSettings(
                 temperature=temperature,
             ),
+            history_processors=[history_processor(context_window=context_window)],
         )
 
-        return asyncio.run(self._ask_async(prompt, agent, stream))
+        return asyncio.run(self._ask_async(prompt, agent, verbose))
 
     async def _ask_async(
         self,
         prompt: str,
         agent: Agent,
-        stream: bool = False,
+        verbose: bool = False,
     ) -> Any:
         """
         Run the agent and optionally stream the response with live updating display.
@@ -161,7 +142,7 @@ class DataSource(BaseModel, ABC):
         console = Console()
 
         try:
-            if stream:
+            if verbose:
                 # Streaming mode with Rich Live display
                 with Live(
                     console=console,
@@ -205,7 +186,7 @@ class DataSource(BaseModel, ABC):
                             elif Agent.is_end_node(node):
                                 return node.data.output
             else:
-                # Quiet mode - just run the agent without display
+                # Quiet mode
                 async with agent.iter(prompt) as run:
                     async for node in run:
                         if Agent.is_end_node(node):
