@@ -4413,7 +4413,7 @@ druid = [
 duckdb = [
     { name = "ibis-framework", extra = ["duckdb"] },
 ]
-durability = [
+durable = [
     { name = "dbos" },
 ]
 flink = [
@@ -4461,7 +4461,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.1.8" },
-    { name = "dbos", marker = "extra == 'durability'", specifier = ">=1.13.2" },
+    { name = "dbos", marker = "extra == 'durable'", specifier = ">=1.13.2" },
     { name = "executing", specifier = ">=2.2.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "ibis-framework", extras = ["bigquery"], marker = "extra == 'bigquery'", specifier = ">=10.6.0" },
@@ -4491,7 +4491,7 @@ requires-dist = [
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=3.0.0" },
     { name = "pyarrow", specifier = "<19.0.0" },
     { name = "pydantic", specifier = ">=2.11.4" },
-    { name = "pydantic-ai", specifier = ">=0.8.0" },
+    { name = "pydantic-ai", specifier = ">=0.4.2" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.21.0" },
@@ -4516,7 +4516,7 @@ requires-dist = [
     { name = "toolfront", extras = ["trino"], marker = "extra == 'all'" },
     { name = "yarl", specifier = ">=1.20.1" },
 ]
-provides-extras = ["test", "dev", "durability", "bigquery", "clickhouse", "databricks", "druid", "duckdb", "flink", "mssql", "mysql", "oracle", "postgres", "risingwave", "snowflake", "sqlite", "trino", "pyspark", "all"]
+provides-extras = ["test", "dev", "durable", "bigquery", "clickhouse", "databricks", "druid", "duckdb", "flink", "mssql", "mysql", "oracle", "postgres", "risingwave", "snowflake", "sqlite", "trino", "pyspark", "all"]
 
 [package.metadata.requires-dev]
 dev = [
