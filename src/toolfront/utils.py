@@ -7,11 +7,10 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qsl, urlparse
+from urllib.parse import urlparse, urlunparse
 
 import executing
 import yaml
-from fsspec import filesystem
 from pydantic_ai.messages import ModelMessage, ToolReturnPart
 
 DEFAULT_OPENAI_MODEL = "openai:gpt-4o"
@@ -70,27 +69,11 @@ def clean_url(url: str) -> str:
     parsed = urlparse(url)
 
     if parsed.scheme == "" and parsed.netloc == "":
-        url = Path(url).resolve().as_uri()
+        parsed = urlparse(Path(url).resolve().as_uri())
 
-    return url
+    parsed._replace(path=parsed.path.rstrip("/"))
 
-
-def get_filesystem(url: str, params: dict[str, str] | list[str] | None = None) -> Any:
-    parsed = urlparse(url)
-
-    kwargs = dict(parse_qsl(parsed.query, keep_blank_values=True))
-
-    if isinstance(params, (list | tuple)):
-        params = dict([param.split("=") for param in params])
-
-    kwargs.update(params or {})
-
-    fs = filesystem(parsed.scheme, **kwargs)
-
-    if not fs.exists(parsed.path):
-        raise FileNotFoundError(f"Not found: {url}")
-
-    return fs
+    return urlunparse(parsed)
 
 
 def get_output_type_hint() -> Any:
@@ -144,7 +127,7 @@ def get_output_type_hint() -> Any:
         return None
 
 
-def parse_markdown_with_frontmatter(markdown: str) -> tuple[str, dict[str, Any] | list[Any]]:
+def get_frontmatter(markdown: str) -> tuple[str, dict[str, Any] | list[Any]]:
     """Parse frontmatter from markdown content and return both raw markdown and commands in frontmatter.
 
     Args:

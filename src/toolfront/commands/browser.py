@@ -1,67 +1,7 @@
-import asyncio
-import json
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from dataclasses import dataclass
-
 import click
-from mcp.server.fastmcp import Context, FastMCP
+from mcp.server.fastmcp import FastMCP
 
-from toolfront.browser import ToolPage
-
-
-class JSONType(click.ParamType):
-    """Custom Click parameter type for JSON parsing.
-
-    Attributes
-    ----------
-    name : str
-        Parameter type name for error messages
-    """
-    name = "json"
-
-    def convert(self, value, param, ctx):
-        """Convert string value to JSON object.
-
-        Parameters
-        ----------
-        value : str
-            String representation of JSON
-        param : click.Parameter
-            Click parameter context
-        ctx : click.Context
-            Click command context
-
-        Returns
-        -------
-        Any
-            Parsed JSON object
-
-        Raises
-        ------
-        click.BadParameter
-            If JSON parsing fails
-        """
-        try:
-            return json.loads(value)
-        except json.JSONDecodeError as e:
-            self.fail(f"Invalid JSON: {e}", param, ctx)
-
-
-JSON = JSONType()
-
-
-@dataclass
-class AppContext:
-    """Application context with typed dependencies.
-
-    Attributes
-    ----------
-    page : ToolPage
-        Current page being served by the MCP server
-    """
-
-    page: ToolPage
+from toolfront.environment import Environment
 
 
 @click.group()
@@ -87,7 +27,8 @@ def browser():
     default="stdio",
     help="Transport mode for MCP server",
 )
-def serve(url, params, host, port, transport) -> None:
+@click.option("--env", type=click.STRING, default=None, help="Environment variables to pass to the server")
+def serve(url, params, host, port, transport, env) -> None:
     """Start an MCP server with a browsing environment.
 
     Usage: `browser serve URL [OPTIONS]`
@@ -104,6 +45,9 @@ def serve(url, params, host, port, transport) -> None:
         Port to run the server on
     transport : str
         Transport mode for MCP server
+    env : str
+        Environment variables to pass to the server: KEY=VALUE
+
 
     Example
     -------
@@ -129,80 +73,17 @@ def serve(url, params, host, port, transport) -> None:
     """
     click.echo("Starting MCP server")
 
-    params = dict([param.split("=") for param in params])
+    environment = Environment(url=url, params=params, env=env)
 
-    page = ToolPage(url=url, params=params, env=None)
+    mcp = FastMCP("ToolFront MCP server", host=host, port=port)
 
-    @asynccontextmanager
-    async def lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
-        """Manage application lifecycle with type-safe context.
+    mcp.add_tool(environment.run_command)
+    mcp.add_tool(environment.read_file)
+    mcp.add_tool(environment.glob)
 
-        Parameters
-        ----------
-        server : FastMCP
-            MCP server instance
-
-        Yields
-        ------
-        AppContext
-            Application context with current page
-        """
-        try:
-            yield AppContext(page=page)
-        finally:
-            pass
-
-    mcp = FastMCP(
-        "ToolFront MCP server", lifespan=lifespan, host=host, port=port, instructions=asyncio.run(page.body())
-    )
-
-    async def navigate(url: str, ctx: Context):
-        """Navigate to a page.
-
-        Instructions:
-        1. Only use only absolute file paths or URLs with protocol and domain
-        2. When navigation fails check URI syntax and retry with corrected format.
-
-        Parameters
-        ----------
-        url : str
-            Target URL or file path to navigate to
-        ctx : Any
-            MCP server context
-
-        Returns
-        -------
-        str
-            Page content with available commands
-        """
-        page = ToolPage(url=url, params=params, env=None)
-        ctx.request_context.lifespan_context.page = page
-        return await page.body()
-
-    async def run_command(command: list[str], ctx: Context):
-        """Run a command.
-
-        Run CLI commands in a subprocess and return their output.
-
-        ALWAYS UNDERSTAND THE ARGUMENTS AND OPTIONS BEFORE RUNNING COMMAND.
-
-        Parameters
-        ----------
-        command : list[str]
-            Command parts (executable and arguments)
-        ctx : Any
-            MCP server context
-
-        Returns
-        -------
-        str
-            Command output or error message
-        """
-        page = ctx.request_context.lifespan_context.page
-        return await page.run_command(command, help_fallback=False)
-
-    mcp.add_tool(navigate)
-    mcp.add_tool(run_command)
+    # Only add search tool if index page exists
+    if environment.index_page:
+        mcp.add_tool(environment.search)
 
     click.echo("MCP server started successfully")
     mcp.run(transport=transport)

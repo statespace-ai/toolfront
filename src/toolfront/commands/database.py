@@ -84,20 +84,17 @@ def database():
 @database.command()
 @click.argument("db", type=click.STRING, required=True)
 def list_tables(db) -> None:
-    """List available tables in the database.
+    """List all tables available in the database.
 
-    Usage: `database list-tables DB`
+    Arguments:
+      DB  Database connection string or environment variable name
 
-    Parameters
-    ----------
-    db : str
-        Database connection string or environment variable name
+    Notes:
+      - Use this to discover what tables exist in the database
+      - For multi-database systems, tables are shown as: catalog.database.table
 
-    Example
-    -------
-    ```bash
-    uvx toolfront database list-tables postgres://user:password@localhost:5432/mydb
-    ```
+    Example:
+      toolfront database list-tables postgres://user:password@localhost:5432/mydb
     """
     click.echo(os.environ.get(db, db))
     connection = create_connection(db)
@@ -128,28 +125,19 @@ def list_tables(db) -> None:
 @click.argument("db", type=click.STRING, required=True)
 @click.argument("path", type=click.STRING, required=True)
 def inspect_table(db, path) -> None:
-    """Inspect the schema of database table and get sample data.
+    """Inspect table schema and view sample data.
 
-    Usage: `database inspect-table DB PATH`
+    Arguments:
+      DB    Database connection string or environment variable name
+      PATH  Table path (format: [catalog.][database.]table)
 
-    Parameters
-    ----------
-    db : str
-        Database connection string or environment variable name
-    path : str
-        Table path to inspect
+    Notes:
+      - ALWAYS inspect tables before querying to understand their structure
+      - Shows column names, data types, nullable constraints, and sample values
+      - Use this to discover what data is available in each table
 
-    LLM Instructions
-    ----------------
-    1. Use this tool to understand table structure like column names, data types, and constraints
-    2. Inspecting tables helps understand the structure of the data
-    3. ALWAYS inspect unfamiliar tables first to learn their columns and data types before querying
-
-    Example
-    -------
-    ```bash
-    uvx toolfront database inspect-table postgres://user:password@localhost:5432/mydb mydb.mytable
-    ```
+    Example:
+      uvx toolfront database inspect-table postgres://user:password@localhost:5432/mydb mydb.mytable
     """
 
     parts = path.split(".")
@@ -176,30 +164,21 @@ def inspect_table(db, path) -> None:
 @click.argument("db", type=click.STRING, required=True)
 @click.argument("sql", type=click.STRING, required=True)
 def query(db, sql) -> None:
-    """Run read-only SQL queries against a database.
+    """Execute read-only SQL queries against the database.
 
-    Usage: `database query DB SQL`
+    Arguments:
+      DB   Database connection string or environment variable name
+      SQL  SQL query to execute (must be read-only)
 
-    Parameters
-    ----------
-    db : str
-        Database connection string or environment variable name
-    sql : str
-        SQL query code to execute
+    Notes:
+      - ONLY query tables you've inspected or discovered via list-tables
+      - Always quote identifiers (table/column names) to avoid errors
+      - Use exact table and column names from inspect-table output
+      - Query is restricted to read-only operations (SELECT, WITH, etc.)
+      - If query fails, inspect the table schema and retry with corrections
 
-    LLM Instructions
-    ----------------
-    1. Always enclose all identifiers (table names, column names) in quotes to preserve case sensitivity and avoid reserved word conflicts and syntax errors.
-    1. ONLY write read-only queries for tables that have been explicitly discovered or referenced
-    2. Always use the exact table and column names as they appear in the schema, respecting case sensitivity
-    3. Before writing queries, make sure you understand the schema of the tables you are querying
-    4. When a query fails or returns unexpected results, try to diagnose the issue and then retry        
-
-    Example
-    -------
-    ```bash
-    uvx toolfront database query postgres://user:password@localhost:5432/mydb "SELECT * FROM mytable"
-    ```
+    Example:
+      toolfront database query postgres://user:password@localhost:5432/mydb "SELECT * FROM mytable"
     """
 
     if not is_read_only_query(sql):
