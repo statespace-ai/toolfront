@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic_ai import Agent, UnexpectedModelBehavior, models
 from pydantic_ai.mcp import MCPServerStdio
 from pydantic_ai.messages import (
@@ -23,7 +23,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 
 from toolfront.environment import Environment
-from toolfront.utils import history_processor
+from toolfront.utils import get_model_from_env, history_processor
 
 DEFAULT_TEMPERATURE = 0.0
 DEFAULT_CONTEXT_WINDOW = 20
@@ -39,22 +39,38 @@ class Browser(BaseModel):
     model: models.Model | models.KnownModelName | str | None = Field(None, description="AI model to use.")
     temperature: float = Field(default=DEFAULT_TEMPERATURE, description="Model temperature.")
     context_window: int = Field(default=DEFAULT_CONTEXT_WINDOW, description="Model context window.")
-    params: dict[str, str] | None = Field(
+    params: dict[str, str] | list[str] | None = Field(
         None, description="Authentication parameters for the filesystem protocol", exclude=True
     )
-    env: dict[str, str] | None = Field(
+    env: dict[str, str] | list[str] | None = Field(
         None, description="Additional environment variables to include in requests.", exclude=True
     )
 
     model_config = {"arbitrary_types_allowed": True}
+
+    @field_validator("params", mode="before")
+    @classmethod
+    def validate_params(cls, params: dict[str, str] | list[str] | None) -> dict[str, str] | None:
+        """Convert list of KEY=VALUE strings to dict."""
+        if isinstance(params, list):
+            return dict(param.split("=", 1) for param in params)
+        return params
+
+    @field_validator("env", mode="before")
+    @classmethod
+    def validate_env(cls, env: dict[str, str] | list[str] | None) -> dict[str, str] | None:
+        """Convert list of KEY=VALUE strings to dict."""
+        if isinstance(env, list):
+            return dict(env_var.split("=", 1) for env_var in env)
+        return env
 
     def __init__(
         self,
         model: models.Model | models.KnownModelName | str | None = None,
         temperature: float = DEFAULT_TEMPERATURE,
         context_window: int = DEFAULT_CONTEXT_WINDOW,
-        params: dict[str, str] | None = None,
-        env: dict[str, str] | None = None,
+        params: dict[str, str] | list[str] | None = None,
+        env: dict[str, str] | list[str] | None = None,
         **kwargs,
     ):
         super().__init__(
@@ -126,7 +142,7 @@ class Browser(BaseModel):
         ```
         """
 
-        environment = Environment(url=url, params=self.params, env=self.env)
+        environment = Environment(url=url, params=self.params, env=self.env)  # type: ignore[arg-type]
 
         server = MCPServerStdio(
             "uv",
@@ -147,8 +163,10 @@ class Browser(BaseModel):
         Your environment home page URL is: {environment.home_page}
         """
 
+        history_processor_ = history_processor(context_window=self.context_window)
+
         agent = Agent(
-            model=self.model,
+            model=self.model or get_model_from_env(),
             system_prompt=instructions,
             toolsets=[server],
             output_retries=DEFAULT_MAX_RETRIES,
@@ -157,7 +175,7 @@ class Browser(BaseModel):
             model_settings=ModelSettings(
                 temperature=self.temperature,
             ),
-            history_processors=[history_processor(context_window=self.context_window)],
+            history_processors=[history_processor_] if history_processor_ else None,
         )
 
         return asyncio.run(Browser._browse_async(prompt, agent, verbose))

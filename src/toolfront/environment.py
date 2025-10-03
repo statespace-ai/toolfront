@@ -188,28 +188,28 @@ class Environment(BaseModel):
     """
 
     url: str = Field(..., description="Root URL for the environment")
-    params: dict[str, str] | list[str] | None = Field(None, description="Query parameters for the page.", exclude=True)
-    env: dict[str, str] | list[str] | None = Field(
-        None, description="Environment variables for the page.", exclude=True
-    )
-    home_page: str | None = Field(None, description="Home page for the environment")
-    index_page: str | None = Field(None, description="Index page for the environment")
+    params: dict[str, str] | None = Field(default=None, description="Query parameters for the page.", exclude=True)
+    env: dict[str, str] | None = Field(default=None, description="Environment variables for the page.", exclude=True)
+    home_page: str | None = Field(default=None, description="Home page for the environment")
+    index_page: str | None = Field(default=None, description="Index page for the environment")
 
     _fs: Any = PrivateAttr(None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    @field_validator("params")
+    @field_validator("params", mode="before")
     @classmethod
-    def validate_params(cls, params: dict[str, str] | list[str] | None) -> dict[str, str] | None:
-        if isinstance(params, list):
+    def validate_params(cls, params: dict[str, str] | list[str] | tuple | None) -> dict[str, str] | None:
+        """Convert list of KEY=VALUE strings to dict."""
+        if isinstance(params, (list, tuple)):
             return dict(param.split("=", 1) for param in params)
         return params
 
-    @field_validator("env")
+    @field_validator("env", mode="before")
     @classmethod
-    def validate_env(cls, env: dict[str, str] | list[str] | None) -> dict[str, str] | None:
-        if isinstance(env, list):
+    def validate_env(cls, env: dict[str, str] | list[str] | tuple | None) -> dict[str, str] | None:
+        """Convert list of KEY=VALUE strings to dict."""
+        if isinstance(env, (list, tuple)):
             return dict(env_var.split("=", 1) for env_var in env)
         return env
 
@@ -540,7 +540,8 @@ class Environment(BaseModel):
 
                 # Convert to output format
                 results = [
-                    BM25Result(filename=row["filename"], score=float(row["score"])) for _, row in results_df.iterrows()
+                    BM25Result(filename=str(row["filename"]), score=float(row["score"]))
+                    for _, row in results_df.iterrows()
                 ]
                 return BM25Output(results=results, total_results=len(results), query=query, url_pattern=self.url)
 
@@ -572,7 +573,8 @@ class Environment(BaseModel):
                         FROM idx.lines
                         WHERE regexp_matches(line, '{query}', '{regex_flags}') {filename_filter}
                     """
-                    total = conn.execute(query_sql).fetchone()[0]
+                    result = conn.execute(query_sql).fetchone()
+                    total = result[0] if result else 0
                     return GrepCountOutput(total_matches=total)
 
                 else:  # CONTENT mode

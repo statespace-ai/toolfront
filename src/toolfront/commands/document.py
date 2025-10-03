@@ -114,7 +114,8 @@ def index(url, stemmer, stopwords, ignore, strip_accents, lower, overwrite, atta
 
     index_url = urljoin(url, "index.duckdb")
     with duckdb.connect(index_url) as conn:
-        conn.execute(f"ATTACH '{attach}'")
+        if attach:
+            conn.execute(f"ATTACH '{attach}'")
         conn.execute("INSTALL fts")
         conn.execute("LOAD fts")
 
