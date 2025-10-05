@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.com/kruskal-labs/toolfront">
-    <img src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/logo.png" width="150" alt="ToolFront Logo">
+  <a href="https://github.com/statespace-ai/toolfront">
+    <img src="https://raw.githubusercontent.com/statespace-ai/toolfront/main/img/logo.png" width="150" alt="ToolFront Logo">
   </a>
 </p>
 
@@ -8,7 +8,7 @@
 
 *Data environments for AI agents*
 
-[![Test Suite](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml/badge.svg)](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml)
+[![Test Suite](https://github.com/statespace-ai/toolfront/actions/workflows/test.yml/badge.svg)](https://github.com/statespace-ai/toolfront/actions/workflows/test.yml)
 [![PyPI package](https://img.shields.io/pypi/v/toolfront?color=%2334D058&label=pypi%20package)](https://pypi.org/project/toolfront/)
 [![Discord](https://img.shields.io/discord/1323415085011701870?label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/rRyM7zkZTf)
 [![X](https://img.shields.io/badge/ToolFront-black?style=flat-square&logo=x&logoColor=white)](https://x.com/toolfront)
@@ -19,7 +19,7 @@
 
 **Documentation: [docs.toolfront.ai](http://docs.toolfront.ai/)**
 
-**Source code: [https://github.com/kruskal-labs/toolfront](https://github.com/kruskal-labs/toolfront)**
+**Source code: [https://github.com/statespace-ai/toolfront](https://github.com/statespace-ai/toolfront)**
 
 ---
 
@@ -113,7 +113,7 @@ Agents using environments hosted on **ToolFront Cloud** get instant access to po
 
 - **Discord**: Join our [community server](https://discord.gg/rRyM7zkZTf) for real-time help and discussions
 - **X**: Follow us [@toolfront](https://x.com/toolfront) for updates and news
-- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/kruskal-labs/toolfront/issues)
+- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/statespace-ai/toolfront/issues)
 
 ## License
 
