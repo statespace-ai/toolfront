@@ -12,16 +12,16 @@ hide:
 
 
 <p align="center">
-  <a href="https://github.com/kruskal-labs/toolfront">
-    <img src="https://raw.githubusercontent.com/kruskal-labs/toolfront/main/img/logo.png" alt="ToolFront" style="width:20%;">
+  <a href="https://github.com/statespace-ai/toolfront">
+    <img src="https://raw.githubusercontent.com/statespace-ai/toolfront/main/img/logo.png" alt="ToolFront" style="width:20%;">
   </a>
 </p>
 <p align="center">
     <strong><em>Data environments for AI agents</em></strong>
 </p>
 <p align="center">
-<a href="https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml" target="_blank">
-    <img src="https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml/badge.svg" alt="Test Suite">
+<a href="https://github.com/statespace-ai/toolfront/actions/workflows/test.yml" target="_blank">
+    <img src="https://github.com/statespace-ai/toolfront/actions/workflows/test.yml/badge.svg" alt="Test Suite">
 </a>
 <a href="https://pypi.org/project/toolfront/" target="_blank">
     <img src="https://img.shields.io/pypi/v/toolfront?color=%2334D058&label=pypi%20package" alt="PyPI package">
@@ -35,7 +35,7 @@ hide:
 </p>
 ---
 
-**Source code: [https://github.com/kruskal-labs/toolfront](https://github.com/kruskal-labs/toolfront)**
+**Source code: [https://github.com/statespace-ai/toolfront](https://github.com/statespace-ai/toolfront)**
 
 ---
 
@@ -107,7 +107,7 @@ pip install toolfront
 
 !!! toolfront "Deploy with ToolFront Cloud 🔥"
 
-    Deploy your environments in one step with [**ToolFront Cloud**](./pages/toolfront_cloud). Simply un `toolfront deploy ./path/to/toolsite` to get a secure environment URL you can start using right away.
+    Deploy your environments in one step with [**ToolFront Cloud**](./pages/toolfront_cloud.md). Simply un `toolfront deploy ./path/to/toolsite` to get a secure environment URL you can start using right away.
 
     ```python
     from toolfront import Browser

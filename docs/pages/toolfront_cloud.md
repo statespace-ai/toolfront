@@ -40,7 +40,7 @@ Found 3 relevant pages:
 I'll start by reading ./api/pricing.md
 ```
 
-To request beta access, please email email **esteban [at] kruskal [dot] ai**
+To request beta access, join our [Discord server](https://discord.gg/rRyM7zkZTf) or  email  **esteban [at] kruskal [dot] ai**
 
 ---
 
@@ -52,25 +52,3 @@ Agents interact with environments using these core tools:
 - `read()` - Get the content of a specific page or file
 - `glob()` - List files matching a pattern
 - `run_command()` - Execute commands defined in page frontmatter
-
-## How It Works
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                          Browser                             │
-│                                                              │
-│  ┌──────────────┐       ┌──────────────┐                    │
-│  │ AI Agent/LLM │  ───> │  MCP Tools   │                    │
-│  └──────────────┘       └──────────────┘                    │
-│                               │                              │
-└───────────────────────────────┼──────────────────────────────┘
-                                │
-                                │ search()
-                                │ read()
-                                │ glob()
-                                │ run_command()
-                                ▼
-                         ┌──────────────┐
-                         │ Environment  │
-                         └──────────────┘
-```
