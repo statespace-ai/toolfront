@@ -6,7 +6,7 @@
 
 <div align="center">
 
-*Data retrieval environments for AI agents*
+*Data environments for AI agents*
 
 [![Test Suite](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml/badge.svg)](https://github.com/kruskal-labs/toolfront/actions/workflows/test.yml)
 [![PyPI package](https://img.shields.io/pypi/v/toolfront?color=%2334D058&label=pypi%20package)](https://pypi.org/project/toolfront/)
@@ -15,16 +15,17 @@
 
 </div>
 
-
 ---
 
 **Documentation: [docs.toolfront.ai](http://docs.toolfront.ai/)**
+
+**Source code: [https://github.com/kruskal-labs/toolfront](https://github.com/kruskal-labs/toolfront)**
 
 ---
 
 ## Installation
 
-Install with `pip` or your favorite PyPI package manager.
+Install `toolfront` with `pip` or your favorite PyPI package manager.
 
 ```bash
 pip install toolfront
@@ -32,171 +33,81 @@ pip install toolfront
 
 ## Quickstart
 
-ToolFront turns markdowns and scripts into navigatable environments for your AI agents.
+ToolFront helps you build and deploy environments for AI agents. Think of environments as directories agents can explore and take actions in.
 
-```bash
-mysite/
+```markdown
+my_environment
 ├── index.md
-├── hello.py
-├── database/
+├── page/
+│   ├── cli.py
 │   └── index.md
-├── documents/
-│   ├── index.duckdb
-│   └── index.md
-└── analytics/
-    ├── index.md
-    └── cli.py
+└── data/
+    ├── sample.txt
+    └── data.csv
 ```
-Each `.md` file can have *markdown* instructions and *command* tools.
+
+Agents can call any commands declared as markdown headers, optionally passing arguments. These tools define what actions agents can take when browsing your environments.
 
 ```markdown
 ---
-[python3, hello.py]
+tools:
+- [python3, cli.py]
+- [curl, -X, GET, https://api.example.com/data]
+
 ---
 
-# My toolsite
+# My environment page
 
-You are a business analyst. Your goal is to answer the user's quesiton.
+Add [links](./page_1) to tell your agents what pages it can visit.
 
-Run `hello.py` to be greeted by a welcome message!
-
-Go to ./database to find out more about our products.
+Agents can call any command defined in the header.
+- `python3 cli.py` executes a python script
+- `curl -X GET https://api.example.com/data` calls an API
 ```
 
-Your AI agents can browse these environments by following links and executing commands to gather data and answer questions.
+Launch browsing sessions with ToolFront's Python SDK, or build your own browsing agent with the MCP. Browsing is always powered by your own models.
+
+### Using the SDK
 
 ```python
 from toolfront import Browser
 
-browser = Browser(model="openai:gpt-4o")
+browser = Browser(model="openai:gpt-5")
 
-response = browser.ask("What's our best-selling product?", url="./mysite")
-```
-## Example 1: Landing Page
+url = "file:///path/to/environment"
 
-Create `./mysite/index.md`:
-
-```markdown
-# My toolsite
-
-You are a business analyst. Your goal is to answer the user's quesiton.
-
-Always answer the user's question using ONLY data explicitly retrieved through the provided tools.
-
-## General Instructions
-* NEVER make assumptions, hallucinate data, or supplement answers with general knowledge
-* Present findings in markdown or the desired output type.
-* Thoroughly try multiple approaches before concluding data cannot be found
-* Handle missing or incomplete data by filtering values before giving up
-* If no relevant data can be found after exhaustive retrieval attempts, clearly explain why
-
-## Available pages:
-- Go to ./database to query and analyze tables
-- Go to ./documents to search through documents
-- Go to ./analytics for custom data analysis
+answer = browser.ask("What's our average ticket price?", url=url)
+print(answer)
 ```
 
-## Example 2: Text2SQL Page
-
-Create `./site/database/index.md` with ToolFront's built-in [database commands](./src/toolfront/commands/database.py):
-
-```markdown
----
-- [toolfront, database, inspect-table]
-- [toolfront, database, list-tables]
-- [toolfront, database, query]
----
-
-# Instructions
-
-This page allows you to learn about the database: `postgres://user:pass@localhost:5432/mydb`
-
-Use the `inspect-table`, `list-tables`, and `query` tools to navigate the database.
-```
-
-## Example 3: Document RAG page
-
-1. Index a collection of `.txt`. documents by running `toolfront document index /path/to/documents`
-
-2. Place the `duckdb.index` file under `./site/database`
-
-3. Create `./site/database/index.md` with ToolFront's built-in [document commands](./src/toolfront/commands/document.py):
-
-```markdown
----
-- [toolfront, document, search, './duckdb.index']
-- [toolfront, document, read]
----
-
-# Document Search
-
-This page allows you to learn about your documents.
-
-Use the search and read tools to find and read relevant documents.
-```
-
-## Example 4: Custom Page
-
-Create a CLI program `./mysite/analytics/cli.py`:
-
-```python
-import click
-
-@click.command()
-@click.option('--metric', required=True, help='Metric to analyze: sales or revenue')
-def analyze(metric):
-    """Simple analytics tool"""
-
-    if metric == 'sales':
-        click.echo("Sales this month: 4,500 units")
-        click.echo("Growth: +15%")
-    elif metric == 'revenue':
-        click.echo("Revenue this month: $125,000")
-        click.echo("Growth: +12%")
-    else:
-        click.echo("Available metrics: sales, revenue")
-
-if __name__ == '__main__':
-    analyze()
-```
-
-Then, create `./mysite/analytics/index.md`
-
-```markdown
----
-- [python3, cli.py, --metric]
----
-
-# Custom Analytics
-
-View business metrics using a custom Python CLI tool.
-
-Run cli.py with --metric sales or --metric revenue to see data.
-```
-
-## Browser MCP Server
-
-You can directly use ToolFront Browser as an MCP:
+### Using MCP
 
 ```json
 {
   "mcpServers": {
-    "toolfront-browser": {
+    "toolfront": {
       "command": "uvx",
-      "args": [
-        "toolfront",
-        "browser",
-        "serve",
-        "./mysite",
-        "--transport",
-        "stdio"
-      ]
+      "args": ["toolfront", "browser", "serve", "file:///path/to/toolsite"]
     }
   }
 }
 ```
 
-> **Note**: ToolFront supports OpenAI, Anthropic, Google, xAI, and 14+ AI model providers. See the [documentation](http://docs.toolfront.ai/) for the complete list.
+
+## ToolFront Cloud
+
+Deploy your environments in one step with **ToolFront Cloud**. Simply run `toolfront deploy ./path/to/toolsite` to get a secure environment URL you can start using right away.
+
+```python
+from toolfront import Browser
+
+browser = Browser(params={"api_key": "TOOLFRONT-API-KEY"})
+
+result = browser.ask(..., url="https://cloud.toolfront.ai/user/environment")
+```
+
+Agents using environments hosted on **ToolFront Cloud** get instant access to powerful search features.
+
 
 ## Community & Contributing
 
