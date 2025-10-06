@@ -46,7 +46,7 @@ my_environment
     └── data.csv
 ```
 
-To add actions to an environment, simply define commands in any markdown header. As agents browse files, they will discover these tools learn how to use them with the `--help` flag.
+To add actions to an environment, simply define commands in any markdown header. As agents browse files, they will discover these tools and learn how to use them with the `--help` flag.
 
 ```markdown
 ---
