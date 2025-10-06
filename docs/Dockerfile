@@ -41,5 +41,8 @@ COPY index.md ./docs/
 # Expose port 8080
 EXPOSE 8080
 
-# Run mkdocs serve
-CMD ["mkdocs", "serve", "--dev-addr", "0.0.0.0:8080"]
+# Build the site
+RUN mkdocs build
+
+# Serve static files
+CMD ["python", "-m", "http.server", "8080", "--directory", "site"]
