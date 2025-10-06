@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     shared-mime-info \
     git \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
