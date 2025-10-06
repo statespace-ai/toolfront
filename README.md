@@ -36,7 +36,7 @@ pip install toolfront
 ToolFront helps you build and deploy environments for AI agents. Think of environments as interactive directories that agents can explore and take actions in.
 
 ```markdown
-my_environment
+environment
 ├── index.md
 ├── page/
 │   ├── cli.py

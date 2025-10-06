@@ -44,7 +44,7 @@ ToolFront helps you build and deploy environments for AI agents. Think of enviro
 
 
 ```markdown
-my_environment
+environment
 ├── index.md
 ├── page/
 │   ├── cli.py
