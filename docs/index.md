@@ -26,8 +26,8 @@ description: "Build and deploy data environments your own agents can browse."
 <a href="https://discord.gg/rRyM7zkZTf" target="_blank">
     <img src="https://img.shields.io/discord/1323415085011701870?label=Discord&logo=discord&logoColor=white&style=flat-square" alt="Discord">
 </a>
-<a href="https://x.com/toolfront" target="_blank">
-    <img src="https://img.shields.io/badge/ToolFront-black?style=flat-square&logo=x&logoColor=white" alt="X">
+<a href="https://x.com/statespace_ai" target="_blank">
+    <img src="https://img.shields.io/badge/Statespace-black?style=flat-square&logo=x&logoColor=white" alt="X">
 </a>
 </p>
 
@@ -64,7 +64,7 @@ tools:
 
 # My environment page
 
-Add [links](./page_1) to tell your agents what pages it can visit.
+Add [links](./page_1) to tell your agents what pages they should check out.
 
 Agents can call any command defined in markdown headers.
 - `python3 cli.py` executes a python script
@@ -98,7 +98,7 @@ You can launch browsing sessions with ToolFront's Python SDK, or build your own 
     }
     ```
 
-ToolFront's browser comes with six core tools your agents can use interact with environments. [^1] You can check them out [here](https://github.com/statespace-ai/toolfront/blob/main/src/toolfront/environment.py).
+ToolFront's browser comes with six core tools your agents can use interact with environments. [^1]
 
 - :material-play:{ .middle } `run_command` - Execute commands exclusively defined in markdown headers
 - :material-eye:{ .middle } `read` - Get the content of a specific page or file
@@ -107,9 +107,9 @@ ToolFront's browser comes with six core tools your agents can use interact with 
 - :material-text-search:{ .middle } `grep` - Find relevant lines that match a regular expression 
 - :material-magnify:{ .middle } `search` - Find relevant documents containing a list of terms
 
-[^1]: Because `grep` and `search` require indexing environments, they're currently only available through ToolFront Cloud. You can always build custom browser agents and tools with ToolFront's MCP.
+[^1]: Because `grep` and `search` require indexing environments, they're currently only available through ToolFront Cloud. You can always build custom agents and tools with ToolFront's MCP.
 
-To get started, install `toolfront` using your favorite PyPI package manager. Be sure to also check out [the only example you'll ever need](/pages/example/).
+To get started, install `toolfront` using your favorite PyPI package manager.
 
 === ":fontawesome-brands-python:{ .middle } &nbsp; pip"
 
@@ -131,14 +131,34 @@ To get started, install `toolfront` using your favorite PyPI package manager. Be
 
 !!! toolfront "Deploy with ToolFront Cloud 🔥"
 
-    Deploy your environments in one step with [**ToolFront Cloud**](./pages/toolfront_cloud.md). Simply run `toolfront deploy ./path/to/toolsite` to get a secure environment URL you can start using right away.
+    Instantly deploy your environments with [**ToolFront Cloud**](./pages/toolfront_cloud.md).
+    
+    ```bash
+    toolfront deploy ./path/to/environment --api-key "my-api-key"
+    ```
+    
+    Would give you a secure environment URL your agents can browse.
 
     ```python
     from toolfront import Browser
 
-    browser = Browser(params={"api_key": "TOOLFRONT-API-KEY"})
+    browser = Browser(env={"TOOLFRONT_API_KEY": "my-api-key"})
 
-    result = browser.ask(..., url="https://cloud.toolfront.ai/user/environment")
+    answer = browser.ask(..., url="https://cloud.toolfront.ai/user/environment")
     ```
 
-    Agents using environments hosted on **ToolFront Cloud** get instant access to powerful search features.
+    Environments deployed to **ToolFront Cloud** are automatically indexed and get access to `grep` and `search` tools.
+
+    ```
+    I need to find information about ticket pricing APIs.
+    Let me search the environment for "ticket pricing API"...
+
+    Found 3 relevant pages:
+      - ./api/pricing.md (highly relevant)
+      - ./guides/analytics.md (relevant)
+      - ./examples/queries.md (somewhat relevant)
+
+    I'll start by reading ./api/pricing.md
+    ```
+
+    **ToolFront Cloud** is currently in open beta. To request access, join our [Discord](https://discord.gg/rRyM7zkZTf) or email `esteban[at]kruskal[dot]ai`.

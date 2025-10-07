@@ -58,7 +58,7 @@ tools:
 
 # My environment page
 
-Add [links](./page_1) to tell your agents what pages it can visit.
+Add [links](./page_1) to tell your agents what pages they should check out.
 
 Agents can call any command defined in markdown headers.
 - `python3 cli.py` executes a python script
@@ -106,17 +106,25 @@ ToolFront's browser comes with six core tools your agents can use to interact wi
 
 ## ToolFront Cloud
 
-Deploy your environments in one step with **ToolFront Cloud**. Simply run `toolfront deploy ./path/to/toolsite` to get a secure environment URL you can start using right away.
+Instantly deploy your environments with **ToolFront Cloud**.
+
+```bash
+toolfront deploy ./path/to/environment --api-key "my-api-key"
+```
+
+Would give you a secure environment URL your agents can browse.
 
 ```python
 from toolfront import Browser
 
-browser = Browser(params={"api_key": "TOOLFRONT-API-KEY"})
+browser = Browser(env={"TOOLFRONT_API_KEY": "my-api-key"})
 
-result = browser.ask(..., url="https://cloud.toolfront.ai/user/environment")
+answer = browser.ask(..., url="https://cloud.toolfront.ai/user/environment")
 ```
 
-Agents using environments hosted on **ToolFront Cloud** get instant access to powerful search features.
+Environments deployed to **ToolFront Cloud** are automatically indexed and get access to `grep` and `search` tools.
+
+**ToolFront Cloud** is currently in open beta. To request access, join our [Discord](https://discord.gg/rRyM7zkZTf) or email `esteban[at]kruskal[dot]ai`.
 
 
 ## Community & Contributing

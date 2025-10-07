@@ -73,7 +73,6 @@ nav:
   - Python SDK: pages/python_sdk.md  
   - Browser MCP: pages/browser_mcp.md  
   - AI Models: pages/ai_models.md
-  - ToolFront Cloud: pages/toolfront_cloud.md
   - Example: pages/example.md
 
 markdown_extensions:
@@ -122,7 +121,7 @@ extra:
       link: https://discord.gg/rRyM7zkZTf
       name: Join our Discord community
     - icon: fontawesome/brands/x-twitter
-      link: https://x.com/statespace_inc
+      link: https://x.com/statespace_ai
       name: Follow us on X (Twitter)
     - icon: fontawesome/brands/github
       link: https://github.com/statespace-ai/toolfront
