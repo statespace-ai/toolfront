@@ -46,8 +46,6 @@ Agents can run commands listed in markdown headers. As they browse files, they w
 **Landing Page**
 
 ```markdown
-# index.md
-
 ---
 tools:
   - [date, +%Y-%m-%d]
@@ -64,8 +62,6 @@ Add instructions and tools to markdown pages.
 <summary><b>Text-to-SQL</b></summary>
 
 ```markdown
-# text2sql.md
-
 ---
 tools:
   - [toolfront, database, $POSTGRES_URL]
@@ -84,8 +80,6 @@ Build text-to-SQL workflows with the `toolfront database` CLI.
 <summary><b>Document RAG</b></summary>
 
 ```markdown
-# document.md
-
 ---
 tools:
   - [python, tools/extract.py]
@@ -104,8 +98,6 @@ Link to [directories](./data) where documents are stored.
 <summary><b>API Integration</b></summary>
 
 ```markdown
-# api.md
-
 ---
 tools:
   - [curl, -X, GET, "https://api.products.com/v1/pricing"]
