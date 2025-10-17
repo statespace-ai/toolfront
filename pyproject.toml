@@ -1,7 +1,7 @@
 [project]
 name = "toolfront"
 version = "0.3.2"
-description = "ToolFront helps you retrieve information from large databases, APIs, and documents with AI."
+description = "ToolFront helps you organize AI workflows into independent tasks with environments."
 readme = "README.md"
 authors = [
     { name = "Esteban Safranchik", email = "esteban@kruskal.ai" },
@@ -45,10 +45,10 @@ include = ["toolfront*"]
 "toolfront" = ["instructions/*.txt"]
 
 [project.urls]
-Homepage = "https://github.com/statespace-ai/toolfront"
-Repository = "https://github.com/statespace-ai/toolfront"
+Homepage = "https://github.com/statespace-tech/toolfront"
+Repository = "https://github.com/statespace-tech/toolfront"
 Documentation = "https://docs.toolfront.ai"
-"Bug Tracker" = "https://github.com/statespace-ai/toolfront/issues"
+"Bug Tracker" = "https://github.com/statespace-tech/toolfront/issues"
 
 [project.optional-dependencies]
 test = [
