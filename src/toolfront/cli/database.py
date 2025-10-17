@@ -5,14 +5,12 @@ import warnings
 from urllib.parse import parse_qsl, urlparse
 
 import click
-import ibis
-from ibis import BaseBackend
 
 NUM_TABLE_SAMPLES = 5
 MAX_COLUMN_WIDTH = 1024
 
 
-def create_connection(db: str) -> BaseBackend:
+def create_connection(db: str):
     """Create database connection using Ibis backend.
 
     Parameters
@@ -25,6 +23,14 @@ def create_connection(db: str) -> BaseBackend:
     BaseBackend
         Connected Ibis backend instance
     """
+    try:
+        import ibis
+    except ImportError as e:
+        raise click.ClickException(
+            "Database functionality requires ibis to be installed. "
+            "Install with: pip install 'toolfront[postgres]' (or mysql, sqlite, etc.)"
+        ) from e
+
     db = os.environ.get(db, db)
     kwargs = dict(parse_qsl(urlparse(db).query, keep_blank_values=True))
     kwargs = {k: json.loads(v) for k, v in kwargs.items()}
