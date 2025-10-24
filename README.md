@@ -8,7 +8,7 @@
 
 # ToolFront
 
-*Data environments for AI agents*
+*Design AI Applications in Markdown*
 
 [![Test Suite](https://github.com/statespace-tech/toolfront/actions/workflows/test.yml/badge.svg)](https://github.com/statespace-tech/toolfront/actions/workflows/test.yml)
 [![PyPI package](https://img.shields.io/pypi/v/toolfront?color=%2334D058&label=pypi%20package)](https://pypi.org/project/toolfront/)
@@ -35,60 +35,56 @@ pip install toolfront
 
 ## Quickstart
 
-ToolFront helps you organize AI workflows into independent tasks with **data environments**.
+ToolFront helps you design AI applications in Markdown. This way, you can develop agents the same way you develop regular software.
 
 ```bash
-environment/
-├── index.md
-├── pages/
-│   ├── text2sql.md
-│   ├── document.md
-│   └── api.md
+project/
+├── README.md
+├── src/
+│   ├── api.md
+│   ├── rag.md
+│   └── text2sql.md
 └── data/
-    ├── invoices/
-    └── logs/
+    ├── catalog/
+    └── spec.json
 
-5 directories, 15 files
+4 directories, 30 files
 ```
 
 <details open>
-<summary><b>Landing Page</b></summary>
+<summary><b>Entry Point</b></summary>
 
-Declare task instructions and tools in Markdown files.
+Start by creating a README with instructions to guide your agent's behavior.
 
 ```markdown
----
-tools:
-  - [date, +%Y-%m-%d]
+# Sales Analytics
 
----
+You are a business analyst.
+Answer questions using the available resources.
 
-# Landing Page
-
-- Include links to [pages](./pages)
-- Add tool commands to frontmatters
-- Agents learn tools with `--help`
+Check out the following relevant files:
+- `./src/api.md` for tools to fetch API data.
+- `./src/rag.md` to retrieve product specs.
+- `./src/text2sql.md` to query product data
 ```
 
 </details>
 
 <details>
-<summary><b>Text-to-SQL</b></summary>
+<summary><b>Tools & APIs</b></summary>
 
-Create text-to-SQL tasks with ToolFront's built-in [database CLI](https://docs.toolfront.ai/pages/database_cli/).
+List tools in your frontmatters so your agents can take actions.
 
 ```markdown
 ---
 tools:
-  - [toolfront, database, $DB_URL]
+  - [curl, -X, GET, "https://api.com/{endpoint}"]
 
 ---
 
-# Text-to-SQL
-
-- Add database metadata and context
-- Agents can list and inspect tables
-- All queries are read-only
+Call the API tool to retrieve order details.
+- Always pass the `{endpoint}` argument
+- See `/data/spec.json` for the full API spec
 ```
 
 </details>
@@ -96,58 +92,52 @@ tools:
 <details>
 <summary><b>Document RAG</b></summary>
 
-Retrieve information from data files like `.txt`, `.csv`, and `.json`.
+Teach your agent how to retrieve and interpret documents within your repository.
 
 ```markdown
----
-tools:
-  - [python, extract.py]
-
----
-
 # Document RAG
 
-- Add data files and descriptions
-- Agents read and search documents
-- Use custom tools to process data
+Search through files for product information.
+Use built-in tools like `read`, `grep`, and `glob`
+
+Instructions:
+- Retrieve product specs under `/data/catalog/`
+- Search for product IDs, SKUs, or feature details
+- Cross-reference information across documents
 ```
 
 </details>
 
 <details>
-<summary><b>API Integration</b></summary>
+<summary><b>Text-to-SQL</b></summary>
 
-Fetch live data with calls to external APIs.
+Use the built-in [database CLI](https://docs.toolfront.ai/pages/database_cli/) for text-to-SQL workflows, or build your own.
 
 ```markdown
 ---
 tools:
-  - [curl, "https://api.com/v1/user"]
+  - [toolfront, database, $POSTGRES_URL]
 
 ---
 
-# API Integration
-
-- Define API endpoints as tools
-- Pass env `$VARS` for secrets
-- Agents fetch live external data
+Query the PostgreSQL database for product details.
+- Discover available parameters with `--help`
+- Available tables: `products` and `categories`
 ```
 
 </details>
 
-Agents browse environments to get work done, using tools and following instructions as needed.
+You can run AI applications directly with the [Python SDK](https://docs.toolfront.ai/pages/python_sdk/), or power them with your own agents via the [MCP Server](https://docs.toolfront.ai/pages/mcp_server/).
 
 <details open>
 <summary><b>Python SDK</b></summary>
 
-Run Python agents on environments with the [SDK](https://docs.toolfront.ai/pages/python_sdk/).
-
 ```python
-from toolfront import Environment
+from toolfront import Application
 
-env = Environment(url="file:///path/environment")
+app = Application(url="file:///path/to/project")
 
-response = env.run("What's our average ticket size?", model="openai:gpt-5")
+result = app.run("What's the status of order 66?", model="openai:gpt-5")
 ```
 
 </details>
@@ -155,14 +145,12 @@ response = env.run("What's our average ticket size?", model="openai:gpt-5")
 <details>
 <summary><b>MCP Server</b></summary>
 
-Connect your own agents to environments with the [MCP Server](https://docs.toolfront.ai/pages/mcp_server/).
-
 ```json
 {
   "mcpServers": {
     "toolfront": {
       "command": "uvx",
-      "args": ["toolfront", "mcp", "file:///path/environment"]
+      "args": ["toolfront", "mcp", "file:///path/to/project"]
     }
   }
 }
@@ -172,16 +160,16 @@ Connect your own agents to environments with the [MCP Server](https://docs.toolf
 
 ## Deploy with ToolFront Cloud
 
-Instantly deploy your environments with [ToolFront Cloud](https://docs.toolfront.ai/pages/toolfront_cloud/).
+Deploy your AI applications with [ToolFront Cloud](https://docs.toolfront.ai/pages/toolfront_cloud/).
 
 ```bash
-toolfront deploy ./path/environment
+toolfront deploy ./path/to/project
 ```
 
-This gives you a secure environment URL your agents can access from anywhere.
+This gives you a URL to your project that works from anywhere. The project runs on your machine.
 
 ```python
-Environment(url="https://cloud.toolfront.ai/user/environment", params={"API_KEY": ...})
+app = Application(url="https://cloud.toolfront.ai/user/project", params={"API_KEY": ...})
 ```
 
 ToolFront Cloud is in beta. To request access, join our [Discord](https://discord.gg/rRyM7zkZTf) or email `esteban[at]kruskal[dot]ai`.

@@ -8,7 +8,7 @@ from enum import Enum
 from importlib.resources import files
 from typing import Any
 from urllib.parse import parse_qsl, urlparse, urlunparse
-
+import os
 import yaml
 from fsspec import filesystem
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, field_validator, model_validator
@@ -150,22 +150,22 @@ class GrepCountOutput(BaseModel):
     total_matches: int = Field(..., description="Total number of matches across all files")
 
 
-class Environment(BaseModel):
-    """Environment for managing filesystem operations and document search.
+class Application(BaseModel):
+    """Application for managing filesystem operations and document search.
 
     Attributes
     ----------
     url : str
-        URL/path to environment (file://, https://, s3://, etc.)
+        URL/path to application (file://, https://, s3://, etc.)
     param : dict[str, str] | None
-        Authentication parameter for remote environments
+        Authentication parameter for remote applications
     env : dict[str, str] | None
         Environment variables for command execution
     """
 
-    url: str = Field(..., description="Root URL for the environment")
+    url: str = Field(..., description="Root URL for the application")
     param: dict[str, str] | None = Field(
-        default=None, description="Authentication parameter for remote environments", exclude=True
+        default=None, description="Authentication parameter for remote applications", exclude=True
     )
     env: dict[str, str] | None = Field(default=None, description="Environment variables for commands", exclude=True)
 
@@ -195,7 +195,7 @@ class Environment(BaseModel):
         return env
 
     @model_validator(mode="after")
-    def _initialize_filesystem(self) -> "Environment":
+    def _initialize_filesystem(self) -> "Application":
         """Initialize filesystem and determine home/index pages."""
         url = clean_url(self.url)
         parsed = urlparse(url)
@@ -214,7 +214,7 @@ class Environment(BaseModel):
         return self
 
     def _validate_url(self, url: str, require_type: str | None = None):
-        """Validate URL is within environment root.
+        """Validate URL is within application root.
 
         Parameters
         ----------
@@ -231,7 +231,7 @@ class Environment(BaseModel):
         Raises
         ------
         ValueError
-            If URL is outside environment root or doesn't match required type
+            If URL is outside application root or doesn't match required type
         FileNotFoundError
             If file is required but doesn't exist
         """
@@ -241,11 +241,11 @@ class Environment(BaseModel):
 
         # Validate scheme and netloc match
         if parsed.scheme != root_parsed.scheme:
-            raise ValueError(f"URL scheme must match environment root: {url} (expected {root_parsed.scheme}://)")
+            raise ValueError(f"URL scheme must match application root: {url} (expected {root_parsed.scheme}://)")
 
         if parsed.netloc != root_parsed.netloc:
             raise ValueError(
-                f"URL domain must match environment root: {url} (expected {root_parsed.scheme}://{root_parsed.netloc})"
+                f"URL domain must match application root: {url} (expected {root_parsed.scheme}://{root_parsed.netloc})"
             )
 
         # Validate path is within root
@@ -253,7 +253,7 @@ class Environment(BaseModel):
         url_path = parsed.path.rstrip("/")
 
         if not url_path.startswith(root_path):
-            raise ValueError(f"URL must be within environment root: {url} (root: {self.url})")
+            raise ValueError(f"URL must be within application root: {url} (root: {self.url})")
 
         # Validate type if required
         if require_type == "file" and not self._fs.isfile(parsed.path):
@@ -263,22 +263,24 @@ class Environment(BaseModel):
 
         return parsed
 
-    async def execute(self, command: list[str], page_url: str) -> CommandOutput:
+    async def execute(self, command: list[str], page_url: str, params: dict[str, str] | None = None) -> CommandOutput:
         """Execute a command from a Markdown page's frontmatter.
 
         Instructions:
-        1. First read the Markdown page to see available commands in its frontmatter
-        2. Commands must exactly match those listed in the page's frontmatter
+        1. First read the Markdown page to see available commands in its frontmatter. Commands must exactly match those listed in the page's frontmatter
+        2. Tool definitions may include parameter placeholders in curly braces (e.g., '{endpoint}', '{id}'). Replace these with actual values when calling the command
         3. If you don't know what a command does or what arguments it accepts, run it with --help flag first (e.g., ['command', '--help'])
         4. Use the help output to understand the command's usage before running it with actual arguments
-        5. page_url MUST be an absolute file URL within the environment root (e.g., 'file:///path/to/page.md', 's3://bucket/path/page.md', 'https://example.com/docs/page.md')
+        5. page_url MUST be an absolute file URL within the application root (e.g., 'file:///path/to/page.md', 's3://bucket/path/page.md', 'https://example.com/docs/page.md')
 
         Parameters
         ----------
         command : list[str]
-            Command and its arguments as a list (e.g., ['python', 'script.py', '--arg', 'value'])
+            Command and its arguments as a list (e.g., ['curl', '-X', 'GET', 'https://api.com/{endpoint}', '-H', 'Authorization: Bearer $TOKEN'])
         page_url : str
             Absolute file URL to the Markdown (.md) page containing the command in its frontmatter
+        params : dict[str, str] | None
+            Parameters to pass to the command (e.g., {'endpoint': 'orders', 'id': '1234567890'})
 
         Returns
         -------
@@ -290,6 +292,7 @@ class Environment(BaseModel):
         RuntimeError
             If command is not listed in the page's frontmatter or execution fails
         """
+        params = params or {}
         parsed = self._validate_url(page_url, require_type="file")
 
         if not parsed.path.endswith(".md"):
@@ -312,6 +315,9 @@ class Environment(BaseModel):
         if parsed.scheme == "file":
             cwd = parsed.path.rsplit("/", 1)[0] if "/" in parsed.path else ""
 
+        # Expand placeholders in command and replace arguments with values
+        command = [os.path.expandvars(c).format(params) for c in command]
+
         result = subprocess.run(command, cwd=cwd, capture_output=True, text=True)
 
         return CommandOutput(stdout=result.stdout, stderr=result.stderr)
@@ -320,7 +326,7 @@ class Environment(BaseModel):
         """Read a file from the filesystem.
 
         Instructions:
-        1. file_url MUST be an absolute file URL within the environment root
+        1. file_url MUST be an absolute file URL within the application root
         2. Use glob to find files first if you don't know the exact path
         3. Offset and length are line-based (0-indexed)
 
@@ -364,7 +370,7 @@ class Environment(BaseModel):
         """Get directory tree structure.
 
         Instructions:
-        1. path_url MUST be an absolute directory URL within the environment root
+        1. path_url MUST be an absolute directory URL within the application root
         2. Returns a visual tree representation of the directory structure
         3. Use recursion_limit to control depth (default: 2 levels)
         4. Use max_display to limit items shown per directory (default: 25)
@@ -400,8 +406,8 @@ class Environment(BaseModel):
         """Find files matching a glob pattern.
 
         Instructions:
-        1. path_url MUST be an absolute directory URL within the environment root (e.g., 'file:///path/to/dir', 's3://bucket/path', 'https://example.com/files')
-        2. All URLs must be within the environment's root URL
+        1. path_url MUST be an absolute directory URL within the application root (e.g., 'file:///path/to/dir', 's3://bucket/path', 'https://example.com/files')
+        2. All URLs must be within the application's root URL
         3. pattern is the glob pattern to match (e.g., '**/*.py', '*.md', 'src/**/*.txt')
         4. Use ** for recursive directory matching
         5. Pattern is combined with the directory URL
@@ -460,7 +466,7 @@ class Environment(BaseModel):
            - 'count': total number of matches
         4. For content mode, use lines_before/lines_after/lines_context for context
         5. Use filename_pattern to filter by filename glob (e.g., '*.py')
-        6. path_url MUST be an absolute URL within the environment root
+        6. path_url MUST be an absolute URL within the application root
         7. For local filesystems (file://), uses native grep subprocess for performance
 
         Parameters
@@ -604,7 +610,7 @@ class Environment(BaseModel):
         3. Mix general concepts with specific names (classes, functions, terms)
         4. Results ranked by relevance score (higher = more relevant)
         5. Searches entire document content (whole files)
-        6. path_url MUST be an absolute URL within the environment root
+        6. path_url MUST be an absolute URL within the application root
 
         Parameters
         ----------
@@ -635,7 +641,7 @@ class Environment(BaseModel):
         context_window: int = 30,
         verbose: bool = False,
     ) -> Any:
-        """Run an agent on an environment and get structured responses.
+        """Run an agent on an application and get structured responses.
 
         Parameters
         ----------
@@ -678,7 +684,7 @@ class Environment(BaseModel):
             history_processors=[history_processor_] if history_processor_ else None,
         )
 
-        return asyncio.run(Environment._run_async(prompt, agent, verbose))
+        return asyncio.run(Application._run_async(prompt, agent, verbose))
 
     @staticmethod
     async def _run_async(

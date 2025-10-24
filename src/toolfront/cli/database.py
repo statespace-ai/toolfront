@@ -16,7 +16,7 @@ def create_connection(db: str):
     Parameters
     ----------
     db : str
-        Database connection string or environment variable name
+        Database connection string or application variable name
 
     Returns
     -------

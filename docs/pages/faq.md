@@ -1,29 +1,21 @@
 # FAQ
 
-**What is an environment?**
-
-An environment is a directory with Markdown files that define tasks, instructions, and tools for AI agents. Agents browse environments to complete work.
-
-**Where do my agents run?**
-
-Agents run anywhere: locally, in the cloud, or on edge devices. We recommend separating agents from environments so you can modify and scale each component independently.
-
 **When should I use the Python SDK vs MCP Server?**
 
-Use the **[Python SDK](python_sdk.md)** to quickly build and run Python agents. Use the **[MCP Server](mcp_server.md)** to connect your own agents (like Claude Desktop or Cline) to environments.
+Use the **[Python SDK](python_sdk.md)** to run applications directly with built-in agents. Use the **[MCP Server](mcp_server.md)** to connect your own agents (like Claude Desktop or Cline) to applications.
 
 **Can I use ToolFront with any AI model?**
 
 Yes! The Python SDK works with any model through **[Pydantic AI](https://ai.pydantic.dev/models/overview/)**, including cloud providers (OpenAI, Anthropic, Google, Mistral) and local models (Ollama, LM Studio).
 
-**How do I deploy environments?**
+**How do I deploy applications?**
 
-You can run environments locally, host them on your own infrastructure, or securely deploy them to **[ToolFront Cloud](toolfront_cloud.md)** for remote access.
+You can run applications from local directories, host them on your own infrastructure, or deploy them to **[ToolFront Cloud](toolfront_cloud.md)** for remote access.
 
-**Are my ToolFront Cloud environments private?**
+**Are my ToolFront Cloud applications private?**
 
-Yes! ToolFront Cloud hosts environments over HTTPS with API key authentication. You agents can then access your environments like any other API.
+Yes! ToolFront Cloud hosts your project files over HTTPS with API key authentication. Your agents can access applications like any other remote resource.
 
 **Why is search only available with ToolFront Cloud?**
 
-The `search` tool requires BM25 indexing, which happens automatically when you deploy to ToolFront cloud. Local environments can still use `grep` and `glob` for searching.
+The `search` tool requires BM25 indexing, which happens automatically when you deploy to ToolFront Cloud. Local applications can still use `grep` and `glob` for searching.

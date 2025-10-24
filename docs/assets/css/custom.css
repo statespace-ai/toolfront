@@ -32,3 +32,9 @@
           mask-image: var(--md-admonition-icon--toolfront);
 }
 
+/* Custom grid layout for code examples - desktop only */
+@media screen and (min-width: 76.25em) {
+  .grid.cards {
+    grid-template-columns: 35% 1fr;
+  }
+}

@@ -42,7 +42,7 @@ theme:
 plugins:
   - search
   - social:
-      cards: true
+      cards: false
       cards_layout_options:
         background_color: "#10a2b4"
         color: "#ffffff"
@@ -70,17 +70,22 @@ plugins:
 
 nav:
   - Quickstart: index.md
+  - Tools: pages/tools.md
   - Python SDK: pages/python_sdk.md
   - MCP Server: pages/mcp_server.md
   - Database CLI: pages/database_cli.md
-  - Example: pages/example.md
+  # - Example: pages/example.md
   - ToolFront Cloud: pages/toolfront_cloud.md
   - FAQ: pages/faq.md
 
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite

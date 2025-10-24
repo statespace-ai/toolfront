@@ -1,28 +1,28 @@
 # Python SDK
 
-ToolFront's SDK lets you quickly build and run Python agents on environments. 
+ToolFront's SDK lets you quickly run AI applications from Python.
 
 
 ```python
-from toolfront import Environment
+from toolfront import Application
 
-env = Environment(url="file:///path/toolsite")
+app = Application(url="file:///path/to/project")
 
-result = env.run(
-    prompt="Email coupons to customers who made purchases last month", 
+result = app.run(
+    prompt="Email coupons to customers who made purchases last month",
     model="openai:gpt-5"
 )
 # Returns: "Done!"
 ```
 
 !!! question "How does it work?"
-    The SDK connects local [Pydantic AI](https://ai.pydantic.dev/models/overview/) models to environments through the [MCP server](mcp_server.md).
+    The SDK connects local [Pydantic AI](https://ai.pydantic.dev/models/overview/) agents to applications through ToolFront's [MCP server](mcp_server.md).
 
 --- 
 
 ## AI Models
 
-The SDK works with any model providers through [Pydantic AI](https://ai.pydantic.dev/models/overview/). Start by exporting your API key.
+The SDK supports all major model providers through [Pydantic AI](https://ai.pydantic.dev/models/overview/). Start by exporting your API key.
 
 === ":simple-openai:{ .middle } &nbsp; OpenAI"
 
@@ -33,11 +33,11 @@ The SDK works with any model providers through [Pydantic AI](https://ai.pydantic
     Then, specify your model using the `provider:model-name` format.
 
     ```python hl_lines="5"
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model="openai:gpt-5")
+    result = app.run(..., model="openai:gpt-5")
     ```
 
 === ":simple-anthropic:{ .middle } &nbsp; Anthropic"
@@ -49,11 +49,11 @@ The SDK works with any model providers through [Pydantic AI](https://ai.pydantic
     Then, specify your model using the `provider:model-name` format.
 
     ```python hl_lines="5"
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model="anthropic:claude-sonnet-4-5")
+    result = app.run(..., model="anthropic:claude-sonnet-4-5")
     ```
 
 === ":simple-google:{ .middle } &nbsp; Google"
@@ -65,11 +65,11 @@ The SDK works with any model providers through [Pydantic AI](https://ai.pydantic
     Then, specify your model using the `provider:model-name` format.
 
     ```python hl_lines="5"
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model="google-gla:gemini-2.5-pro")
+    result = app.run(..., model="google-gla:gemini-2.5-pro")
     ```
 
 === ":simple-mistralai:{ .middle } &nbsp; Mistral"
@@ -81,11 +81,11 @@ The SDK works with any model providers through [Pydantic AI](https://ai.pydantic
     Then, specify your model using the `provider:model-name` format.
 
     ```python hl_lines="5"
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model="mistral:mistral-large-latest")
+    result = app.run(..., model="mistral:mistral-large-latest")
     ```
 
 === ":simple-huggingface:{ .middle } &nbsp; HuggingFace"
@@ -97,11 +97,11 @@ The SDK works with any model providers through [Pydantic AI](https://ai.pydantic
     Then, specify your model using the `provider:model-name` format.
 
     ```python hl_lines="5"
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model="huggingface:Qwen/Qwen3-235B-A22B")
+    result = app.run(..., model="huggingface:Qwen/Qwen3-235B-A22B")
     ```
 
 === ":material-source-branch:{ .middle } &nbsp; OpenRouter"
@@ -113,28 +113,24 @@ The SDK works with any model providers through [Pydantic AI](https://ai.pydantic
     Then, specify your model using the `provider:model-name` format.
 
     ```python hl_lines="5"
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model="openrouter:anthropic/claude-3.5-sonnet")
+    result = app.run(..., model="openrouter:anthropic/claude-3.5-sonnet")
     ```
 
 !!! tip "Tip: Default Model"
 
-    Configure a default model for all your runs:
-
-    ```bash
-    export TOOLFRONT_MODEL="openai:gpt-5"
-    ```
+    Set a default model with the `TOOLFRONT_MODEL` environment variable: `export TOOLFRONT_MODEL="openai:gpt-5`
 
 
-Alternatively, use [Pydantic AI](https://ai.pydantic.dev/models/overview/) models directly.
+Alternatively, use [Pydantic AI](https://ai.pydantic.dev/models/overview/) directly for local or custom models.
 
 === ":simple-ollama:{ .middle } &nbsp; Ollama"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
     from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.ollama import OllamaProvider
 
@@ -143,15 +139,15 @@ Alternatively, use [Pydantic AI](https://ai.pydantic.dev/models/overview/) model
         provider=OllamaProvider(base_url='http://localhost:11434/v1'),
     )
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model=ollama_model)
+    result = app.run(..., model=ollama_model)
     ```
 
 === ":simple-vercel:{ .middle } &nbsp; Vercel"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
     from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.vercel import VercelProvider
 
@@ -160,15 +156,15 @@ Alternatively, use [Pydantic AI](https://ai.pydantic.dev/models/overview/) model
         provider=VercelProvider(api_key='your-vercel-ai-gateway-api-key'),
     )
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model=vercel_model)
+    result = app.run(..., model=vercel_model)
     ```
 
 === ":simple-perplexity:{ .middle } &nbsp; Perplexity"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
     from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
@@ -180,32 +176,32 @@ Alternatively, use [Pydantic AI](https://ai.pydantic.dev/models/overview/) model
         )
     )
 
-    environment = Environment(url="file:///path/to/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.ask(..., model=perplexity_model)
+    result = app.run(..., model=perplexity_model)
     ```
 
 ---
 
 ## Structured Retrieval
 
-Use `output_type` to get retrieve structured data in any format you need.
+Retrieve structured data in any format by using the `output_type` parameter.
 
 === ":fontawesome-solid-cube:{ .middle } &nbsp; Scalars"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    avg_price = environment.run(
+    avg_price = app.run(
         prompt="What's our average ticket price?",
         model="openai:gpt-5",
         output_type=float
     )
     # Returns: 29.99
 
-    has_inventory = environment.run(
+    has_inventory = app.run(
         prompt="Do we have any monitors in stock?",
         model="openai:gpt-5",
         output_type=bool
@@ -216,18 +212,18 @@ Use `output_type` to get retrieve structured data in any format you need.
 === ":fontawesome-solid-layer-group:{ .middle } &nbsp; Collections"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    product_names = environment.run(
+    product_names = app.run(
         "What products do we sell?",
         model="openai:gpt-5",
         output_type=list[str]
     )
     # Returns: ["Laptop Pro", "Wireless Mouse", "USB Cable"]
 
-    sales_by_region = environment.run(
+    sales_by_region = app.run(
         "Sales by region",
         model="openai:gpt-5",
         output_type=dict[str, int]
@@ -238,18 +234,18 @@ Use `output_type` to get retrieve structured data in any format you need.
 === ":fontawesome-solid-chain:{ .middle } &nbsp; Unions"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/toolsite")
+    app = Application(url="file:///path/to/project")
 
-    result = environment.run(
+    result = app.run(
         "Best-sellers this month?",
         model="openai:gpt-5",
         output_type=str | list[str]
     )
     # Returns: ["Product A", "Product B"] or "No data found"
 
-    error = environment.run(
+    error = app.run(
         "What was the error message?",
         model="openai:gpt-5",
         output_type=str | None
@@ -260,10 +256,10 @@ Use `output_type` to get retrieve structured data in any format you need.
 === ":fontawesome-solid-sitemap:{ .middle } &nbsp; Objects"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
     from pydantic import BaseModel, Field
 
-    environment = Environment(url="file:///path/toolsite")
+    app = Application(url="file:///path/to/project")
 
     class Product(BaseModel):
         name: str = Field(description="Product name")
@@ -271,7 +267,7 @@ Use `output_type` to get retrieve structured data in any format you need.
         in_stock: bool = Field(description="Whether product is in stock")
 
 
-    product = environment.run(
+    product = app.run(
         "What's our best-selling product?",
         model="openai:gpt-5",
         output_type=Product
@@ -282,9 +278,9 @@ Use `output_type` to get retrieve structured data in any format you need.
 === ":fontawesome-solid-percent:{ .middle } &nbsp; Functions"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(url="file:///path/toolsite")
+    app = Application(url="file:///path/to/project")
 
     def my_func(price: float, quantity: int):
         """
@@ -293,7 +289,7 @@ Use `output_type` to get retrieve structured data in any format you need.
         return price * quantity
 
     # Returns the output of the provided function
-    product = environment.run(
+    product = app.run(
         "Compute the revenue of our best-seller",
         model="openai:gpt-5",
         output_type=my_func
@@ -303,50 +299,13 @@ Use `output_type` to get retrieve structured data in any format you need.
 
 ---
 
-## Environment Variables
-
-Markdown pages may reference environment variables for authentication or configuration:
-
-```markdown hl_lines="3-4"
----
-tools:
-  - [curl, -X, GET, "https://api.com/data", -H, "Authorization: Bearer $TOKEN"]
-  - [toolfront, database, $DB_URL]
-
----
-
-# My Markdown page
-...
-```
-
-Pass these variables to the `Environment` using the `env` parameter.
-
-```python
-from toolfront import Environment
-
-environment = Environment(
-    url="file:///path/toolsite",
-    env={
-        "TOKEN": "token",
-        "DB_URL": "postgresql://user:pass@localhost:5432/mydb"
-    }
-)
-
-result = environment.run("Fetch latest data", model="openai:gpt-5")
-```
-
-!!! warning "Working with Secrets"
-    Environment variables are never exposed to AI agents.
-
----
-
-::: toolfront.environment.Environment
+::: toolfront.application.Application
     options:
       show_root_heading: true
       show_source: true
       members: []
 
-::: toolfront.environment.Environment.run
+::: toolfront.application.Application.run
     options:
       show_root_heading: true
       show_source: true

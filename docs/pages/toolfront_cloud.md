@@ -1,15 +1,15 @@
 # ToolFront Cloud
 
-ToolFront Cloud serves your environments over the web, making them accessible from anywhere.
+ToolFront Cloud serves your applications over the web, making them accessible from anywhere.
 
 ---
 
 ## Benefits
 
-Cloud deployment offers several advantages over local environments or self-hosting.
+Cloud deployment offers several advantages over local applications or self-hosting.
 
-- **Separation of Concerns** - Scale and deploy agents and environments independently
-- **Remote Access** - Access environments from anywhere with a single URL
+- **Separation of Concerns** - Scale and deploy agents and applications independently
+- **Remote Access** - Access applications from anywhere with a single URL
 - **Automatic Indexing** - Get instant BM25 semantic search on deployment
 - **Zero Infrastructure** - No server setup, SSL certificates, or maintenance
 - **Built-in Security** - API key authentication and HTTPS included
@@ -18,10 +18,10 @@ Cloud deployment offers several advantages over local environments or self-hosti
 
 ## Usage
 
-Deploy your environment:
+Deploy your application:
 
 ```bash
-toolfront deploy ./path/environment
+toolfront deploy ./path/to/project
 ```
 
 Connect agents using the secure URL with the **[Python SDK](./python_sdk.md)** or **[MCP Server](./mcp_server.md)**:
@@ -29,14 +29,14 @@ Connect agents using the secure URL with the **[Python SDK](./python_sdk.md)** o
 === ":simple-python:{ .middle } &nbsp; Python SDK"
 
     ```python
-    from toolfront import Environment
+    from toolfront import Application
 
-    environment = Environment(
-        url="https://cloud.toolfront.ai/user/environment",
+    app = Application(
+        url="https://cloud.toolfront.ai/user/project",
         params={"API_KEY": "your-api-key"}
     )
 
-    result = environment.run("What's our best-seller?", model="openai:gpt-5")
+    result = app.run("What's our best-seller?", model="openai:gpt-5")
     ```
 
 === ":simple-modelcontextprotocol:{ .middle } &nbsp; MCP Server"
@@ -49,7 +49,7 @@ Connect agents using the secure URL with the **[Python SDK](./python_sdk.md)** o
           "args": [
             "toolfront",
             "mcp",
-            "https://cloud.toolfront.ai/user/environment",
+            "https://cloud.toolfront.ai/user/project",
             "--param",
             "API_KEY=your-api-key"
           ]
@@ -58,7 +58,7 @@ Connect agents using the secure URL with the **[Python SDK](./python_sdk.md)** o
     }
     ```
 
-Cloud environments are indexed with BM25 and get access to the `search` tool:
+Cloud applications are indexed with BM25 and get access to the `search` tool:
 
 ```
 Let me search for documents relevant to "ticket pricing API"...

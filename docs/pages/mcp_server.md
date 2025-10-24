@@ -1,6 +1,6 @@
 # MCP Server
 
-ToolFront's MCP server provides environment connectivity and browsing tools to your agents.
+ToolFront's MCP server provides application connectivity and browsing tools to your agents.
 
 === ":material-code-json:{ .middle } &nbsp; JSON"
 
@@ -11,7 +11,7 @@ ToolFront's MCP server provides environment connectivity and browsing tools to y
       "mcpServers": {
         "toolfront": {
           "command": "uvx",
-          "args": ["toolfront", "mcp", "file:///path/environment"]
+          "args": ["toolfront", "mcp", "file:///path/to/project"]
         }
       }
     }
@@ -22,7 +22,7 @@ ToolFront's MCP server provides environment connectivity and browsing tools to y
     Run the server directly from the command line.
 
     ```bash
-    toolfront mcp file:///path/environment
+    toolfront mcp file:///path/to/project
     ```
 
 Available options:
@@ -30,16 +30,16 @@ Available options:
 - `--transport` - Communication protocol: `stdio` (default), `streamable-http`, or `sse`
 - `--host` - Server host address (default: `127.0.0.1`)
 - `--port` - Server port number (default: `8000`)
-- `--params` / `-p` - Authentication for remote environment (e.g., `--params KEY=value`)
+- `--params` / `-p` - Authentication for remote application (e.g., `--params KEY=value`)
 - `--env` - Environment variables for tools (e.g., `--env TOKEN=value`)
 
 ---
 
 ## Core Tools
 
-Agents use six core tools to interact with environments:
+Agents use six core tools to interact with applications:
 
-- :material-play:{ .middle } `execute` - Execute tools commands in frontmatters, optionally passing parameters
+- :material-play:{ .middle } `execute` - Execute tools in frontmatters, optionally passing arguments and parameters
 - :material-eye:{ .middle } `read` - Read the content of a specific file
 - :material-file-tree:{ .middle } `tree` - View directory structure
 - :material-folder-search:{ .middle } `glob` - List files matching a glob pattern
@@ -48,10 +48,10 @@ Agents use six core tools to interact with environments:
 
 !!! toolfront "Search Tool"
 
-    Environments deployed with **[ToolFront Cloud](toolfront_cloud.md)** are automatically indexed and get access to the `search` tool:
+    Applications deployed with **[ToolFront Cloud](toolfront_cloud.md)** are automatically indexed and get access to the `search` tool:
 
     ```
-    Let me search the environment for documents relevant to "ticket pricing API"...
+    Let me search the application for documents relevant to "ticket pricing API"...
 
     Found 3 relevant pages:
       - ./api/pricing.md (highly relevant)
@@ -62,49 +62,6 @@ Agents use six core tools to interact with environments:
     ```
 
 ---
-
-## Environment Variables
-
-Environment tools may reference environment variables for authentication or configuration:
-
-```markdown
----
-tools:
-  - [curl, -X, GET, "https://api.com/data", -H, "Authorization: Bearer $TOKEN"]
-  - [toolfront, database, $DB_URL]
-  
----
-
-# My Markdown page
-...
-```
-
-Pass these variables when starting the MCP server:
-
-=== ":material-code-json:{ .middle } &nbsp; JSON"
-
-    ```json
-    {
-      "mcpServers": {
-        "toolfront": {
-          "command": "uvx",
-          "args": ["toolfront", "mcp", "file:///path/environment"],
-          "env": {
-            "TOKEN": "token",
-            "DB_URL": "postgresql://user:pass@localhost:5432/mydb"
-          }
-        }
-      }
-    }
-    ```
-
-=== ":material-console:{ .middle } &nbsp; CLI"
-
-    ```bash
-    toolfront mcp file:///path/environment \
-      --env "TOKEN=token" \
-      --env "DB_URL=postgresql://user:pass@localhost:5432/mydb"
-    ```
 
 ::: toolfront.cli.mcp.serve
     options:

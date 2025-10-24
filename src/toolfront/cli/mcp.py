@@ -1,7 +1,7 @@
 import click
 from mcp.server.fastmcp import FastMCP
 
-from toolfront.environment import Environment
+from toolfront.application import Application
 
 
 @click.group()
@@ -17,7 +17,7 @@ def mcp():
     "-p",
     multiple=True,
     default=None,
-    help="Authentication parameter for the remote environment: KEY=VALUE",
+    help="Authentication parameter for the remote application: KEY=VALUE",
 )
 @click.option("--host", type=click.STRING, default="127.0.0.1", help="Host to run the server on")
 @click.option("--port", type=click.INT, default=8000, help="Port to run the server on")
@@ -27,16 +27,16 @@ def mcp():
     default="stdio",
     help="Transport mode for MCP server",
 )
-@click.option("--env", type=click.STRING, default=None, help="Environment variables to pass to the server")
+@click.option("--env", type=click.STRING, default=None, help="Application variables to pass to the server")
 def serve(url, param, host, port, transport, env) -> None:
-    """Start an MCP server for interacting with environments.
+    """Start an MCP server for interacting with applications.
 
     Parameters
     ----------
     url : str
-        Environment URL or file path (file://, https://, s3://, etc.)
+        Application URL or file path (file://, https://, s3://, etc.)
     param : tuple[str, ...]
-        Authentication parameters for remote environment (KEY=VALUE, can be repeated)
+        Authentication parameters for remote application (KEY=VALUE, can be repeated)
     host : str
         Server host address (default: 127.0.0.1)
     port : int
@@ -44,22 +44,22 @@ def serve(url, param, host, port, transport, env) -> None:
     transport : str
         MCP transport mode: stdio, streamable-http, or sse (default: stdio)
     env : str
-        Environment variables to pass to the server (KEY=VALUE)
+        Application variables to pass to the server (KEY=VALUE)
     """
     if transport == "stdio":
         click.echo("Starting MCP server", err=True)
     else:
         click.echo("Starting MCP server")
 
-    environment = Environment(url=url, param=param, env=env)
+    application = Application(url=url, param=param, env=env)
 
     mcp = FastMCP("ToolFront MCP server", host=host, port=port)
 
-    mcp.add_tool(environment.execute)
-    mcp.add_tool(environment.read)
-    mcp.add_tool(environment.tree)
-    mcp.add_tool(environment.glob)
-    mcp.add_tool(environment.grep)
+    mcp.add_tool(application.execute)
+    mcp.add_tool(application.read)
+    mcp.add_tool(application.tree)
+    mcp.add_tool(application.glob)
+    mcp.add_tool(application.grep)
 
     if transport == "stdio":
         click.echo("MCP server started successfully", err=True)

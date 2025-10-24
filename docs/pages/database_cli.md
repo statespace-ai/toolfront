@@ -6,6 +6,7 @@ ToolFront's built-in `database` CLI provides text-to-SQL capabilities for AI age
 ---
 tools:
   - [toolfront, database, $POSTGRES_URL]
+
 ---
 
 # Database Page
@@ -18,7 +19,7 @@ Query the database for information about users, products, or transactions.
 
 ## Installation
 
-Install ToolFront with your any of the 15+ database backends supported by [Ibis](https://ibis-project.org/).
+Install ToolFront with any of the 15+ database backends supported by [Ibis](https://ibis-project.org/).
 
 
 === ":simple-postgresql:{ .middle } &nbsp; PostgreSQL"
@@ -71,75 +72,6 @@ Agents use three sub-commands to explore and query databases:
 
 ---
 
-## Connection Strings
+!!! tip "Database Secrets"
 
-Use environment variables to keep database credentials private.
-
-```markdown
----
-tools:
-  - [toolfront, database, $POSTGRES_URL]
-
----
-
-# My Markdown page
-...
-```
-
-Pass the environment variable to your agent:
-
-=== ":simple-python:{ .middle } &nbsp; Python SDK"
-
-    ```python
-    from toolfront import Environment
-
-    environment = Environment(
-        url="file:///path/environment",
-        env={"POSTGRES_URL": "postgresql://user:pass@localhost:5432/mydb"}
-    )
-    ```
-
-=== ":simple-modelcontextprotocol:{ .middle } &nbsp; MCP Server"
-
-    ```json
-    {
-      "mcpServers": {
-        "toolfront": {
-          "command": "uvx",
-          "args": ["toolfront", "mcp", "file:///path/environment"],
-          "env": {
-            "POSTGRES_URL": "postgresql://user:pass@localhost:5432/mydb"
-          }
-        }
-      }
-    }
-    ```
-
----
-
-## Example Page
-
-Here's an example Markdown page with database tools:
-
-```markdown
----
-tools:
-  - [toolfront, database, $POSTGRES_URL]
-
----
-
-# User Database
-
-Query the database for user accounts and profile information.
-
-## Available Tables
-
-- `users` - User accounts with emails and registration dates
-- `profiles` - User profiles with names and preferences
-
-## Instructions
-
-1. Use `list-tables` to see available tables
-2. Use `inspect-table` to understand structure
-3. Use `query` to run SQL and retrieve data
-```
+    Use environment variables to keep database credentials private, e.g. `$POSTGRES_URL`. See [tools](./tools.md) for more details.

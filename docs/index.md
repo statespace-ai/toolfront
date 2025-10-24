@@ -11,7 +11,8 @@ title: "Quickstart"
     <h1 style="font-weight: 800;"><b>ToolFront</b></h1>
 </div>
 <p align="center">
-    <em>Data environments for AI agents</em>
+    <em>Design AI Applications in Markdown</em>
+</em>
 </p>
 <p align="center">
 <a href="https://github.com/statespace-tech/toolfront/actions/workflows/test.yml" target="_blank">
@@ -34,180 +35,169 @@ title: "Quickstart"
 
 ---
 
-ToolFront helps you organize AI workflows into independent tasks with **data environments**. 
+ToolFront helps you design AI applications in Markdown. This way, you can develop agents the same way you develop regular software.
 
-=== ":material-home:{ .middle } &nbsp; Landing Page"
+=== ":material-home: Entry Point"
 
-    Declare task instructions and tools in Markdown files.
-
-    <div class="grid cards" markdown>
-
-    ```bash hl_lines="2"
-    environment/
-    ├── index.md
-    ├── pages/
-    │   ├── text2sql.md
-    │   ├── document.md
-    │   └── api.md
-    └── data/
-        ├── invoices/
-        └── logs/
-
-    5 directories, 15 files
-    ```
-
-    ```markdown
-    ---
-    tools:
-      - [date, +%Y-%m-%d]
-    
-    ---
-
-    # Landing Page
-
-    - Include links to [pages](./pages)
-    - Add tool commands to frontmatters
-    - Agents learn tools with `--help`
-    ```
-
-    </div>
-
-=== ":material-database:{ .middle } &nbsp; Text-to-SQL"
-
-    Create text-to-SQL tasks with ToolFront's built-in **[database CLI](./pages/database_cli.md)**
+    Start by creating a README with instructions to guide your agent's behavior.
 
     <div class="grid cards" markdown>
 
-    ```bash hl_lines="4"
-    environment/
-    ├── index.md
-    ├── pages/
-    │   ├── text2sql.md
-    │   ├── document.md
-    │   └── api.md
-    └── data/
-        ├── invoices/
-        └── logs/
+    ```bash hl_lines="5"
+    project/
+    ├── data/
+    │   ├── catalog/
+    │   └── spec.json
+    ├── README.md
+    └── src/
+        ├── api.md
+        ├── rag.md
+        └── text2sql.md
 
-    5 directories, 15 files
+    4 directories, 30 files
     ```
 
+    ```markdown title="README.md"
+    # Sales Analytics
 
-    ```markdown
-    ---
-    tools:
-      - [toolfront, database, $DB_URL]
-    
-    ---
+    You are a business analyst.
+    Answer questions using the available resources.
 
-    # Text-to-SQL
-
-    - Add database metadata and context
-    - Agents can list and inspect tables
-    - All queries are read-only
+    Check out the following relevant files:
+    - `./src/api.md` for tools to fetch API data.
+    - `./src/rag.md` to retrieve product specs.
+    - `./src/text2sql.md` to query product data
     ```
 
     </div>
 
 
-=== ":material-file-document:{ .middle } &nbsp; Document RAG"
+=== ":material-tools: Tools & APIs"
 
-    Retrieve information from data files like `.txt`, `.csv`, and `.json`.
-      
+    List tools in your frontmatters so your agents can take actions.
+
     <div class="grid cards" markdown>
 
-    ```bash hl_lines="5 7-9"
-    environment/
-    ├── index.md
-    ├── pages/
-    │   ├── text2sql.md
-    │   ├── document.md
-    │   └── api.md
-    └── data/
-        ├── invoices/
-        └── logs/
+    ```bash hl_lines="7"
+    project/
+    ├── data/
+    │   ├── catalog/
+    │   └── spec.json
+    ├── README.md
+    └── src/
+        ├── api.md
+        ├── rag.md
+        └── text2sql.md
 
-    5 directories, 15 files
+    4 directories, 30 files
     ```
 
 
-    ```markdown
+    ```markdown title="api.md"
     ---
     tools:
-      - [python, extract.py]
+      - [curl, -X, GET, "https://api.com/{endpoint}"]
     
     ---
 
+    Call the API tool to retrieve order details.
+    - Always pass the `{endpoint}` argument
+    - See `/data/spec.json` for the full API spec
+    ```
+
+    </div>
+
+
+=== ":material-file-document: Document RAG"
+
+    Teach your agent how to retrieve and interpret documents within your repository.
+
+    <div class="grid cards" markdown>
+
+    ```bash hl_lines="8"
+    project/
+    ├── data/
+    │   ├── catalog/
+    │   └── spec.json
+    ├── README.md
+    └── src/
+        ├── api.md
+        ├── rag.md
+        └── text2sql.md
+
+    4 directories, 30 files
+    ```
+
+
+    ```markdown title="rag.md"
     # Document RAG
 
-    - Add data files and descriptions
-    - Agents read and search documents
-    - Use custom tools to process data
+    Search through files for product information.
+    Use built-in tools like `read`, `grep`, and `glob`
+
+    Instructions:
+    - Retrieve product specs under `/data/catalog/`
+    - Search for product IDs, SKUs, or feature details
+    - Cross-reference information across documents
     ```
 
     </div>
 
 
-=== ":material-api:{ .middle } &nbsp; API Integration"
+=== ":material-database: Text-to-SQL"
 
-      Fetch live data with calls to external APIs.
+    Use the built-in **[database CLI](./pages/database_cli.md)** for text-to-SQL workflows, or build your own.
 
-      <div class="grid cards" markdown>
+    <div class="grid cards" markdown>
 
-      ```bash hl_lines="6"
-      environment/
-      ├── index.md
-      ├── pages/
-      │   ├── text2sql.md
-      │   ├── document.md
-      │   └── api.md
-      └── data/
-          ├── invoices/
-          └── logs/
+    ```bash hl_lines="9"
+    project/
+    ├── data/
+    │   ├── catalog/
+    │   └── spec.json
+    ├── README.md
+    └── src/
+        ├── api.md
+        ├── rag.md
+        └── text2sql.md
 
-      5 directories, 15 files
-      ```
+    4 directories, 30 files
+    ```
 
-      ```markdown
-      ---
-      tools:
-        - [curl, "https://api.com/v1/user"]
-        
-      ---
+    ```markdown title="text2sql.md"
+    ---
+    tools:
+      - [toolfront, database, $POSTGRES_URL]
+    
+    ---
 
-      # API Integration
+    Query the PostgreSQL database for product details.
+    - Discover available parameters with `--help`
+    - Available tables: `products` and `categories`
+    ```
 
-      - Define API endpoints as tools
-      - Pass env `$VARS` for secrets
-      - Agents fetch live external data
-      ```
+    </div>
 
-      </div>
-
-Agents browse environments to get work done, using tools and following instructions as needed.
+You can run AI applications directly with the **[Python SDK](./pages/python_sdk.md)**, or power them with your own agents via the **[MCP Server](./pages/mcp_server.md)**.
 
 === ":simple-python:{ .middle } &nbsp; Python SDK"
 
-    Run Python agents on environments with the **[SDK](./pages/python_sdk.md)**
-
     ```python
-    from toolfront import Environment
+    from toolfront import Application
 
-    env = Environment(url="file:///path/environment")
+    app = Application(url="file:///path/to/project")
 
-    response = env.run("What's our average ticket size?", model="openai:gpt-5")
+    result = app.run("What's the status of order 66?", model="openai:gpt-5")
     ```
 
 === ":simple-modelcontextprotocol:{ .middle } &nbsp; MCP Server"
-
-    Connect your own agents to environments with the **[MCP Server](./pages/mcp_server.md)**
 
     ```json
     {
       "mcpServers": {
         "toolfront": {
           "command": "uvx",
-          "args": ["toolfront", "mcp", "file:///path/environment"],
+          "args": ["toolfront", "mcp", "file:///path/to/project"],
         }
       }
     }
@@ -236,16 +226,16 @@ To get started, install `toolfront` with your favorite PyPI package manager.
 
 !!! toolfront "Deploy with ToolFront Cloud 🔥"
 
-    Instantly deploy your environments with **[ToolFront Cloud](pages/toolfront_cloud.md)**.
+    Deploy your AI applications with **[ToolFront Cloud](pages/toolfront_cloud.md)**.
 
     ```bash
-    toolfront deploy ./path/environment
+    toolfront deploy ./path/to/project
     ```
 
-    This gives you a secure environment URL your agents can access from anywhere.
+    This gives you an application URL you can run from anywhere.
 
     ```python
-    Environment(url="https://cloud.toolfront.ai/user/environment", params={"API_KEY": ...})
+    app = Application(url="https://cloud.toolfront.ai/user/project", params={"API_KEY": ...})
     ```
 
     ToolFront Cloud is in beta. To request access, join our **[Discord](https://discord.gg/rRyM7zkZTf)** or email `esteban[at]kruskal[dot]ai`.

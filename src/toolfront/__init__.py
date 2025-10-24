@@ -1,3 +1,3 @@
-from .environment import Environment
+from .application import Application
 
-__all__ = ["Environment"]
+__all__ = ["Application"]

@@ -1,7 +1,7 @@
 [project]
 name = "toolfront"
 version = "0.3.3"
-description = "ToolFront helps you organize AI workflows into independent tasks with environments."
+description = "Design AI applications in Markdown."
 readme = "README.md"
 authors = [
     { name = "Esteban Safranchik", email = "esteban@kruskal.ai" },
