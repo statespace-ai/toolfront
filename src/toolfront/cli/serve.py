@@ -52,31 +52,31 @@ def get_frontmatter(markdown: str) -> dict[str, Any]:
     return {}
 
 
-def resolve_file_path(directory: str, file_path: str) -> str:
+def resolve_file_path(directory: Path, file_path: str) -> str:
     """Resolve and validate a file path.
 
     Simple resolution logic:
     - If path ends with .md: use as-is
     - Otherwise: try path/README.md
     """
-    full_path = os.path.abspath(os.path.join(directory, file_path))
+    full_path = (directory / file_path).resolve()
 
     # Security check
-    if not full_path.startswith(directory):
+    if not full_path.is_relative_to(directory):
         raise HTTPException(status_code=403, detail="Access denied: path outside served directory")
 
     # If path ends with .md, use it directly
     if file_path.endswith(".md"):
-        if not os.path.exists(full_path):
+        if not full_path.exists():
             raise HTTPException(status_code=404, detail="File not found")
-        if not os.path.isfile(full_path):
+        if not full_path.is_file():
             raise HTTPException(status_code=400, detail="Path is not a file")
-        return full_path
+        return str(full_path)
 
     # Otherwise, try path/README.md
-    readme_path = os.path.join(full_path, "README.md")
-    if os.path.exists(readme_path) and os.path.isfile(readme_path):
-        return readme_path
+    readme_path = full_path / "README.md"
+    if readme_path.exists() and readme_path.is_file():
+        return str(readme_path)
 
     raise HTTPException(status_code=404, detail="File not found (tried README.md)")
 
@@ -87,7 +87,7 @@ def resolve_file_path(directory: str, file_path: str) -> str:
 @click.option("--port", default=8000, type=int, help="Port to bind the server to")
 def serve(directory, host, port):
     """Serve files from a directory via HTTP"""
-    directory = os.path.abspath(directory)
+    directory = Path(directory).resolve()
 
     app = FastAPI(title="ToolFront Application")
 
@@ -125,7 +125,7 @@ def serve(directory, host, port):
         result = subprocess.run(expanded_command, cwd=path.parent, env=action.env, capture_output=True, text=True)
 
         return JSONResponse(
-            {"stdout": result.stdout or "", "stderr": result.stderr or "", "returncode": result.returncode}
+            {"stdout": result.stdout or "N/A", "stderr": result.stderr or "N/A", "returncode": result.returncode}
         )
 
     click.echo(f"Starting ToolFront server on {host}:{port}")
