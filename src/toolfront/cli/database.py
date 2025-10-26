@@ -201,7 +201,3 @@ def query(ctx, sql) -> None:
         click.echo(data.to_markdown(index=False))
     else:
         raise ValueError("Database does not support raw sql queries")
-
-
-if __name__ == "__main__":
-    database()
