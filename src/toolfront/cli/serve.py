@@ -89,6 +89,10 @@ def serve(directory, host, port):
     """Serve files from a directory via HTTP"""
     directory = Path(directory).resolve()
 
+    # check if README.md exists in the directory
+    if not (directory / "README.md").exists():
+        raise HTTPException(status_code=400, detail="README.md not found in directory")
+
     app = FastAPI(title="ToolFront Application")
 
     @app.get("/{file_path:path}")
