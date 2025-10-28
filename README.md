@@ -25,135 +25,37 @@
 
 ---
 
-## Installation
-
-Install `toolfront` with your favorite PyPI package manager.
-
-```bash
-pip install toolfront
-```
-
 ## Quickstart
 
-ToolFront helps you build AI applications in Markdown. This way, you can develop agents the same way you develop regular software.
+**ToolFront is a declarative framework for building AI agents in Markdown.**
+
+Write tools and instructions in `.md` files. Run the project and get a live AI application.
+
+### Create it
+
+Start with **one file**: `README.md`
+
+```markdown
+---
+tools:
+  - [curl, -X, GET, "https://httpbin.org/status/200"]
+---
+
+# Status Checker
+- Use `curl` to check if the service is up
+```
+
+### Run it
+
+Run the application with:
 
 ```bash
-project/
-├── data/
-├── README.md
-├── spec.json
-├── src/
-│   ├── api.md
-│   ├── rag.md
-│   ├── text2sql.md
-│   └── toolkit.md
-└── tools/
-
-4 directories, 30 files
+toolfront run .
 ```
 
-<details open>
-<summary><b>Entry Point</b></summary>
+### Ask it
 
-Start by creating a README with general instructions and tools for your agent.
-
-```markdown
----
-tools:
-  - [ls]
-  - [cat]
-
----
-
-# Agent Instructions
-- Use `ls` and `cat` to browse the tool site
-- Check out `./src` for specialized workflows
-```
-
-</details>
-
-<details>
-<summary><b>API Integration</b></summary>
-
-Connect agents to external APIs and web services using HTTP tools like `curl`.
-
-```markdown
----
-tools:
-  - [curl, -X, GET, "https://api.com/{endpoint}"]
-
----
-
-# Web API
-- Call external APIs to fetch real-time data.
-- Pass `{endpoint}` to make GET requests
-- Check `/data/spec.json` for available endpoints
-```
-
-</details>
-
-<details>
-<summary><b>Document RAG</b></summary>
-
-Teach your agent how to search and interpret documents with tools like `grep`.
-
-```markdown
-
----
-tools
-  - [grep]
-
----
-
-# Document RAG
-- Use `grep` to search through `/data/catalog/`
-- Cross-reference information across documents
-- Look for product IDs, SKUs, or feature details
-```
-
-</details>
-
-<details>
-<summary><b>Text-to-SQL</b></summary>
-
-Connect agents to databases using CLI tools like `psql` for text-to-SQL workflows.
-
-```markdown
----
-tools:
-  - [psql, -U, $USER, -d, $DATABASE, -c, {query}]
-
----
-
-# Text-to-SQL
-- Query the PostgreSQL DB for product details
-- Pass a `{query}` to the `psql` tool
-- Available tables: `products` and `categories`
-```
-
-</details>
-
-<details>
-<summary><b>Custom Tools</b></summary>
-
-Build custom tools using scripts in any programming language.
-
-```markdown
----
-tools:
-  - [python, tools/status.py, {id}]
-  - [cargo, script, tools/check_delays.rs]
-
----
-
-# Toolkit
-- Run `status.py` with `{id}` to check statuses
-- Use `check_delays.rs` to scan for delayed orders
-```
-
-</details>
-
-You can run AI applications directly with the [Python SDK](https://docs.toolfront.ai/pages/python_sdk/), or power them with your own agents via the [MCP Server](https://docs.toolfront.ai/pages/mcp_server/).
+Ask your agents about the application:
 
 <details open>
 <summary><b>Python SDK</b></summary>
@@ -163,7 +65,10 @@ from toolfront import Application
 
 app = Application(url="http://127.0.0.1:8000")
 
-result = app.ask("What's the status of order 66?", model="openai:gpt-5")
+result = app.ask("Is the service up?", model="openai:gpt-5")
+
+print(result)
+# Answer: yes
 ```
 
 </details>
@@ -183,6 +88,95 @@ result = app.ask("What's the status of order 66?", model="openai:gpt-5")
 ```
 
 </details>
+
+---
+
+## Upgraded Example
+
+Your full project can grow like this:
+
+```bash
+project/
+├── README.md
+├── src/
+│   ├── api.md
+│   ├── rag.md
+│   ├── text2sql.md
+│   └── toolkit.md
+├── data/
+└── tools/
+```
+
+### Add Navigation
+
+Update `README.md` with tools to explore the project
+
+```markdown
+---
+tools:
+  - [curl, -X, GET, "https://httpbin.org/status/200"]
+  - [ls]
+  - [cat]
+---
+
+# Status Checker
+- Use `curl` to check if the service is up
+- Use `ls` and `cat` to browse other files
+```
+
+### Add Document RAG
+
+Give your agent tools to search documents
+
+```markdown
+---
+tools:
+  - [grep]
+---
+
+# Search Docs
+- Use `grep` to search files in `/data/`
+```
+
+### Add Text-to-SQL
+
+Connect your databases for SQL workflows
+
+```markdown
+---
+tools:
+  - [psql, -U, $USER, -d, $DATABASE, -c, {query}]
+---
+
+# Database Access
+- Call the `psql` tool to query the PostgreSQL database
+```
+
+### Add Custom Tools
+
+Build custom tools in any programming language
+
+```markdown
+---
+tools:
+  - [python, tools/status.py, --delayed]
+---
+
+# Custom Tools
+- Run `status.py` to check delayed orders
+```
+
+---
+
+## Installation
+
+Install `toolfront` with your favorite PyPI package manager.
+
+```bash
+pip install toolfront
+```
+
+---
 
 ## Deploy with ToolFront Cloud
 

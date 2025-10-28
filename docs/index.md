@@ -11,7 +11,7 @@ title: "Quickstart"
     <h1 style="font-weight: 800;"><b>ToolFront</b></h1>
 </div>
 <p align="center">
-    <em>Build AI Applications in Markdown</em>
+    <em>Build AI Agents in Markdown</em>
 </em>
 </p>
 <p align="center">
@@ -35,221 +35,55 @@ title: "Quickstart"
 
 ---
 
-<b> ToolFront is a declarative framework for building AI applications in Markdown.</b>
+**ToolFront is a declarative framework for building AI agents in Markdown.**
 
-=== ":material-home: Entry Point"
+Write tools and instructions in `.md` files. Run the project and get a live AI application.
 
-    Start by creating a README with general instructions and tools for your agent.
+---
 
-    <div class="grid cards" markdown>
+## Simple Example
 
-    ```bash hl_lines="3"
-    project/
-    ├── data/
-    ├── README.md
-    ├── spec.json
-    ├── src/
-    │   ├── api.md
-    │   ├── rag.md
-    │   ├── text2sql.md
-    │   └── toolkit.md
-    └── tools/
+### Create it
 
-    4 directories, 30 files
-    ```
-
-    ```markdown title="README.md"
-    ---
-    tools:
-      - [ls]
-      - [cat]
-    
-    ---
-
-    # Agent Instructions
-    - Use `ls` and `cat` to browse the tool site
-    - Check out `./src` for specialized workflows
-    ```
-
-    </div>
-
-=== ":material-web: API Integration"
-
-    Connect agents to external APIs and web services using HTTP tools like `curl`.
-
-    <div class="grid cards" markdown>
-
-    ```bash hl_lines="6"
-    project/
-    ├── data/
-    ├── README.md
-    ├── spec.json
-    ├── src/
-    │   ├── api.md
-    │   ├── rag.md
-    │   ├── text2sql.md
-    │   └── toolkit.md
-    └── tools/
-
-    4 directories, 30 files
-    ```
+  Start with **one file**: `README.md`
 
 
-    ```markdown title="api.md"
-    ---
-    tools:
-      - [curl, -X, GET, "https://api.com/{endpoint}"]
+  ```markdown title="README.md"
+  ---
+  tools:
+    - [curl, -X, GET, "https://httpbin.org/status/200"]
+  ---
 
-    ---
+  # Status Checker
+  - Use `curl` to check if the service is up
+  ```
 
-    # Web API
-    - Call external APIs to fetch real-time data.
-    - Pass `{endpoint}` to make GET requests
-    - Check `/data/spec.json` for available endpoints
-    ```
+### Run it
 
-    </div>
-
-=== ":material-file-document: Document RAG"
-
-    Teach your agent how to search and interpret documents with tools like `grep`.
-
-    <div class="grid cards" markdown>
-
-    ```bash hl_lines="7"
-    project/
-    ├── data/
-    ├── README.md
-    ├── spec.json
-    ├── src/
-    │   ├── api.md
-    │   ├── rag.md
-    │   ├── text2sql.md
-    │   └── toolkit.md
-    └── tools/
-
-    4 directories, 30 files
-    ```
-
-
-    ```markdown title="rag.md"
-
-    ---
-    tools
-      - [grep]
-    
-    ---
-
-    # Document RAG
-    - Use `grep` to search through `/data/catalog/`
-    - Cross-reference information across documents
-    - Look for product IDs, SKUs, or feature details
-    ```
-
-    </div>
-
-
-=== ":material-database: Text-to-SQL"
-
-    Connect agents to databases using CLI tools like `psql` for text-to-SQL workflows.
-
-    <div class="grid cards" markdown>
-
-    ```bash hl_lines="8"
-    project/
-    ├── data/
-    ├── README.md
-    ├── spec.json
-    ├── src/
-    │   ├── api.md
-    │   ├── rag.md
-    │   ├── text2sql.md
-    │   └── toolkit.md
-    └── tools/
-
-    4 directories, 30 files
-    ```
-
-    ```markdown title="text2sql.md"
-    ---
-    tools:
-      - [psql, -U, $USER, -d, $DATABASE, -c, {query}]
-    
-    ---
-
-    # Text-to-SQL 
-    - Query the PostgreSQL DB for product details
-    - Pass a `{query}` to the `psql` tool
-    - Available tables: `products` and `categories`
-    ```
-
-    </div>
-
-
-=== ":material-tools: Custom Tools"
-
-    Build custom tools using scripts in any programming language.
-
-    <div class="grid cards" markdown>
-
-    ```bash hl_lines="9"
-    project/
-    ├── data/
-    ├── README.md
-    ├── spec.json
-    ├── src/
-    │   ├── api.md
-    │   ├── rag.md
-    │   ├── text2sql.md
-    │   └── toolkit.md
-    └── tools/
-
-    4 directories, 30 files
-    ```
-
-
-    ```markdown title="toolkit.md"
-    ---
-    tools:
-      - [python, tools/status.py, {id}]
-      - [cargo, script, tools/check_delays.rs]
-
-    ---
-
-    # Toolkit
-    - Run `status.py` with `{id}` to check statuses
-    - Use `check_delays.rs` to scan for delayed orders
-    ```
-
-    </div>
-
-Once you've built your application, run it with `toolfront run ./path/to/project`:
+Run the application with:
 
 ```bash
-$ toolfront run ./path/to/project --port 8000
-INFO:     Started server process [72194]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8000
+toolfront run .
 ```
 
-Agents can interact with running applications in one of two ways:
+### Ask it
+
+Ask your agents about the application
 
 === ":simple-python:{ .middle } &nbsp; Python SDK"
-
-    ToolFront's Python SDK provides a pre-built application interface in Python
 
     ```python
     from toolfront import Application
 
     app = Application(url="http://127.0.0.1:8000")
 
-    result = app.ask("What's the status of order 66?", model="openai:gpt-5")
+    result = app.ask("Is the service up?", model="openai:gpt-5")
+    
+    print(result)
+    # Answer: yes
     ```
 
 === ":simple-modelcontextprotocol:{ .middle } &nbsp; MCP Server"
-
-    ToolFront's MCP Server lets you connect your own agents to running applications.
 
     ```json
     {
@@ -262,7 +96,90 @@ Agents can interact with running applications in one of two ways:
     }
     ```
 
-To get started, install `toolfront` with your favorite PyPI package manager.
+---
+
+## Upgraded Example
+
+Your full project can grow like this: 
+
+```bash
+project/
+├── README.md
+├── src/
+│   ├── api.md
+│   ├── rag.md
+│   ├── text2sql.md
+│   └── toolkit.md
+├── data/
+└── tools/
+```
+
+### Add Navigation
+
+  Update `README.md` with tools to explore the project
+
+  ```markdown title="README.md" hl_lines="4-5 11"
+  ---
+  tools:
+    - [curl, -X, GET, "https://httpbin.org/status/200"]
+    - [ls]
+    - [cat]
+
+  ---
+
+  # Status Checker
+  - Use `curl` to check if the service is up
+  - Use `ls` and `cat` to browse other files
+  ```
+
+### Add Document RAG
+
+  Give your agent tools to search documents
+
+  ```markdown title="src/rag.md"
+  ---
+  tools:
+    - [grep]
+  ---
+
+  # Search Docs
+  - Use `grep` to search files in `/data/`
+  ```
+
+### Add Text-to-SQL
+
+  Connect your databases for SQL workflows
+
+
+  ```markdown title="src/text2sql.md"
+  ---
+  tools:
+    - [psql, -U, $USER, -d, $DATABASE, -c, {query}]
+  ---
+
+  # Database Access
+  - Call the `psql` tool to query the PostgreSQL database
+  ```
+
+### Add Custom Tools
+
+  Build custom tools in any programming language.
+
+  ```markdown title="src/toolkit.md"
+  ---
+  tools:
+    - [python, tools/status.py, --delayed]
+  ---
+  
+  # Custom Tools
+  - Run `status.py` to check delayed orders
+  ```
+
+---
+
+## Installation
+
+Install `toolfront` with your favorite PyPI package manager.
 
 === ":fontawesome-brands-python:{ .middle } &nbsp; pip"
 
